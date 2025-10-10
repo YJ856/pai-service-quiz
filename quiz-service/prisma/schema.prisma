@@ -1,0 +1,47 @@
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ENUM: QUIZ.status ∈ {SCHEDULED, TODAY, COMPLETED}
+enum QuizStatus {
+  SCHEDULED  // 예약됨(발행 예정)
+  TODAY      // 오늘 발행
+  COMPLETED  // 완료
+}
+
+model Quiz {
+  id               Int          @id @default(autoincrement())                    // PK
+  parentProfileId  Int          @map("parent_profile_id")                        // 외부 부모 프로필 ID (소프트 참조, FK 없음)
+  question         String                                                       // 문제
+  answer           String                                                       // 정답
+  reward           String?                                                      // 보상(옵션, nullable)
+  hint             String?                                                      // 힌트(옵션, nullable)
+  publishDate      DateTime     @db.Date @map("publish_date")                    // 발행일(date-only)
+  status           QuizStatus                                                   // 상태
+  assignments      Assignment[]                                                 // 1:N - Quiz has many Assignments
+
+  @@map("quizzes")                                                               // 테이블명 매핑
+  @@index([parentProfileId, publishDate])                                        // Index: QUIZ(parent_profile_id, publish_date)
+}
+
+model Assignment {
+  id             Int    @id @default(autoincrement())                            // PK
+  quizId         Int    @map("quiz_id")                                          // FK -> Quiz.id
+  childProfileId Int    @map("child_profile_id")                                 // 외부 자녀 프로필 ID (소프트 참조, FK 없음)
+  isSolved       Boolean @default(false) @map("is_solved")                        // 해결 여부
+  rewardGranted  Boolean @default(false) @map("reward_granted")                   // 보상 지급 여부
+
+  quiz           Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade) // N:1
+
+  @@map("assignments")                                                            // 테이블명 매핑
+  @@unique([quizId, childProfileId])                                              // UNIQUE: (quiz_id, child_profile_id)
+  @@index([quizId, childProfileId])                                               // Index: ASSIGNMENT(quiz_id, child_profile_id)
+  @@index([childProfileId])                                                       // Index: ASSIGNMENT(child_profile_id)
+}
