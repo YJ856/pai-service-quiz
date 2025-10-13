@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { CreateQuizRequest, CreateQuizResponse } from '@your-scope/shared-type';
+import type { CreateQuizRequestDto, CreateQuizResponseData } from 'pai-shared-types';
 import { CreateQuizCommand } from '../application/command/create-quiz.command';
 import type { Quiz } from '../domain/model/quiz';
 
@@ -11,7 +11,7 @@ import type { Quiz } from '../domain/model/quiz';
  */
 @Injectable()
 export class QuizMapper {
-    toCreateCommand(req: CreateQuizRequest, parentProfileId: string): CreateQuizCommand {
+    toCreateCommand(req: CreateQuizRequestDto, parentProfileId: string): CreateQuizCommand {
         const norm = (v: unknown) => (v == null ? null : String(v).trim());
         
         // 유효성 검사 후 문자열(yyyy-MM-dd) 그대로 사용
@@ -27,11 +27,8 @@ export class QuizMapper {
         );
     }
 
-    toCreateResponse(saved: Quiz): CreateQuizResponse {
-        return {
-            success: true,
-            data: { quizId: (saved as any).id, },
-        };
+    toCreateResponse(saved: Quiz): CreateQuizResponseData {
+        return { quizId: (saved as any).id as number };
     }
 }
 

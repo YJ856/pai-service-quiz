@@ -2,7 +2,6 @@
 import {
   Body,
   Controller,
-  Headers,
   HttpCode,
   HttpStatus,
   Inject,
@@ -11,7 +10,7 @@ import {
 } from '@nestjs/common';
 
 // ✅ 요청/응답 타입은 타입 전용 import
-import type { CreateQuizRequest, CreateQuizResponse } from '@your-scope/shared-type';
+import type { CreateQuizRequestDto, CreateQuizResponseData, BaseResponse } from 'pai-shared-types';
 
 // ✅ 토큰은 런타임 값이므로 일반 import
 import { QUIZ_TOKENS } from '../../../../quiz.token';
@@ -42,11 +41,16 @@ export class QuizController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Body() body: CreateQuizRequest,            
+    @Body() body: CreateQuizRequestDto,            
     @Auth('profileId') parentProfileId: string,
-  ): Promise<CreateQuizResponse> {
+  ): Promise<BaseResponse<CreateQuizResponseData>> {
     const cmd = this.mapper.toCreateCommand(body, parentProfileId);
     const saved = await this.createQuiz.execute(cmd);
-    return this.mapper.toCreateResponse(saved);
+    const data = this.mapper.toCreateResponse(saved);
+    return {
+      success: true,
+      message: '퀴즈 생성 성공',
+      data,
+    };
   }
 }
