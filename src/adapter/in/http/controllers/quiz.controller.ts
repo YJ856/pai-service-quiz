@@ -8,26 +8,26 @@ import {
   Post,
   Get,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 
-// 요청/응답 타입은 타입 전용 import
-import type { CreateQuizRequestDto, CreateQuizResponseData, BaseResponse, NextPublishDateData } from 'pai-shared-types';
+import type { CreateQuizRequestDto, 
+              CreateQuizResponseData, 
+              BaseResponse, 
+              NextPublishDateData,
+              ParentsTodayQueryDto,
+              ParentsTodayResponseData } from 'pai-shared-types';
 
-// 토큰은 런타임 값이므로 일반 import
 import { QUIZ_TOKENS } from '../../../../quiz.token';
 
-// 포트(인터페이스)는 타입 전용 import (런타임 심벌 아님)
 import type { CreateQuizUseCase } from '../../../../application/port/in/create-quiz.usecase';
 import type { GetNextPublishDateUseCase } from '../../../../application/port/in/next-publish-date.usecase';
+import type { ListParentsTodayUseCase } from '../../../../application/port/in/list-parents-today.usecase';
 
-// Mapper는 클래스(런타임 값)라서 일반 import
 import { QuizMapper } from '../../../../mapper/quiz.mapper';
 import { NextPublishDateMapper } from '../../../../mapper/next-publish-date.mapper';
 
-// Guard: 토큰 검증 + 부모 권한 보장(ParentGuard에서 req.auth 세팅)
 import { ParentGuard } from '../auth/guards/parent.guard';
-
-// 범용 인증 데코레이터: req.auth.userId / req.auth.profileId를 깔끔히 주입
 import { Auth } from '../decorators/auth.decorator';
 
 
@@ -42,6 +42,9 @@ export class QuizController {
     @Inject(QUIZ_TOKENS.GetNextPublishDateUseCase)
     private readonly getNextPublishDate: GetNextPublishDateUseCase,
     private readonly nextPublishDateMapper: NextPublishDateMapper,
+
+    @Inject(QUIZ_TOKENS.ListParentsTodayUseCase)
+    private readonly listParentsToday: ListParentsTodayUseCase,
   ) {}
 
   @Get('next-publish-date')
@@ -66,6 +69,39 @@ export class QuizController {
     return {
       success: true,
       message: '퀴즈 생성 성공',
+      data,
+    };
+  }
+
+  @Get('parents/today')
+  @HttpCode(HttpStatus.OK)
+  async listParentsTodayHandler(
+    @Auth('profileId') parentProfileId: string,
+    @Query() query: ParentsTodayQueryDto,
+  ): Promise<BaseResponse<ParentsTodayResponseData>> {
+    const rawLimit = (query as any)?.limit;
+    let limit = 20; // 기본값
+    if (rawLimit !== undefined) {
+      const x = Number(rawLimit);
+      if (Number.isFinite(x)) {
+        limit = Math.max(1, Math.min(x, 50));
+      }
+    }
+
+    const cursor =
+      query?.cursor && String(query.cursor).trim() !== ''
+        ? String(query.cursor).trim()
+        : null; // 빈 문자열이면 null 처리
+
+    const data = await this.listParentsToday.execute({
+      parentProfileId,
+      limit,
+      cursor,
+    });
+
+    return {
+      success: true,
+      message: '오늘의 퀴즈 조회 성공',
       data,
     };
   }

@@ -2,9 +2,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from './prisma/prisma.service';
 import type { QuizQueryPort } from '../../../application/port/out/quiz.query.port';
+import type {
+  QuizParentsQueryRepositoryPort,
+  FindParentsTodayParams,
+  FindParentsTodayResult,
+} from '../../../application/port/out/quiz-parents-query.repository.port';
+
 
 @Injectable()
-export class QuizQueryAdapter implements QuizQueryPort {
+export class QuizQueryAdapter implements QuizQueryPort, QuizParentsQueryRepositoryPort {
   constructor(private readonly prisma: PrismaService) {}
 
   async findLastScheduledDateYmd(parentProfileId: string): Promise<string | null> {
@@ -32,6 +38,66 @@ export class QuizQueryAdapter implements QuizQueryPort {
     });
     return count > 0;
   }
+
+  async findParentsToday(params: FindParentsTodayParams): Promise<FindParentsTodayResult> {
+    const { parentProfileId, todayYmd, limit, afterQuizId } = params;
+    const pid = toIntId(parentProfileId);
+    const { gte, lt } = utcDayRangeForYmd(todayYmd);
+
+    const rows = await this.prisma.quiz.findMany({
+      where: {
+        parentProfileId: pid,          // ✅ 네 스키마에 맞춰 parentProfileId 사용
+        status: 'TODAY',
+        publishDate: { gte, lt },      // ✅ @db.Date 타입 안전 조회
+        ...(afterQuizId ? { id: { gt: afterQuizId } } : {}),
+      },
+      orderBy: { id: 'asc' },
+      take: limit + 1,                 // hasNext 판별용
+      select: {
+        id: true,
+        question: true,
+        hint: true,
+        answer: true,
+        reward: true,
+        status: true,                  // 'TODAY'
+        parentProfileId: true,
+        assignments: {
+          select: {
+            childProfileId: true,
+            isSolved: true,
+            // completed/보상 조회에도 쓸거라 rewardGranted도 보통 같이 가져가도 OK
+            // rewardGranted: true,
+          },
+        },
+      },
+    });
+
+    const hasNext = rows.length > limit;
+    const page = hasNext ? rows.slice(0, limit) : rows;
+
+    const items = page.map((q) => ({
+      quizId: q.id,
+      status: 'TODAY' as const,
+      question: q.question,
+      hint: q.hint ?? undefined,
+      answer: q.answer,
+      reward: q.reward ?? undefined,
+
+      authorParentProfileId: q.parentProfileId,
+      authorParentName: '부모',            
+      authorParentAvatarMediaId: null,
+
+      children: (q.assignments ?? []).map((a) => ({
+        childProfileId: a.childProfileId,
+        childName: '',                     
+        childAvatarMediaId: null,          
+        isSolved: !!a.isSolved,
+      })),
+    }));
+
+    return { items, hasNext };
+  }
+
 }
 
 /** ---- helpers ---- */
