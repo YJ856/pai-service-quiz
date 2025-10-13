@@ -5,3 +5,4 @@ export interface QuizRepositoryPort {
     findLastScheduledDateByFamily(parentProfileId: number | string): Promise<string | null>;
     findById(id: number): Promise<Quiz | null>;
 }
+
