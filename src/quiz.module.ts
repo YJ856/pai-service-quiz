@@ -16,11 +16,13 @@ import { ListParentsCompletedService } from './application/use-cases/list-parent
 import { ListParentsScheduledService } from './application/use-cases/list-parents-scheduled.service';
 import { TransitionQuizStatusService } from './application/use-cases/transition-quiz-status.service';
 import { GetParentsQuizDetailService } from './application/use-cases/get-parents-quiz-detail.service';
+import { UpdateQuizService } from './application/use-cases/update-quiz.service';
 
 // Ports 구현체(Adapters)
 import { QuizRepositoryAdapter } from './adapter/out/persistence/quiz.repository.adapter';
 import { QuizQueryAdapter } from './adapter/out/persistence/quiz.query.adapter';
 import { ProfileDirectoryHttpAdapter } from './adapter/out/user/profile-directory.http.adapter';
+import { QuizUpdateAdapter } from './adapter/out/persistence/quiz.update.adapter';
 
 // Infra (Prisma)
 import { PrismaService } from './adapter/out/persistence/prisma/prisma.service';
@@ -51,6 +53,7 @@ import { QuizCron } from './adapter/in/scheduler/quiz.cron';
     { provide: QUIZ_TOKENS.QuizParentsQueryRepositoryPort, useExisting: QuizQueryAdapter },
     { provide: QUIZ_TOKENS.QuizDetailQueryRepositoryPort, useExisting: QuizQueryAdapter },
     { provide: QUIZ_TOKENS.ProfileDirectoryPort, useClass: ProfileDirectoryHttpAdapter },
+    { provide: QUIZ_TOKENS.QuizUpdateRepositoryPort, useClass: QuizUpdateAdapter },
 
     // UseCase(계약) ↔ 구현
     { provide: QUIZ_TOKENS.CreateQuizUseCase, useClass: CreateQuizService },
@@ -59,6 +62,7 @@ import { QuizCron } from './adapter/in/scheduler/quiz.cron';
     { provide: QUIZ_TOKENS.ListParentsCompletedUseCase, useClass: ListParentsCompletedService },
     { provide: QUIZ_TOKENS.ListParentsScheduledUseCase, useClass: ListParentsScheduledService },
     { provide: QUIZ_TOKENS.GetParentsQuizDetailUseCase, useClass: GetParentsQuizDetailService },
+    { provide: QUIZ_TOKENS.UpdateQuizUseCase, useClass: UpdateQuizService },
 
     // 배치 + 크론
     TransitionQuizStatusService,

@@ -9,6 +9,7 @@ import {
   UseGuards,
   Query,
   Param,
+  Patch,
 } from '@nestjs/common';
 
 import type { CreateQuizRequestDto, 
@@ -22,6 +23,7 @@ import type { CreateQuizRequestDto,
               ParentsScheduledQueryDto,
               ParentsScheduledResponseData,
               ParentsQuizDetailResponseData,
+              UpdateQuizRequestDto,
              } from 'pai-shared-types';
 
 import { QUIZ_TOKENS } from '../../../../quiz.token';
@@ -32,6 +34,7 @@ import type { ListParentsTodayUseCase } from '../../../../application/port/in/li
 import type { ListParentsCompletedUseCase } from '../../../../application/port/in/list-parents-completed.usecase';
 import type { ListParentsScheduledUseCase } from '../../../../application/port/in/list-parents-scheduled.usecase';
 import type { GetParentsQuizDetailUseCase } from '../../../../application/port/in/get-parents-quiz-detail.usecase';
+import type { UpdateQuizUseCase } from '../../../../application/port/in/update-quiz.usecase';
 
 import { QuizMapper } from '../../../../mapper/quiz.mapper';
 import { NextPublishDateMapper } from '../../../../mapper/next-publish-date.mapper';
@@ -63,6 +66,9 @@ export class QuizController {
 
     @Inject(QUIZ_TOKENS.GetParentsQuizDetailUseCase)
     private readonly getParentsQuizDetail: GetParentsQuizDetailUseCase,
+
+    @Inject(QUIZ_TOKENS.UpdateQuizUseCase)
+    private readonly updateQuiz: UpdateQuizUseCase,
   ) {}
 
   @Get('next-publish-date')
@@ -196,4 +202,30 @@ export class QuizController {
 
     return { success: true, message: '퀴즈 상세 조회 성공', data };
   }
+
+  @Patch(':quizId')
+  @HttpCode(HttpStatus.OK)
+  async updateQuizHandler(
+    @Param('quizId') quizIdParam: string,
+    @Auth('profileId') parentProfileId: string,
+    @Body() body: UpdateQuizRequestDto,
+  ): Promise<BaseResponse<null>> {
+    // Path 파싱
+    const quizId = Number(quizIdParam);
+    if (!Number.isFinite(quizId) || quizId <= 0) {
+      // 컨벤션: 서비스에서 BadRequestException을 던지게 할 수도 있지만,
+      // 여기서도 빠르게 필터링 가능
+      throw new Error('VALIDATION_ERROR');
+    }
+
+    // 유스케이스 실행 (에러는 필터에서 공통 처리)
+    await this.updateQuiz.execute({
+      quizId,
+      parentProfileId,
+      patch: body ?? {},
+    });
+
+    return { success: true, message: '수정이 완료되었습니다!', data: null };
+  }
+
 }
