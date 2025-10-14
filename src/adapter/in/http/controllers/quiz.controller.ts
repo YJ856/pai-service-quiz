@@ -16,13 +16,20 @@ import type { CreateQuizRequestDto,
               BaseResponse, 
               NextPublishDateData,
               ParentsTodayQueryDto,
-              ParentsTodayResponseData } from 'pai-shared-types';
+              ParentsTodayResponseData,
+              ParentsCompletedQueryDto,
+              ParentsCompletedResponseData,
+              ParentsScheduledQueryDto,
+              ParentsScheduledResponseData,
+             } from 'pai-shared-types';
 
 import { QUIZ_TOKENS } from '../../../../quiz.token';
 
 import type { CreateQuizUseCase } from '../../../../application/port/in/create-quiz.usecase';
 import type { GetNextPublishDateUseCase } from '../../../../application/port/in/next-publish-date.usecase';
 import type { ListParentsTodayUseCase } from '../../../../application/port/in/list-parents-today.usecase';
+import type { ListParentsCompletedUseCase } from '../../../../application/port/in/list-parents-completed.usecase';
+import type { ListParentsScheduledUseCase } from '../../../../application/port/in/list-parents-scheduled.usecase';
 
 import { QuizMapper } from '../../../../mapper/quiz.mapper';
 import { NextPublishDateMapper } from '../../../../mapper/next-publish-date.mapper';
@@ -45,6 +52,12 @@ export class QuizController {
 
     @Inject(QUIZ_TOKENS.ListParentsTodayUseCase)
     private readonly listParentsToday: ListParentsTodayUseCase,
+
+    @Inject(QUIZ_TOKENS.ListParentsCompletedUseCase)
+    private readonly listParentsCompleted: ListParentsCompletedUseCase,
+
+    @Inject(QUIZ_TOKENS.ListParentsScheduledUseCase)
+    private readonly listParentsScheduled: ListParentsScheduledUseCase,
   ) {}
 
   @Get('next-publish-date')
@@ -102,6 +115,74 @@ export class QuizController {
     return {
       success: true,
       message: '오늘의 퀴즈 조회 성공',
+      data,
+    };
+  }
+
+  @Get('parents/completed')
+  @HttpCode(HttpStatus.OK)
+  async listParentsCompletedHandler(
+    @Auth('profileId') parentProfileId: string,
+    @Query() query: ParentsCompletedQueryDto,
+  ): Promise<BaseResponse<ParentsCompletedResponseData>> {
+    // limit 안전 파싱 + 클램프
+    const rawLimit = (query as any)?.limit;
+    let limit = 20; // 기본값
+    if (rawLimit !== undefined) {
+      const x = Number(rawLimit);
+      if (Number.isFinite(x)) {
+        limit = Math.max(1, Math.min(x, 50));
+      }
+    }
+
+    // 빈 문자열 커서는 null 처리
+    const cursor =
+      query?.cursor && String(query.cursor).trim() !== ''
+        ? String(query.cursor).trim()
+        : null;
+
+    const data = await this.listParentsCompleted.execute({
+      parentProfileId,
+      limit,
+      cursor,
+    });
+
+    return {
+      success: true,
+      message: '완료된 퀴즈 조회 성공',
+      data,
+    };
+  }
+
+  @Get('parents/scheduled')
+  @HttpCode(HttpStatus.OK)
+  async listParentsScheduledHandler(
+    @Auth('profileId') parentProfileId: string,
+    @Query() query: ParentsScheduledQueryDto,
+  ): Promise<BaseResponse<ParentsScheduledResponseData>> {
+    // limit 안전 파싱 + 클램프
+    const rawLimit = (query as any)?.limit;
+    let limit = 20;
+    if (rawLimit !== undefined) {
+      const x = Number(rawLimit);
+      if (Number.isFinite(x)) limit = Math.max(1, Math.min(x, 50));
+    }
+
+    // 빈 문자열 커서는 null 처리
+    const cursor =
+      query?.cursor && String(query.cursor).trim() !== ''
+        ? String(query.cursor).trim()
+        : null;
+
+    const data = await this.listParentsScheduled.execute({
+      parentProfileId,
+      limit,
+      cursor,
+    });
+
+    return {
+      success: true,
+      message: '예정된 퀴즈 조회 성공',
       data,
     };
   }

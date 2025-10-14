@@ -6,6 +6,10 @@ import type {
   QuizParentsQueryRepositoryPort,
   FindParentsTodayParams,
   FindParentsTodayResult,
+  FindParentsCompletedParams,
+  FindParentsCompletedResult,
+  FindParentsScheduledParams,
+  FindParentsScheduledResult,
 } from '../../../application/port/out/quiz-parents-query.repository.port';
 
 
@@ -98,6 +102,145 @@ export class QuizQueryAdapter implements QuizQueryPort, QuizParentsQueryReposito
     return { items, hasNext };
   }
 
+  async findParentsCompleted(params: FindParentsCompletedParams): Promise<FindParentsCompletedResult> {
+    const { parentProfileId, limit, after } = params;
+    const pid = toIntId(parentProfileId);
+
+    // 커서 조건 (정렬: publishDate DESC, id DESC)
+    //  - (publishDate < D) OR (publishDate == D AND id < Q)
+    const cursorWhere = after
+      ? {
+          OR: [
+            { publishDate: { lt: ymdToUtcDate(after.publishDateYmd) } },
+            {
+              AND: [
+                { publishDate: ymdToUtcDate(after.publishDateYmd) },
+                { id: { lt: after.quizId } },
+              ],
+            },
+          ],
+        }
+      : {};
+
+    const rows = await this.prisma.quiz.findMany({
+      where: {
+        parentProfileId: pid,
+        status: 'COMPLETED',
+        ...cursorWhere,
+      },
+      orderBy: [
+        { publishDate: 'desc' },
+        { id: 'desc' },
+      ],
+      take: limit + 1, // hasNext 판단용
+      select: {
+        id: true,
+        publishDate: true,
+        question: true,
+        answer: true,
+        reward: true,
+        parentProfileId: true,
+        // 자녀 결과(보상 포함)
+        assignments: {
+          select: {
+            childProfileId: true,
+            isSolved: true,
+            rewardGranted: true,
+          },
+        },
+      },
+    });
+
+    const hasNext = rows.length > limit;
+    const page = hasNext ? rows.slice(0, limit) : rows;
+
+    const items = page.map((q) => ({
+      quizId: q.id,
+      status: 'COMPLETED' as const,
+      publishDate: toYmdFromDate(q.publishDate), // 'yyyy-MM-dd'
+      question: q.question,
+      answer: q.answer,
+      reward: q.reward ?? undefined,
+
+      authorParentProfileId: q.parentProfileId,
+      authorParentName: '부모',                // ← 외부 user 서비스에서 보강 (서비스에서 merge)
+      authorParentAvatarMediaId: null,        // ← 외부 user 서비스에서 보강
+
+      children: (q.assignments ?? []).map((a) => ({
+        childProfileId: a.childProfileId,
+        childName: '',                        // ← 외부 user 서비스에서 보강
+        childAvatarMediaId: null,             // ← 외부 user 서비스에서 보강
+        isSolved: !!a.isSolved,
+        rewardGranted: !!a.rewardGranted,
+      })),
+    }));
+
+    return { items, hasNext };
+  }
+
+  async findParentsScheduled(params: FindParentsScheduledParams): Promise<FindParentsScheduledResult> {
+    const { parentProfileId, limit, after } = params;
+    const pid = toIntId(parentProfileId);
+
+    // 커서 조건 (정렬: publishDate ASC, id ASC)
+    //  - (publishDate > D) OR (publishDate == D AND id > Q)
+    const cursorWhere = after
+      ? {
+          OR: [
+            { publishDate: { gt: ymdToUtcDate(after.publishDateYmd) } },
+            {
+              AND: [
+                { publishDate: ymdToUtcDate(after.publishDateYmd) },
+                { id: { gt: after.quizId } },
+              ],
+            },
+          ],
+        }
+      : {};
+
+    const rows = await this.prisma.quiz.findMany({
+      where: {
+        parentProfileId: pid,
+        status: 'SCHEDULED',
+        ...cursorWhere,
+      },
+      orderBy: [
+        { publishDate: 'asc' },
+        { id: 'asc' },
+      ],
+      take: limit + 1, // hasNext 판단용
+      select: {
+        id: true,
+        publishDate: true,
+        question: true,
+        answer: true,
+        hint: true,
+        reward: true,
+        parentProfileId: true,
+      },
+    });
+
+    const hasNext = rows.length > limit;
+    const page = hasNext ? rows.slice(0, limit) : rows;
+
+    const items = page.map((q) => ({
+      quizId: q.id,
+      status: 'SCHEDULED' as const,
+      publishDate: toYmdFromDate(q.publishDate), // 'yyyy-MM-dd'
+      question: q.question,
+      answer: q.answer,
+      hint: q.hint ?? undefined,
+      reward: q.reward ?? undefined,
+
+      authorParentProfileId: q.parentProfileId,
+      authorParentName: '부모',                // 서비스에서 실제 프로필 정보로 보강
+      authorParentAvatarMediaId: null,        // 서비스에서 보강
+      isEditable: false,                       // 서비스에서 최종 계산(본인+SCHEDULED)으로 덮어씀
+    }));
+
+    return { items, hasNext };
+  }
+
 }
 
 /** ---- helpers ---- */
@@ -122,4 +265,10 @@ function utcDayRangeForYmd(ymd: string): { gte: Date; lt: Date } {
   const startUtcMs = Date.UTC(y, m - 1, d, 0, 0, 0);
   const endUtcMs = startUtcMs + 24 * 3600 * 1000;
   return { gte: new Date(startUtcMs), lt: new Date(endUtcMs) };
+}
+
+/** 'yyyy-MM-dd' → UTC 00:00 Date (Prisma @db.Date 비교용) */
+function ymdToUtcDate(ymd: string): Date {
+  const [y, m, d] = ymd.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
 }

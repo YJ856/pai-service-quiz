@@ -30,14 +30,14 @@ export class ParentGuard implements CanActivate {
 
     if (!userId) throw new UnauthorizedException('UNAUTHORIZED: sub(userId) missing');
     if (!profileId) throw new BadRequestException('VALIDATION_ERROR: profileId missing');
-    if (profileType !== 'PARENT') throw new ForbiddenException('FORBIDDEN: parent profile required');
+    if (profileType !== 'parent') throw new ForbiddenException('FORBIDDEN: parent profile required');
 
     // 4) 쓰기 쉽게 저장
     req.auth = {
         token,
         userId,
         profileId,
-        role: 'PARENT' as const,
+        role: 'parent' as const,
         claims,
     };
 

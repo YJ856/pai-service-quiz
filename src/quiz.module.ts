@@ -12,6 +12,8 @@ import { QUIZ_TOKENS } from './quiz.token';
 import { CreateQuizService } from './application/use-cases/create-quiz.service';
 import { GetNextPublishDateService } from './application/use-cases/next-publish-date.service';
 import { ListParentsTodayService } from './application/use-cases/list-parents-today.service';
+import { ListParentsCompletedService } from './application/use-cases/list-parents-completed.service';
+import { ListParentsScheduledService } from './application/use-cases/list-parents-scheduled.service';
 
 // Ports 구현체(Adapters)
 import { QuizRepositoryAdapter } from './adapter/out/persistence/quiz.repository.adapter';
@@ -40,15 +42,15 @@ import { NextPublishDateMapper } from './mapper/next-publish-date.mapper';
     // Port ↔ Adapter
     { provide: QUIZ_TOKENS.QuizRepositoryPort, useClass: QuizRepositoryAdapter },
     { provide: QUIZ_TOKENS.QuizQueryPort, useClass: QuizQueryAdapter },
-    
     { provide: QUIZ_TOKENS.QuizParentsQueryRepositoryPort, useExisting: QuizQueryAdapter },
-
     { provide: QUIZ_TOKENS.ProfileDirectoryPort, useClass: ProfileDirectoryHttpAdapter },
 
     // UseCase(계약) ↔ 구현
     { provide: QUIZ_TOKENS.CreateQuizUseCase, useClass: CreateQuizService },
     { provide: QUIZ_TOKENS.GetNextPublishDateUseCase, useClass: GetNextPublishDateService },
     { provide: QUIZ_TOKENS.ListParentsTodayUseCase, useClass: ListParentsTodayService },
+    { provide: QUIZ_TOKENS.ListParentsCompletedUseCase, useClass: ListParentsCompletedService },
+    { provide: QUIZ_TOKENS.ListParentsScheduledUseCase, useClass: ListParentsScheduledService },
     
   ],
   // exports: []  // 다른 모듈에서 이 토큰/서비스를 쓰게 하려면 여기에 내보내기
