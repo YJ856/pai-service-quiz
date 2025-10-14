@@ -1,4 +1,3 @@
-// src/adapter/in/http/controllers/quiz.controller.ts
 import {
   Body,
   Controller,
@@ -9,6 +8,7 @@ import {
   Get,
   UseGuards,
   Query,
+  Param,
 } from '@nestjs/common';
 
 import type { CreateQuizRequestDto, 
@@ -21,6 +21,7 @@ import type { CreateQuizRequestDto,
               ParentsCompletedResponseData,
               ParentsScheduledQueryDto,
               ParentsScheduledResponseData,
+              ParentsQuizDetailResponseData,
              } from 'pai-shared-types';
 
 import { QUIZ_TOKENS } from '../../../../quiz.token';
@@ -30,6 +31,7 @@ import type { GetNextPublishDateUseCase } from '../../../../application/port/in/
 import type { ListParentsTodayUseCase } from '../../../../application/port/in/list-parents-today.usecase';
 import type { ListParentsCompletedUseCase } from '../../../../application/port/in/list-parents-completed.usecase';
 import type { ListParentsScheduledUseCase } from '../../../../application/port/in/list-parents-scheduled.usecase';
+import type { GetParentsQuizDetailUseCase } from '../../../../application/port/in/get-parents-quiz-detail.usecase';
 
 import { QuizMapper } from '../../../../mapper/quiz.mapper';
 import { NextPublishDateMapper } from '../../../../mapper/next-publish-date.mapper';
@@ -58,6 +60,9 @@ export class QuizController {
 
     @Inject(QUIZ_TOKENS.ListParentsScheduledUseCase)
     private readonly listParentsScheduled: ListParentsScheduledUseCase,
+
+    @Inject(QUIZ_TOKENS.GetParentsQuizDetailUseCase)
+    private readonly getParentsQuizDetail: GetParentsQuizDetailUseCase,
   ) {}
 
   @Get('next-publish-date')
@@ -79,11 +84,7 @@ export class QuizController {
     const cmd = this.quizMapper.toCreateCommand(body, parentProfileId);
     const saved = await this.createQuiz.execute(cmd);
     const data = this.quizMapper.toCreateResponse(saved);
-    return {
-      success: true,
-      message: '퀴즈 생성 성공',
-      data,
-    };
+    return { success: true, message: '퀴즈 생성 성공', data };
   }
 
   @Get('parents/today')
@@ -112,11 +113,7 @@ export class QuizController {
       cursor,
     });
 
-    return {
-      success: true,
-      message: '오늘의 퀴즈 조회 성공',
-      data,
-    };
+    return { success: true, message: '오늘의 퀴즈 조회 성공', data };
   }
 
   @Get('parents/completed')
@@ -147,11 +144,7 @@ export class QuizController {
       cursor,
     });
 
-    return {
-      success: true,
-      message: '완료된 퀴즈 조회 성공',
-      data,
-    };
+    return { success: true, message: '완료된 퀴즈 조회 성공', data };
   }
 
   @Get('parents/scheduled')
@@ -180,10 +173,27 @@ export class QuizController {
       cursor,
     });
 
-    return {
-      success: true,
-      message: '예정된 퀴즈 조회 성공',
-      data,
-    };
+    return { success: true, message: '예정된 퀴즈 조회 성공', data };
+  }
+
+  @Get(':quizId')
+  @HttpCode(HttpStatus.OK)
+  async getParentsQuizDetailHandler(
+    @Param('quizId') quizIdParam: string,
+    @Auth('profileId') parentProfileId: string,
+  ): Promise<BaseResponse<ParentsQuizDetailResponseData>> {
+    // 숫자 파싱 + 검증 (잘못된 형식이면 400)
+    const quizId = Number(quizIdParam);
+    if (!Number.isFinite(quizId) || quizId <= 0) {
+      // 컨트롤러에서 에러 throw 대신, 일관된 메시지를 원하면 BadRequestException 던져도 OK
+      throw new Error('VALIDATION_ERROR');
+    }
+
+    const data = await this.getParentsQuizDetail.execute({
+      quizId,
+      parentProfileId,
+    });
+
+    return { success: true, message: '퀴즈 상세 조회 성공', data };
   }
 }

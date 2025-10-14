@@ -11,10 +11,14 @@ import type {
   FindParentsScheduledParams,
   FindParentsScheduledResult,
 } from '../../../application/port/out/quiz-parents-query.repository.port';
+import type { 
+  QuizDetailQueryRepositoryPort,
+  QuizDetailRow,
+} from '../../../application/port/out/quiz-detail-query.repository.port';
 
 
 @Injectable()
-export class QuizQueryAdapter implements QuizQueryPort, QuizParentsQueryRepositoryPort {
+export class QuizQueryAdapter implements QuizQueryPort, QuizParentsQueryRepositoryPort, QuizDetailQueryRepositoryPort {
   constructor(private readonly prisma: PrismaService) {}
 
   async findLastScheduledDateYmd(parentProfileId: string): Promise<string | null> {
@@ -241,6 +245,36 @@ export class QuizQueryAdapter implements QuizQueryPort, QuizParentsQueryReposito
     return { items, hasNext };
   }
 
+  async findById(quizId: number): Promise<QuizDetailRow | null> {
+    const row = await this.prisma.quiz.findUnique({
+      where: { id: quizId },
+      select: {
+        id: true,
+        question: true,
+        answer: true,
+        hint: true,
+        reward: true,
+        publishDate: true,    // @db.Date → Date
+        parentProfileId: true,
+        status: true,         // 'SCHEDULED' | 'TODAY' | 'COMPLETED'
+      },
+    });
+
+    if (!row) return null;
+
+    // Prisma 타입을 포트 타입(QuizDetailRow)으로 그대로 매핑
+    return {
+      id: row.id,
+      question: row.question,
+      answer: row.answer,
+      hint: row.hint ?? null,
+      reward: row.reward ?? null,
+      publishDate: row.publishDate,
+      parentProfileId: row.parentProfileId,
+      status: row.status as QuizDetailRow['status'],
+    };
+  }
+  
 }
 
 /** ---- helpers ---- */

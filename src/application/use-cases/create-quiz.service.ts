@@ -5,6 +5,7 @@ import { Inject, Injectable, BadRequestException } from '@nestjs/common';
 import type { CreateQuizUseCase } from '../port/in/create-quiz.usecase';
 import type { CreateQuizCommand } from '../command/create-quiz.command';
 import type { QuizRepositoryPort } from '../port/out/quiz.repository.port';
+import type { QuizQueryPort } from '../port/out/quiz.query.port';
 // 도메인/토큰/런타임 클래스는 일반 import
 import { Quiz } from '../../domain/model/quiz';
 import { QUIZ_TOKENS } from '../../quiz.token';
@@ -14,6 +15,8 @@ export class CreateQuizService implements CreateQuizUseCase {
   constructor(
     @Inject(QUIZ_TOKENS.QuizRepositoryPort)
     private readonly repo: QuizRepositoryPort,
+    @Inject(QUIZ_TOKENS.QuizQueryPort)
+    private readonly quizQuery: QuizQueryPort,
   ) {}
 
   async execute(cmd: CreateQuizCommand): Promise<Quiz> {
@@ -42,12 +45,26 @@ export class CreateQuizService implements CreateQuizUseCase {
     return this.repo.save(domain);
   }
 
-  /** 기본 출제일: 마지막 예약일이 있으면 +1, 없으면 today */
+  /**
+   * 기본 출제일 계산 (next-publish-date.service.ts와 동일한 로직)
+   * 규칙:
+   * 1) 예약(SCHEDULED) 중 가장 마지막 날짜 + 1일
+   * 2) 예약이 없으면 → 오늘 존재 여부 확인:
+   *    - 오늘이 비어있으면: 오늘
+   *    - 오늘 이미 있으면: 내일
+   */
   private async nextDefaultDateForFamily(
     parentProfileId: number | string,
   ): Promise<string> {
-    const last = await this.repo.findLastScheduledDateByFamily(parentProfileId);
-    return last ? plusOneYmd(last) : todayYmd();
+    // parentProfileId를 string으로 변환 (QuizQueryPort는 string을 받음)
+    const pid = String(parentProfileId);
+
+    const last = await this.quizQuery.findLastScheduledDateYmd(pid);
+    if (last) return plusOneYmd(last);
+
+    const today = todayYmd();
+    const hasToday = await this.quizQuery.existsAnyOnDate(pid, today);
+    return hasToday ? plusOneYmd(today) : today;
   }
 }
 
