@@ -25,6 +25,7 @@ import { QuizQueryAdapter } from './adapter/out/persistence/quiz.query.adapter';
 import { ProfileDirectoryHttpAdapter } from './adapter/out/user/profile-directory.http.adapter';
 import { QuizUpdateAdapter } from './adapter/out/persistence/quiz.update.adapter';
 import { QuizDeleteAdapter } from './adapter/out/persistence/quiz.delete.adapter';
+import { QuizStatusTransitionAdapter } from './adapter/out/persistence/quiz.status-transition.adapter';
 
 // Infra (Prisma)
 import { PrismaService } from './adapter/out/persistence/prisma/prisma.service';
@@ -57,6 +58,7 @@ import { QuizCron } from './adapter/in/scheduler/quiz.cron';
     { provide: QUIZ_TOKENS.ProfileDirectoryPort, useClass: ProfileDirectoryHttpAdapter },
     { provide: QUIZ_TOKENS.QuizUpdateRepositoryPort, useClass: QuizUpdateAdapter },
     { provide: QUIZ_TOKENS.QuizDeleteRepositoryPort, useClass: QuizDeleteAdapter },
+    { provide: QUIZ_TOKENS.QuizStatusTransitionPort, useClass: QuizStatusTransitionAdapter },
 
     // UseCase(계약) ↔ 구현
     { provide: QUIZ_TOKENS.CreateQuizUseCase, useClass: CreateQuizService },

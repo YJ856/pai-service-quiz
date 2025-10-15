@@ -5,6 +5,7 @@ export const QUIZ_TOKENS = {
     QuizDetailQueryRepositoryPort: Symbol('QuizDetailQueryRepositoryPort'),
     QuizUpdateRepositoryPort: Symbol('QuizUpdateRepositoryPort'),
     QuizDeleteRepositoryPort: Symbol('QuizDeleteRepositoryPort'),
+    QuizStatusTransitionPort: Symbol('QuizStatusTransitionPort'),
 
     CreateQuizUseCase: Symbol('CreateQuizUseCase'),
     GetNextPublishDateUseCase: Symbol('GetNextPublishDateUseCase'),
