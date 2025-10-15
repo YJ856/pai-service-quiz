@@ -1,47 +1,51 @@
-import { BadRequestException, CanActivate, ExecutionContext, Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { verifyAccessToken } from '../token.verifier';
 
-
 @Injectable()
-export class ParentGuard implements CanActivate {
+export class ChildGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // HTTP 요청 객체 가져오기
     const req = context.switchToHttp().getRequest() as any;
 
     // 1) Bearer 토큰 추출
     const authHeader = req.headers['authorization'] as string | undefined;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        throw new UnauthorizedException('UNAUTHORIZED: Bearer token required');
+      throw new UnauthorizedException('UNAUTHORIZED: Bearer token required');
     }
     const token = authHeader.slice('Bearer '.length).trim();
 
     // 2) 서명/만료 검증 + 클레임 추출
-    let claims;
+    let claims: any;
     try {
-        claims = await verifyAccessToken(token);
+      claims = await verifyAccessToken(token);
     } catch {
-        throw new UnauthorizedException('UNAUTHORIZED: invalid or expired token');
+      throw new UnauthorizedException('UNAUTHORIZED: invalid or expired token');
     }
 
     // 3) 필요한 클레임 확인
     const userId = claims.sub;
     const profileId = claims.profileId;
-    const profileType = String(claims.profileType || '');
+    const profileType = String(claims.profileType || '').toLowerCase();
 
     if (!userId) throw new UnauthorizedException('UNAUTHORIZED: sub(userId) missing');
     if (!profileId) throw new BadRequestException('VALIDATION_ERROR: profileId missing');
-    if (profileType !== 'parent') throw new ForbiddenException('FORBIDDEN: parent profile required');
+    if (profileType !== 'child') throw new ForbiddenException('FORBIDDEN: child profile required');
 
     // 4) 쓰기 쉽게 저장
     req.auth = {
-        token,
-        userId,
-        profileId,
-        role: 'parent' as const,
-        claims,
+      token,
+      userId,
+      profileId,
+      role: 'child' as const,
+      claims,
     };
 
     return true;
   }
 }
-

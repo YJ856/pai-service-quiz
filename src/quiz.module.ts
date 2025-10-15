@@ -18,6 +18,8 @@ import { TransitionQuizStatusService } from './application/use-cases/transition-
 import { GetParentsQuizDetailService } from './application/use-cases/get-parents-quiz-detail.service';
 import { UpdateQuizService } from './application/use-cases/update-quiz.service';
 import { DeleteQuizService } from './application/use-cases/delete-quiz.service';
+import { ListChildrenTodayService } from './application/use-cases/list-children-today.service';
+import { ListChildrenCompletedService } from './application/use-cases/list-children-completed.service';
 
 // Ports 구현체(Adapters)
 import { QuizRepositoryAdapter } from './adapter/out/persistence/quiz.repository.adapter';
@@ -36,6 +38,7 @@ import { QuizMapper } from './mapper/quiz.mapper';
 // Guard
 import { ParentGuard } from './adapter/in/http/auth/guards/parent.guard';
 import { NextPublishDateMapper } from './mapper/next-publish-date.mapper';
+import { ChildGuard } from './adapter/in/http/auth/guards/child.guard';
 
 // scheduler
 import { QuizCron } from './adapter/in/scheduler/quiz.cron';
@@ -48,6 +51,7 @@ import { QuizCron } from './adapter/in/scheduler/quiz.cron';
     PrismaService,
     QuizMapper,
     ParentGuard,
+    ChildGuard,
     NextPublishDateMapper,
     TransitionQuizStatusService,
     // Port ↔ Adapter
@@ -59,6 +63,7 @@ import { QuizCron } from './adapter/in/scheduler/quiz.cron';
     { provide: QUIZ_TOKENS.QuizUpdateRepositoryPort, useClass: QuizUpdateAdapter },
     { provide: QUIZ_TOKENS.QuizDeleteRepositoryPort, useClass: QuizDeleteAdapter },
     { provide: QUIZ_TOKENS.QuizStatusTransitionPort, useClass: QuizStatusTransitionAdapter },
+    { provide: QUIZ_TOKENS.QuizChildrenQueryRepositoryPort, useExisting: QuizQueryAdapter },
 
     // UseCase(계약) ↔ 구현
     { provide: QUIZ_TOKENS.CreateQuizUseCase, useClass: CreateQuizService },
@@ -69,6 +74,8 @@ import { QuizCron } from './adapter/in/scheduler/quiz.cron';
     { provide: QUIZ_TOKENS.GetParentsQuizDetailUseCase, useClass: GetParentsQuizDetailService },
     { provide: QUIZ_TOKENS.UpdateQuizUseCase, useClass: UpdateQuizService },
     { provide: QUIZ_TOKENS.DeleteQuizUseCase, useClass: DeleteQuizService },
+    { provide: QUIZ_TOKENS.ListChildrenTodayUseCase, useClass: ListChildrenTodayService },
+    { provide: QUIZ_TOKENS.ListChildrenCompletedUseCase, useClass: ListChildrenCompletedService },
 
     // 배치 + 크론
     TransitionQuizStatusService,

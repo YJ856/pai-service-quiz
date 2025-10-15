@@ -6,6 +6,7 @@ export const QUIZ_TOKENS = {
     QuizUpdateRepositoryPort: Symbol('QuizUpdateRepositoryPort'),
     QuizDeleteRepositoryPort: Symbol('QuizDeleteRepositoryPort'),
     QuizStatusTransitionPort: Symbol('QuizStatusTransitionPort'),
+    QuizChildrenQueryRepositoryPort: Symbol('QuizChildrenQueryRepositoryPort'),
 
     CreateQuizUseCase: Symbol('CreateQuizUseCase'),
     GetNextPublishDateUseCase: Symbol('GetNextPublishDateUseCase'),
@@ -15,6 +16,8 @@ export const QUIZ_TOKENS = {
     GetParentsQuizDetailUseCase: Symbol('GetParentsQuizDetailUseCase'),
     UpdateQuizUseCase: Symbol('UpdateQuizUseCase'),
     DeleteQuizUseCase: Symbol('DeleteQuizUseCase'),
+    ListChildrenTodayUseCase: Symbol('ListChildrenTodayUseCase'),
+    ListChildrenCompletedUseCase: Symbol('ListChildrenCompletedUseCase'),
 
     // 외부 User 서비스 포트(프로필 디렉터리)
     ProfileDirectoryPort: Symbol('ProfileDirectoryPort'),

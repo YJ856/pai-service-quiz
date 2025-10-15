@@ -27,6 +27,10 @@ import type { CreateQuizRequestDto,
               UpdateQuizRequestDto,
               UpdateQuizResponseData,
               DeleteQuizResponseData,
+              ChildrenTodayQueryDto,
+              ChildrenTodayResponseData,
+              ChildrenCompletedQueryDto,
+              ChildrenCompletedResponseData,
              } from 'pai-shared-types';
 
 import { QUIZ_TOKENS } from '../../../../quiz.token';
@@ -39,15 +43,19 @@ import type { ListParentsScheduledUseCase } from '../../../../application/port/i
 import type { GetParentsQuizDetailUseCase } from '../../../../application/port/in/get-parents-quiz-detail.usecase';
 import type { UpdateQuizUseCase } from '../../../../application/port/in/update-quiz.usecase';
 import type { DeleteQuizUseCase } from '../../../../application/port/in/delete-quiz.usecase';
+import type { ListChildrenTodayUseCase } from '../../../../application/port/in/list-children-today.usecase';
+import type { ListChildrenCompletedUseCase } from '../../../../application/port/in/list-children-completed.usecase';
+
 
 import { QuizMapper } from '../../../../mapper/quiz.mapper';
 import { NextPublishDateMapper } from '../../../../mapper/next-publish-date.mapper';
 
 import { ParentGuard } from '../auth/guards/parent.guard';
+import { ChildGuard } from '../auth/guards/child.guard';
 import { Auth } from '../decorators/auth.decorator';
 
 
-@UseGuards(ParentGuard) 
+
 @Controller('api/quiz') // 이 컨트롤러의 모든 핸들러는 parentGuard를 반드시 통과해야 함
 export class QuizController {
   constructor(
@@ -76,8 +84,15 @@ export class QuizController {
 
     @Inject(QUIZ_TOKENS.DeleteQuizUseCase)
     private readonly deleteQuiz: DeleteQuizUseCase,
+
+    @Inject(QUIZ_TOKENS.ListChildrenTodayUseCase)
+    private readonly listChildrenToday: ListChildrenTodayUseCase,
+
+    @Inject(QUIZ_TOKENS.ListChildrenCompletedUseCase)
+    private readonly listChildrenCompleted: ListChildrenCompletedUseCase,
   ) {}
 
+  @UseGuards(ParentGuard) 
   @Get('next-publish-date')
   @HttpCode(HttpStatus.OK)
   async getNextPublishDateHandler(
@@ -88,6 +103,7 @@ export class QuizController {
     return { success: true, message: '기본 출제일 조회 성공', data };
   }
 
+  @UseGuards(ParentGuard) 
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(
@@ -100,6 +116,7 @@ export class QuizController {
     return { success: true, message: '퀴즈 생성 성공', data };
   }
 
+  @UseGuards(ParentGuard) 
   @Get('parents/today')
   @HttpCode(HttpStatus.OK)
   async listParentsTodayHandler(
@@ -129,6 +146,7 @@ export class QuizController {
     return { success: true, message: '오늘의 퀴즈 조회 성공', data };
   }
 
+  @UseGuards(ParentGuard) 
   @Get('parents/completed')
   @HttpCode(HttpStatus.OK)
   async listParentsCompletedHandler(
@@ -160,6 +178,7 @@ export class QuizController {
     return { success: true, message: '완료된 퀴즈 조회 성공', data };
   }
 
+  @UseGuards(ParentGuard) 
   @Get('parents/scheduled')
   @HttpCode(HttpStatus.OK)
   async listParentsScheduledHandler(
@@ -189,6 +208,7 @@ export class QuizController {
     return { success: true, message: '예정된 퀴즈 조회 성공', data };
   }
 
+  @UseGuards(ParentGuard) 
   @Get(':quizId')
   @HttpCode(HttpStatus.OK)
   async getParentsQuizDetailHandler(
@@ -210,6 +230,7 @@ export class QuizController {
     return { success: true, message: '퀴즈 상세 조회 성공', data };
   }
 
+  @UseGuards(ParentGuard) 
   @Patch(':quizId')
   @HttpCode(HttpStatus.OK)
   async updateQuizHandler(
@@ -237,6 +258,7 @@ export class QuizController {
     return { success: true, message: '수정이 완료되었습니다!', data };
   }
 
+  @UseGuards(ParentGuard) 
   @Delete(':quizId')
   @HttpCode(HttpStatus.OK)
   async deleteQuizHandler(
@@ -260,4 +282,65 @@ export class QuizController {
 
     return { success: true, message: '삭제가 완료되었습니다!', data };
   }
+
+  @UseGuards(ChildGuard)
+  @Get('children/today')
+  @HttpCode(HttpStatus.OK)
+  async listChildrenTodayHandler(
+    @Auth('profileId') childProfileId: string,
+    @Query() query: ChildrenTodayQueryDto,
+  ): Promise<BaseResponse<ChildrenTodayResponseData>> {
+    // limit 안전 파싱 + 클램프(기본 20, 1..50)
+    const rawLimit = (query as any)?.limit;
+    let limit = 20;
+    if (rawLimit !== undefined) {
+      const x = Number(rawLimit);
+      if (Number.isFinite(x)) limit = Math.max(1, Math.min(x, 50));
+    }
+
+    // 빈 문자열 커서는 null 처리
+    const cursor =
+      query?.cursor && String(query.cursor).trim() !== ''
+        ? String(query.cursor).trim()
+        : null;
+
+    const data = await this.listChildrenToday.execute({
+      childProfileId,
+      limit,
+      cursor,
+    });
+
+    return { success: true, message: '자녀용 오늘의 퀴즈 조회 성공', data };
+  }
+
+  @UseGuards(ChildGuard)
+  @Get('children/completed')
+  @HttpCode(HttpStatus.OK)
+  async listChildrenCompletedHandler(
+    @Auth('profileId') childProfileId: string,
+    @Query() query: ChildrenCompletedQueryDto,
+  ): Promise<BaseResponse<ChildrenCompletedResponseData>> {
+    // limit 안전 파싱 + 클램프(기본 20, 1..50)
+    const rawLimit = (query as any)?.limit;
+    let limit = 20;
+    if (rawLimit !== undefined) {
+      const x = Number(rawLimit);
+      if (Number.isFinite(x)) limit = Math.max(1, Math.min(x, 50));
+    }
+
+    // 빈 문자열 커서는 null 처리 (Base64("yyyy-MM-dd|quizId"))
+    const cursor =
+      query?.cursor && String(query.cursor).trim() !== ''
+        ? String(query.cursor).trim()
+        : null;
+
+    const data = await this.listChildrenCompleted.execute({
+      childProfileId,
+      limit,
+      cursor,
+    });
+
+    return { success: true, message: '자녀용 완료된 퀴즈 조회 성공', data };
+  }
+
 }

@@ -11,6 +11,16 @@ import type {
   FindParentsScheduledParams,
   FindParentsScheduledResult,
 } from '../../../application/port/out/quiz-parents-query.repository.port';
+
+import type {
+  QuizChildrenQueryRepositoryPort,
+  FindChildrenTodayParams,
+  FindChildrenTodayResult,
+  FindChildrenCompletedParams,
+  FindChildrenCompletedResult,
+} from '../../../application/port/out/quiz-children-query.repository.port';
+
+
 import type {
   QuizDetailQueryRepositoryPort,
   QuizDetailRow,
@@ -19,7 +29,7 @@ import { toYmdFromDate, ymdToUtcDate, utcDayRangeForYmd,  } from '../../../utils
 import { toIntId } from '../../../utils/id.util';
 
 @Injectable()
-export class QuizQueryAdapter implements QuizQueryPort, QuizParentsQueryRepositoryPort, QuizDetailQueryRepositoryPort {
+export class QuizQueryAdapter implements QuizQueryPort, QuizParentsQueryRepositoryPort, QuizDetailQueryRepositoryPort, QuizChildrenQueryRepositoryPort {
   constructor(private readonly prisma: PrismaService) {}
 
   async findLastScheduledDateYmd(parentProfileId: string): Promise<string | null> {
@@ -275,6 +285,137 @@ export class QuizQueryAdapter implements QuizQueryPort, QuizParentsQueryReposito
       status: row.status as QuizDetailRow['status'],
     };
   }
-  
+
+    /**
+   * 자녀용 오늘의 퀴즈
+   * - todayYmd: 'yyyy-MM-dd' (KST 기준) → utcDayRangeForYmd 로 UTC 경계 변환
+   * - 정렬: id ASC
+   * - 커서: id > afterQuizId
+   * - 대상 자녀에게 배정된(assignments.some) TODAY만 조회
+   */
+  async findChildrenToday(params: FindChildrenTodayParams): Promise<FindChildrenTodayResult> {
+    const { childProfileId, todayYmd, limit, afterQuizId } = params;
+    const cid = toIntId(childProfileId);
+    const { gte, lt } = utcDayRangeForYmd(todayYmd);
+
+    const rows = await this.prisma.quiz.findMany({
+      where: {
+        status: 'TODAY',
+        publishDate: { gte, lt },
+        assignments: {
+          some: { childProfileId: cid },
+        },
+        ...(afterQuizId ? { id: { gt: afterQuizId } } : {}),
+      },
+      orderBy: { id: 'asc' },
+      take: limit + 1, // hasNext 판단용
+      select: {
+        id: true,
+        status: true,                   // 'TODAY'
+        question: true,
+        hint: true,
+        reward: true,
+        parentProfileId: true,          // authorParentProfileId 로 매핑
+        // author 이름/아바타는 외부 user 서비스에서 보강 전 기본값만 내려도 OK
+        assignments: {
+          where: { childProfileId: cid },
+          select: { isSolved: true },
+        },
+      },
+    });
+
+    const hasNext = rows.length > limit;
+    const page = hasNext ? rows.slice(0, limit) : rows;
+
+    // ChildrenTodayItemDto 로 매핑
+    const items = page.map((q) => ({
+      quizId: q.id,
+      status: 'TODAY' as const,
+      question: q.question,
+      hint: q.hint ?? undefined,
+      // 보상 노출 정책은 UseCase에서 isSolved 기준으로 필터링 예정이므로 원본 유지
+      reward: q.reward ?? undefined,
+
+      authorParentProfileId: q.parentProfileId,
+      authorParentName: '부모',            // 서비스에서 실제 프로필 정보 보강 가능
+      authorParentAvatarMediaId: null,    // 서비스에서 보강 가능
+
+      isSolved: !!q.assignments[0]?.isSolved,
+    }));
+
+    return { items, hasNext };
+  }
+
+    /**
+   * 자녀용 완료된 퀴즈
+   * - 정렬: publishDate DESC, id DESC
+   * - 커서: (publishDate < D) OR (publishDate == D AND id < Q)
+   * - 결과: 해당 자녀가 '푼'(isSolved=true) 퀴즈만
+   */
+  async findChildrenCompleted(params: FindChildrenCompletedParams): Promise<FindChildrenCompletedResult> {
+    const { childProfileId, limit, after } = params;
+    const cid = toIntId(childProfileId);
+
+    // 커서 조건 (부모용 completed와 동일한 규칙)
+    //  - (publishDate < D) OR (publishDate == D AND id < Q)
+    const cursorWhere = after
+      ? {
+          OR: [
+            { publishDate: { lt: ymdToUtcDate(after.publishDateYmd) } },
+            {
+              AND: [
+                { publishDate: ymdToUtcDate(after.publishDateYmd) },
+                { id: { lt: after.quizId } },
+              ],
+            },
+          ],
+        }
+      : {};
+
+    const rows = await this.prisma.quiz.findMany({
+      where: {
+        status: 'COMPLETED',
+        assignments: {
+          some: {
+            childProfileId: cid,
+            isSolved: true, // ✅ 본인이 푼 것만
+          },
+        },
+        ...cursorWhere,
+      },
+      orderBy: [
+        { publishDate: 'desc' },
+        { id: 'desc' },
+      ],
+      take: limit + 1, // hasNext 판단용
+      select: {
+        id: true,
+        publishDate: true,
+        question: true,
+        answer: true,
+        reward: true,
+        parentProfileId: true,
+      },
+    });
+
+    const hasNext = rows.length > limit;
+    const page = hasNext ? rows.slice(0, limit) : rows;
+
+    const items = page.map((q) => ({
+      quizId: q.id,
+      status: 'COMPLETED' as const,
+      publishDate: toYmdFromDate(q.publishDate), // 'yyyy-MM-dd' (KST 기준 문자열로 변환 유틸 재사용)
+      question: q.question,
+      answer: q.answer,
+      reward: q.reward ?? undefined,
+
+      authorParentProfileId: q.parentProfileId,
+      authorParentName: '부모',             // 필요 시 서비스 레이어에서 실제 이름으로 보강
+      authorParentAvatarMediaId: null,      // 필요 시 서비스 레이어에서 보강
+    }));
+
+    return { items, hasNext };
+  }
+
 }
 
