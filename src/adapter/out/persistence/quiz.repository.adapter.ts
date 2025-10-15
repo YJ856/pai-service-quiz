@@ -2,20 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from './prisma/prisma.service';
 import { Quiz } from '../../../domain/model/quiz';
 import type { QuizRepositoryPort } from '../../../application/port/out/quiz.repository.port';
-
-/** yyyy-MM-dd → Date(UTC 00:00) */
-function ymdToUtcDate(ymd: string): Date {
-  const [y, m, d] = ymd.split('-').map(Number);
-  return new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
-}
-
-/** Date(UTC) → yyyy-MM-dd */
-function utcDateToYmd(dt: Date): string {
-  const y = dt.getUTCFullYear();
-  const m = String(dt.getUTCMonth() + 1).padStart(2, '0');
-  const d = String(dt.getUTCDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
+import { ymdToUtcDate, utcDateToYmd } from '../../../utils/date.util';
 
 @Injectable()
 export class QuizRepositoryAdapter implements QuizRepositoryPort {

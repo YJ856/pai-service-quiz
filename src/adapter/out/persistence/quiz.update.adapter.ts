@@ -17,10 +17,10 @@ export class QuizUpdateAdapter implements QuizUpdateRepositoryPort {
    */
   async updateIfScheduledAndAuthor(params: {
     quizId: number;
-    authorParentProfileId: number;
+    ParentProfileId: number;
     patch: QuizUpdateRepoPatch;
   }): Promise<number> {
-    const { quizId, authorParentProfileId, patch } = params;
+    const { quizId, ParentProfileId, patch } = params;
 
     // Prisma updateMany의 data: undefined는 “변경 없음”, null은 “null로 세팅”
     const data: Record<string, any> = {};
@@ -34,11 +34,7 @@ export class QuizUpdateAdapter implements QuizUpdateRepositoryPort {
     if (Object.keys(data).length === 0) return 0;
 
     const result = await this.prisma.quiz.updateMany({
-      where: {
-        id: quizId,
-        parentProfileId: authorParentProfileId,
-        status: 'SCHEDULED', // DB가 최종적으로 상태 조건 보장
-      },
+      where: { id: quizId, parentProfileId: ParentProfileId, status: 'SCHEDULED' },
       data,
     });
 

@@ -9,6 +9,7 @@ import type { QuizQueryPort } from '../port/out/quiz.query.port';
 // 도메인/토큰/런타임 클래스는 일반 import
 import { Quiz } from '../../domain/model/quiz';
 import { QUIZ_TOKENS } from '../../quiz.token';
+import { todayYmd, plusOneYmd } from '../../utils/date.util';
 
 @Injectable()
 export class CreateQuizService implements CreateQuizUseCase {
@@ -66,31 +67,4 @@ export class CreateQuizService implements CreateQuizUseCase {
     const hasToday = await this.quizQuery.existsAnyOnDate(pid, today);
     return hasToday ? plusOneYmd(today) : today;
   }
-}
-
-/* ========= 날짜 헬퍼(문자열 yyyy-MM-dd 기준) ========= */
-
-/** BUSINESS_TZ(기본 Asia/Seoul) 기준 '오늘'을 yyyy-MM-dd로 */
-function todayYmd(): string {
-  const tz = process.env.BUSINESS_TZ || 'Asia/Seoul';
-  // Intl로 타임존 기준 연-월-일을 안전하게 추출
-  const fmt = new Intl.DateTimeFormat('en-CA', { // en-CA => YYYY-MM-DD 형식
-    timeZone: tz,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-  // @ts-ignore: en-CA는 'YYYY-MM-DD'로 반환
-  return fmt.format(new Date()); // 예: "2025-10-12"
-}
-
-/** yyyy-MM-dd +1일 → yyyy-MM-dd */
-function plusOneYmd(ymd: string): string {
-  const [y, m, d] = ymd.split('-').map(Number);
-  const dt = new Date(Date.UTC(y, m - 1, d));
-  dt.setUTCDate(dt.getUTCDate() + 1);
-  const yy = dt.getUTCFullYear();
-  const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
-  const dd = String(dt.getUTCDate()).padStart(2, '0');
-  return `${yy}-${mm}-${dd}`;
 }

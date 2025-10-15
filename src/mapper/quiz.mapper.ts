@@ -1,7 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import type { CreateQuizRequestDto, CreateQuizResponseData } from 'pai-shared-types';
-import { CreateQuizCommand } from '../application/command/create-quiz.command';
+import type {
+    CreateQuizRequestDto,
+    CreateQuizResponseData,
+    UpdateQuizRequestDto,
+    UpdateQuizResponseData,
+    DeleteQuizResponseData,
+} from 'pai-shared-types';
+import type { CreateQuizCommand } from '../application/command/create-quiz.command';
+import type { UpdateQuizCommand } from '../application/command/update-quiz.command';
+import type { DeleteQuizCommand } from '../application/command/delete-quiz.command';
 import type { Quiz } from '../domain/model/quiz';
+import { toYmdOrUndefined, toYmdFromDate } from '../utils/date.util';
 
 /**
  * DTO(shared-type) <-> Command <-> Domain 변환 담당
@@ -13,35 +22,65 @@ import type { Quiz } from '../domain/model/quiz';
 export class QuizMapper {
     toCreateCommand(req: CreateQuizRequestDto, parentProfileId: string): CreateQuizCommand {
         const norm = (v: unknown) => (v == null ? null : String(v).trim());
-        
+
         // 유효성 검사 후 문자열(yyyy-MM-dd) 그대로 사용
         const ymd = toYmdOrUndefined(req.publishDate ?? undefined);
 
-        return new CreateQuizCommand(
-            String(req.question ?? '').trim(),
-            String(req.answer ?? '').trim(),
-            norm(req.hint),
-            norm(req.reward), 
-            parentProfileId, 
-            ymd,
-        );
+        return {
+            question: String(req.question ?? '').trim(),
+            answer: String(req.answer ?? '').trim(),
+            hint: norm(req.hint),
+            reward: norm(req.reward),
+            authorParentProfileId: parentProfileId,
+            publishDate: ymd,
+        };
     }
 
     toCreateResponse(saved: Quiz): CreateQuizResponseData {
         return { quizId: (saved as any).id as number };
     }
-}
 
-/** 내부 헬퍼(필요 시 별도 util로 분리 가능) */
+    toUpdateCommand(
+        req: UpdateQuizRequestDto,
+        quizId: number,
+        parentProfileId: string,
+    ): UpdateQuizCommand {
+        return {
+            quizId,
+            parentProfileId,
+            question: req.question !== undefined ? String(req.question).trim() : undefined,
+            answer: req.answer !== undefined ? String(req.answer).trim() : undefined,
+            hint: req.hint !== undefined ? (req.hint === null ? null : String(req.hint).trim()) : undefined,
+            reward: req.reward !== undefined ? (req.reward === null ? null : String(req.reward).trim()) : undefined,
+            publishDate: req.publishDate,
+        };
+    }
 
-/** 'yyyy-MM-dd' 형식 유효성만 체크. 유효하면 원문 문자열, 아니면 undefined */
-function toYmdOrUndefined(ymd?: string | null): string | undefined {
-    if (!ymd) return undefined;
-    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd);
-    if (!m) return undefined;
-    const y = +m[1], mo = +m[2], d = +m[3];
-    // 달력 유효성 체크 (예: 2025-02-31 방지)
-    const dt = new Date(Date.UTC(y, mo - 1, d));
-    const ok = dt.getUTCFullYear() === y && dt.getUTCMonth() === mo - 1 && dt.getUTCDate() === d;
-    return ok ? ymd : undefined;
+    toUpdateResponse(quiz: any): UpdateQuizResponseData {
+        return {
+            quizId: quiz.id,
+            question: quiz.question,
+            answer: quiz.answer,
+            hint: quiz.hint ?? undefined,
+            reward: quiz.reward ?? undefined,
+            publishDate: toYmdFromDate(quiz.publishDate),
+            isEditable: quiz.status === 'SCHEDULED',
+        };
+    }
+
+    toDeleteCommand(
+        quizId: number,
+        parentProfileId: string,
+    ): DeleteQuizCommand {
+        return {
+            quizId,
+            parentProfileId: Number(parentProfileId),
+        };
+    }
+
+    toDeleteResponse(quizId: number): DeleteQuizResponseData {
+        return {
+            quizId,
+        };
+    }
 }

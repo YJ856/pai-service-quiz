@@ -17,12 +17,14 @@ import { ListParentsScheduledService } from './application/use-cases/list-parent
 import { TransitionQuizStatusService } from './application/use-cases/transition-quiz-status.service';
 import { GetParentsQuizDetailService } from './application/use-cases/get-parents-quiz-detail.service';
 import { UpdateQuizService } from './application/use-cases/update-quiz.service';
+import { DeleteQuizService } from './application/use-cases/delete-quiz.service';
 
 // Ports 구현체(Adapters)
 import { QuizRepositoryAdapter } from './adapter/out/persistence/quiz.repository.adapter';
 import { QuizQueryAdapter } from './adapter/out/persistence/quiz.query.adapter';
 import { ProfileDirectoryHttpAdapter } from './adapter/out/user/profile-directory.http.adapter';
 import { QuizUpdateAdapter } from './adapter/out/persistence/quiz.update.adapter';
+import { QuizDeleteAdapter } from './adapter/out/persistence/quiz.delete.adapter';
 
 // Infra (Prisma)
 import { PrismaService } from './adapter/out/persistence/prisma/prisma.service';
@@ -54,6 +56,7 @@ import { QuizCron } from './adapter/in/scheduler/quiz.cron';
     { provide: QUIZ_TOKENS.QuizDetailQueryRepositoryPort, useExisting: QuizQueryAdapter },
     { provide: QUIZ_TOKENS.ProfileDirectoryPort, useClass: ProfileDirectoryHttpAdapter },
     { provide: QUIZ_TOKENS.QuizUpdateRepositoryPort, useClass: QuizUpdateAdapter },
+    { provide: QUIZ_TOKENS.QuizDeleteRepositoryPort, useClass: QuizDeleteAdapter },
 
     // UseCase(계약) ↔ 구현
     { provide: QUIZ_TOKENS.CreateQuizUseCase, useClass: CreateQuizService },
@@ -63,6 +66,7 @@ import { QuizCron } from './adapter/in/scheduler/quiz.cron';
     { provide: QUIZ_TOKENS.ListParentsScheduledUseCase, useClass: ListParentsScheduledService },
     { provide: QUIZ_TOKENS.GetParentsQuizDetailUseCase, useClass: GetParentsQuizDetailService },
     { provide: QUIZ_TOKENS.UpdateQuizUseCase, useClass: UpdateQuizService },
+    { provide: QUIZ_TOKENS.DeleteQuizUseCase, useClass: DeleteQuizService },
 
     // 배치 + 크론
     TransitionQuizStatusService,

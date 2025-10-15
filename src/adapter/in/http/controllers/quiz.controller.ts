@@ -10,11 +10,12 @@ import {
   Query,
   Param,
   Patch,
+  Delete,
 } from '@nestjs/common';
 
-import type { CreateQuizRequestDto, 
-              CreateQuizResponseData, 
-              BaseResponse, 
+import type { CreateQuizRequestDto,
+              CreateQuizResponseData,
+              BaseResponse,
               NextPublishDateData,
               ParentsTodayQueryDto,
               ParentsTodayResponseData,
@@ -24,6 +25,8 @@ import type { CreateQuizRequestDto,
               ParentsScheduledResponseData,
               ParentsQuizDetailResponseData,
               UpdateQuizRequestDto,
+              UpdateQuizResponseData,
+              DeleteQuizResponseData,
              } from 'pai-shared-types';
 
 import { QUIZ_TOKENS } from '../../../../quiz.token';
@@ -35,6 +38,7 @@ import type { ListParentsCompletedUseCase } from '../../../../application/port/i
 import type { ListParentsScheduledUseCase } from '../../../../application/port/in/list-parents-scheduled.usecase';
 import type { GetParentsQuizDetailUseCase } from '../../../../application/port/in/get-parents-quiz-detail.usecase';
 import type { UpdateQuizUseCase } from '../../../../application/port/in/update-quiz.usecase';
+import type { DeleteQuizUseCase } from '../../../../application/port/in/delete-quiz.usecase';
 
 import { QuizMapper } from '../../../../mapper/quiz.mapper';
 import { NextPublishDateMapper } from '../../../../mapper/next-publish-date.mapper';
@@ -69,6 +73,9 @@ export class QuizController {
 
     @Inject(QUIZ_TOKENS.UpdateQuizUseCase)
     private readonly updateQuiz: UpdateQuizUseCase,
+
+    @Inject(QUIZ_TOKENS.DeleteQuizUseCase)
+    private readonly deleteQuiz: DeleteQuizUseCase,
   ) {}
 
   @Get('next-publish-date')
@@ -209,7 +216,7 @@ export class QuizController {
     @Param('quizId') quizIdParam: string,
     @Auth('profileId') parentProfileId: string,
     @Body() body: UpdateQuizRequestDto,
-  ): Promise<BaseResponse<null>> {
+  ): Promise<BaseResponse<UpdateQuizResponseData>> {
     // Path 파싱
     const quizId = Number(quizIdParam);
     if (!Number.isFinite(quizId) || quizId <= 0) {
@@ -218,14 +225,39 @@ export class QuizController {
       throw new Error('VALIDATION_ERROR');
     }
 
-    // 유스케이스 실행 (에러는 필터에서 공통 처리)
-    await this.updateQuiz.execute({
-      quizId,
-      parentProfileId,
-      patch: body ?? {},
-    });
+    // DTO를 Command로 변환
+    const cmd = this.quizMapper.toUpdateCommand(body ?? {}, quizId, parentProfileId);
 
-    return { success: true, message: '수정이 완료되었습니다!', data: null };
+    // 유스케이스 실행 (에러는 필터에서 공통 처리)
+    const updatedQuiz = await this.updateQuiz.execute(cmd);
+
+    // 수정된 퀴즈를 Response DTO로 변환
+    const data = this.quizMapper.toUpdateResponse(updatedQuiz);
+
+    return { success: true, message: '수정이 완료되었습니다!', data };
   }
 
+  @Delete(':quizId')
+  @HttpCode(HttpStatus.OK)
+  async deleteQuizHandler(
+    @Param('quizId') quizIdParam: string,
+    @Auth('profileId') parentProfileId: string,
+  ): Promise<BaseResponse<DeleteQuizResponseData>> {
+    // Path 파싱
+    const quizId = Number(quizIdParam);
+    if (!Number.isFinite(quizId) || quizId <= 0) {
+      throw new Error('VALIDATION_ERROR');
+    }
+
+    // DTO를 Command로 변환
+    const cmd = this.quizMapper.toDeleteCommand(quizId, parentProfileId);
+
+    // 유스케이스 실행 (에러는 필터에서 공통 처리)
+    await this.deleteQuiz.execute(cmd);
+
+    // 응답 DTO 생성
+    const data = this.quizMapper.toDeleteResponse(quizId);
+
+    return { success: true, message: '삭제가 완료되었습니다!', data };
+  }
 }

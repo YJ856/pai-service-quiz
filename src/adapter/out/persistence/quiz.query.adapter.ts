@@ -11,11 +11,12 @@ import type {
   FindParentsScheduledParams,
   FindParentsScheduledResult,
 } from '../../../application/port/out/quiz-parents-query.repository.port';
-import type { 
+import type {
   QuizDetailQueryRepositoryPort,
   QuizDetailRow,
 } from '../../../application/port/out/quiz-detail-query.repository.port';
-
+import { toYmdFromDate, ymdToUtcDate, utcDayRangeForYmd,  } from '../../../utils/date.util';
+import { toIntId } from '../../../utils/id.util';
 
 @Injectable()
 export class QuizQueryAdapter implements QuizQueryPort, QuizParentsQueryRepositoryPort, QuizDetailQueryRepositoryPort {
@@ -277,32 +278,3 @@ export class QuizQueryAdapter implements QuizQueryPort, QuizParentsQueryReposito
   
 }
 
-/** ---- helpers ---- */
-function toIntId(id: string | number): number {
-  const n = typeof id === 'string' ? Number(id) : id;
-  if (!Number.isFinite(n)) throw new Error('Invalid parentProfileId');
-  return n;
-}
-
-/** Date(UTC 기준) → 'yyyy-MM-dd' (KST 의미 아님, date-only 그대로 포맷) */
-function toYmdFromDate(dt: Date): string {
-  // @db.Date는 시간 없는 DATE 타입이라 UTC 00:00로 들어옴
-  const y = dt.getUTCFullYear();
-  const m = String(dt.getUTCMonth() + 1).padStart(2, '0');
-  const d = String(dt.getUTCDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-/** 'yyyy-MM-dd' → 해당 날짜의 UTC 경계 (gte/lt) */
-function utcDayRangeForYmd(ymd: string): { gte: Date; lt: Date } {
-  const [y, m, d] = ymd.split('-').map(Number);
-  const startUtcMs = Date.UTC(y, m - 1, d, 0, 0, 0);
-  const endUtcMs = startUtcMs + 24 * 3600 * 1000;
-  return { gte: new Date(startUtcMs), lt: new Date(endUtcMs) };
-}
-
-/** 'yyyy-MM-dd' → UTC 00:00 Date (Prisma @db.Date 비교용) */
-function ymdToUtcDate(ymd: string): Date {
-  const [y, m, d] = ymd.split('-').map(Number);
-  return new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
-}

@@ -26,7 +26,7 @@ export interface QuizUpdateRepositoryPort {
    */
   updateIfScheduledAndAuthor(params: {
     quizId: number;
-    authorParentProfileId: number;
+    ParentProfileId: number;
     patch: QuizUpdateRepoPatch;
   }): Promise<number>;
 }
