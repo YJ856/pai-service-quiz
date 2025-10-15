@@ -17,6 +17,9 @@ import type {
   QuizChildrenAnswerRepositoryPort,
 } from '../port/out/quiz-children-answer.repository.port';
 
+// Utils
+import { getTodayYmdKST } from '../../utils/date.util';
+
 @Injectable()
 export class AnswerQuizService implements AnswerQuizUseCase {
   constructor(
@@ -44,7 +47,7 @@ export class AnswerQuizService implements AnswerQuizUseCase {
       throw new BadRequestException('VALIDATION_ERROR: answer cannot be empty');
     }
 
-    const todayYmd = this.getTodayYmdKST();
+    const todayYmd = getTodayYmdKST();
 
     // 1) 제출 대상 조회 (본인 배정 + 오늘(TODAY) + 오늘 날짜)
     const target = await this.repo.findAnswerTarget({
@@ -96,17 +99,6 @@ export class AnswerQuizService implements AnswerQuizUseCase {
   }
 
   // ===== Helpers =====
-
-  /** Asia/Seoul yyyy-MM-dd */
-  private getTodayYmdKST(): string {
-    const now = new Date();
-    const kstMs = now.getTime() + 9 * 60 * 60 * 1000;
-    const kst = new Date(kstMs);
-    const y = kst.getUTCFullYear();
-    const m = String(kst.getUTCMonth() + 1).padStart(2, '0');
-    const d = String(kst.getUTCDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  }
 
   /** 채점: 기본 완전 일치, normalize=true면 간단 정규화 후 비교 */
   private checkAnswer(input: string, correct: string, normalize: boolean): boolean {

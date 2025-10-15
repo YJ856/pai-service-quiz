@@ -17,6 +17,16 @@ import type {
   ChildProfileSummary,
 } from '../port/out/profile-directory.port';
 
+// Utils
+import { getTodayYmdKST } from '../../utils/date.util';
+import { clampLimit } from '../../utils/pagination.util';
+import { decodeIdCursor, encodeIdCursor } from '../../utils/cursor.util';
+import {
+  getParentProfileSafe,
+  getChildProfilesSafe,
+  collectChildProfileIds,
+} from '../../utils/profile.util';
+
 @Injectable()
 export class ListParentsTodayService implements ListParentsTodayUseCase {
   constructor(
@@ -35,10 +45,9 @@ export class ListParentsTodayService implements ListParentsTodayUseCase {
    */
   async execute(params: ListParentsTodayQuery): Promise<ParentsTodayResponseData> {
     const { parentProfileId } = params;
-    const limit = this.clampLimit(params.limit);
-    const afterQuizId = this.decodeCursorToAfterId(params.cursor);
-
-    const todayYmd = this.getTodayYmdKST();
+    const limit = clampLimit(params.limit);
+    const afterQuizId = decodeIdCursor(params.cursor);
+    const todayYmd = getTodayYmdKST();
 
     // 1) DB에서 기본 목록
     const { items, hasNext } = await this.repo.findParentsToday({
@@ -50,15 +59,15 @@ export class ListParentsTodayService implements ListParentsTodayUseCase {
 
     // 2) 프로필 정보 배치 조회
     const [parent, childMap] = await Promise.all([
-      this.getParentSafe(Number(parentProfileId)),
-      this.getChildrenSafe(this.collectChildIds(items)),
+      getParentProfileSafe(this.profiles, Number(parentProfileId)),
+      getChildProfilesSafe(this.profiles, collectChildProfileIds(items)),
     ]);
 
     // 3) 응답에 프로필 정보 합치기
     const merged = this.enrichWithProfiles(items, parent, childMap);
 
     const nextCursor = hasNext
-      ? this.encodeAfterIdToCursor(items[items.length - 1].quizId)
+      ? encodeIdCursor(items[items.length - 1].quizId)
       : null;
 
     return {
@@ -69,73 +78,6 @@ export class ListParentsTodayService implements ListParentsTodayUseCase {
   }
 
   // ============== Helpers ==============
-
-  private clampLimit(n: number): number {
-    if (n < 1) return 1;
-    if (n > 50) return 50;
-    return n;
-  }
-
-  /** Base64("123") → 123  */
-  private decodeCursorToAfterId(cursor: string | null): number | null {
-    if (!cursor) return null;
-    try {
-      const decoded = Buffer.from(cursor, 'base64').toString('utf8');
-      const raw = this.safeJsonParse(decoded);
-      const s = typeof raw === 'string' ? raw : decoded;
-      const id = Number(String(s).trim());
-      return Number.isFinite(id) && id > 0 ? id : null;
-    } catch {
-      return null;
-    }
-  }
-
-  /** 123 → Base64("\"123\"") */
-  private encodeAfterIdToCursor(id: number): string {
-    const payload = JSON.stringify(String(id));
-    return Buffer.from(payload, 'utf8').toString('base64');
-  }
-
-  private safeJsonParse(input: string): unknown {
-    try {
-      return JSON.parse(input);
-    } catch {
-      return input;
-    }
-  }
-
-  /** Asia/Seoul yyyy-MM-dd */
-  private getTodayYmdKST(): string {
-    const now = new Date();
-    const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
-    const y = kst.getUTCFullYear();
-    const m = String(kst.getUTCMonth() + 1).padStart(2, '0');
-    const d = String(kst.getUTCDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  }
-
-  private collectChildIds(items: ParentsTodayItemDto[]): number[] {
-    const set = new Set<number>();
-    for (const it of items) for (const c of it.children) set.add(c.childProfileId);
-    return Array.from(set);
-  }
-
-  private async getParentSafe(id: number): Promise<ParentProfileSummary | null> {
-    try {
-      if (!Number.isFinite(id)) return null;
-      return await this.profiles.getParentProfile(id);
-    } catch {
-      return null;
-    }
-  }
-
-  private async getChildrenSafe(ids: number[]): Promise<Record<number, ChildProfileSummary>> {
-    try {
-      return await this.profiles.getChildProfiles(ids);
-    } catch {
-      return {};
-    }
-  }
 
   /** DB rows + 외부 프로필을 합쳐 최종 DTO로 */
   private enrichWithProfiles(

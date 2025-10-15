@@ -111,3 +111,18 @@ export function utcDayRangeForYmd(ymd: string): { gte: Date; lt: Date } {
   const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
   return { gte: start, lt: end };
 }
+
+/**
+ * Asia/Seoul(KST) 기준 오늘 날짜를 'yyyy-MM-dd' 형식으로 반환
+ * - UTC+9 타임존 기준 계산
+ * @returns 'yyyy-MM-dd' 형식의 오늘 날짜 (KST)
+ */
+export function getTodayYmdKST(): string {
+  const now = new Date();
+  const kstMs = now.getTime() + 9 * 60 * 60 * 1000; // UTC+9
+  const kst = new Date(kstMs);
+  const y = kst.getUTCFullYear();
+  const m = String(kst.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(kst.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}

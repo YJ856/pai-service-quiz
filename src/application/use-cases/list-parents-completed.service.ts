@@ -21,6 +21,15 @@ import type {
   ChildProfileSummary,
 } from '../port/out/profile-directory.port';
 
+// Utils
+import { clampLimit } from '../../utils/pagination.util';
+import { decodeCompositeCursor, encodeCompositeCursor } from '../../utils/cursor.util';
+import {
+  getParentProfileSafe,
+  getChildProfilesSafe,
+  collectChildProfileIds,
+} from '../../utils/profile.util';
+
 @Injectable()
 export class ListParentsCompletedService implements ListParentsCompletedUseCase {
   constructor(
@@ -38,8 +47,8 @@ export class ListParentsCompletedService implements ListParentsCompletedUseCase 
    */
   async execute(params: ListParentsCompletedQuery): Promise<ParentsCompletedResponseData> {
     const { parentProfileId } = params;
-    const limit = this.clampLimit(params.limit);
-    const after = this.decodeCursor(params.cursor); // { publishDateYmd, quizId } | null
+    const limit = clampLimit(params.limit);
+    const after = decodeCompositeCursor(params.cursor);
 
     // 1) DB 조회
     const findParams: FindParentsCompletedParams = {
@@ -51,8 +60,8 @@ export class ListParentsCompletedService implements ListParentsCompletedUseCase 
 
     // 2) 프로필 정보 배치 조회
     const [parent, childMap] = await Promise.all([
-      this.getParentSafe(Number(parentProfileId)),
-      this.getChildrenSafe(this.collectChildIds(items)),
+      getParentProfileSafe(this.profiles, Number(parentProfileId)),
+      getChildProfilesSafe(this.profiles, collectChildProfileIds(items)),
     ]);
 
     // 3) 프로필 정보 합치기
@@ -62,7 +71,7 @@ export class ListParentsCompletedService implements ListParentsCompletedUseCase 
     const tail = merged.length ? merged[merged.length - 1] : null;
     const nextCursor =
       hasNext && tail
-        ? this.encodeCursor(tail.publishDate, tail.quizId)
+        ? encodeCompositeCursor(tail.publishDate, tail.quizId)
         : null;
 
     return {
@@ -73,71 +82,6 @@ export class ListParentsCompletedService implements ListParentsCompletedUseCase 
   }
 
   // ============== Helpers ==============
-
-  private clampLimit(n: number): number {
-    if (n < 1) return 1;
-    if (n > 50) return 50;
-    return n;
-  }
-
-  /** "Base64(\"yyyy-MM-dd|quizId\")" → { publishDateYmd, quizId } | null */
-  private decodeCursor(cursor: string | null): { publishDateYmd: string; quizId: number } | null {
-    if (!cursor) return null;
-    try {
-      const decoded = Buffer.from(cursor, 'base64').toString('utf8');
-      const raw = this.safeJsonParse(decoded); // "\"2025-10-03|101\"" → "2025-10-03|101"
-      const s = typeof raw === 'string' ? raw : decoded;
-      const [ymd, idStr] = String(s).split('|');
-      const id = Number(idStr);
-      if (!this.isValidYmd(ymd) || !Number.isFinite(id)) return null;
-      return { publishDateYmd: ymd, quizId: id };
-    } catch {
-      return null;
-    }
-  }
-
-  /** { ymd, id } → Base64("\"yyyy-MM-dd|quizId\"") */
-  private encodeCursor(publishDateYmd: string, quizId: number): string {
-    const payload = JSON.stringify(`${publishDateYmd}|${quizId}`);
-    return Buffer.from(payload, 'utf8').toString('base64');
-  }
-
-  private safeJsonParse(input: string): unknown {
-    try {
-      return JSON.parse(input);
-    } catch {
-      return input;
-    }
-  }
-
-  private isValidYmd(ymd: string): boolean {
-    return /^\d{4}-\d{2}-\d{2}$/.test(ymd);
-  }
-
-  private collectChildIds(items: ParentsCompletedItemDto[]): number[] {
-    const set = new Set<number>();
-    for (const it of items) {
-      for (const c of it.children) set.add(c.childProfileId);
-    }
-    return Array.from(set);
-  }
-
-  private async getParentSafe(id: number): Promise<ParentProfileSummary | null> {
-    try {
-      if (!Number.isFinite(id)) return null;
-      return await this.profiles.getParentProfile(id);
-    } catch {
-      return null;
-    }
-  }
-
-  private async getChildrenSafe(ids: number[]): Promise<Record<number, ChildProfileSummary>> {
-    try {
-      return await this.profiles.getChildProfiles(ids);
-    } catch {
-      return {};
-    }
-  }
 
   /** DB rows + 외부 프로필을 합쳐 최종 DTO로 */
   private enrichWithProfiles(

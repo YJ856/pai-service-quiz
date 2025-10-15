@@ -13,6 +13,11 @@ import type {
 } from '../port/out/quiz-parents-query.repository.port';
 import type { ProfileDirectoryPort, ParentProfileSummary } from '../port/out/profile-directory.port';
 
+// Utils
+import { clampLimit } from '../../utils/pagination.util';
+import { decodeCompositeCursor, encodeCompositeCursor } from '../../utils/cursor.util';
+import { getParentProfileSafe } from '../../utils/profile.util';
+
 @Injectable()
 export class ListParentsScheduledService implements ListParentsScheduledUseCase {
   constructor(
@@ -29,8 +34,8 @@ export class ListParentsScheduledService implements ListParentsScheduledUseCase 
    */
   async execute(params: ListParentsScheduledQuery): Promise<ParentsScheduledResponseData> {
     const { parentProfileId } = params;
-    const limit = this.clampLimit(params.limit);
-    const after = this.decodeCursor(params.cursor); // { publishDateYmd, quizId } | null
+    const limit = clampLimit(params.limit);
+    const after = decodeCompositeCursor(params.cursor);
 
     // 1) DB 조회
     const findParams: FindParentsScheduledParams = {
@@ -41,12 +46,12 @@ export class ListParentsScheduledService implements ListParentsScheduledUseCase 
     const { items, hasNext } = await this.repo.findParentsScheduled(findParams);
 
     // 2) 부모 프로필(이름/아바타) 보강
-    const parent = await this.getParentSafe(Number(parentProfileId));
+    const parent = await getParentProfileSafe(this.profiles, Number(parentProfileId));
     const merged = this.enrichWithParent(items, parent, Number(parentProfileId));
 
     // 3) nextCursor (ASC 정렬이므로 페이지의 마지막 아이템 기준)
     const tail = merged.length ? merged[merged.length - 1] : null;
-    const nextCursor = hasNext && tail ? this.encodeCursor(tail.publishDate, tail.quizId) : null;
+    const nextCursor = hasNext && tail ? encodeCompositeCursor(tail.publishDate, tail.quizId) : null;
 
     return {
       items: merged,
@@ -56,55 +61,6 @@ export class ListParentsScheduledService implements ListParentsScheduledUseCase 
   }
 
   // ============== Helpers ==============
-
-  private clampLimit(n: number): number {
-    if (n < 1) return 1;
-    if (n > 50) return 50;
-    return n;
-  }
-
-  /** "Base64(\"yyyy-MM-dd|quizId\")" → { publishDateYmd, quizId } | null */
-  private decodeCursor(cursor: string | null): { publishDateYmd: string; quizId: number } | null {
-    if (!cursor) return null;
-    try {
-      const decoded = Buffer.from(cursor, 'base64').toString('utf8');
-      const raw = this.safeJsonParse(decoded); // "\"2025-10-07|123\"" → "2025-10-07|123"
-      const s = typeof raw === 'string' ? raw : decoded;
-      const [ymd, idStr] = String(s).split('|');
-      const id = Number(idStr);
-      if (!this.isValidYmd(ymd) || !Number.isFinite(id)) return null;
-      return { publishDateYmd: ymd, quizId: id };
-    } catch {
-      return null;
-    }
-  }
-
-  /** { ymd, id } → Base64("\"yyyy-MM-dd|quizId\"") */
-  private encodeCursor(publishDateYmd: string, quizId: number): string {
-    const payload = JSON.stringify(`${publishDateYmd}|${quizId}`);
-    return Buffer.from(payload, 'utf8').toString('base64');
-  }
-
-  private safeJsonParse(input: string): unknown {
-    try {
-      return JSON.parse(input);
-    } catch {
-      return input;
-    }
-  }
-
-  private isValidYmd(ymd: string): boolean {
-    return /^\d{4}-\d{2}-\d{2}$/.test(ymd);
-  }
-
-  private async getParentSafe(id: number): Promise<ParentProfileSummary | null> {
-    try {
-      if (!Number.isFinite(id)) return null;
-      return await this.profiles.getParentProfile(id);
-    } catch {
-      return null;
-    }
-  }
 
   private enrichWithParent(
     rows: ParentsScheduledItemDto[],

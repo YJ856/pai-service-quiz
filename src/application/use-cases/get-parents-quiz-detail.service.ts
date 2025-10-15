@@ -19,6 +19,9 @@ import type {
   QuizDetailQueryRepositoryPort,
 } from '../port/out/quiz-detail-query.repository.port';
 
+// Utils
+import { toYmdFromDate } from '../../utils/date.util';
+
 @Injectable()
 export class GetParentsQuizDetailService implements GetParentsQuizDetailUseCase {
   constructor(
@@ -34,7 +37,7 @@ export class GetParentsQuizDetailService implements GetParentsQuizDetailUseCase 
    */
   async execute(query: GetParentsQuizDetailQuery): Promise<ParentsQuizDetailResponseData> {
     const quizId = query.quizId;
-    const requesterPid = toInt(query.parentProfileId);
+    const requesterPid = this.toInt(query.parentProfileId);
 
     // 1) 단건 조회
     const row = await this.repo.findById(quizId);
@@ -61,20 +64,12 @@ export class GetParentsQuizDetailService implements GetParentsQuizDetailUseCase 
       isEditable: true, // 위에서 SCHEDULED & 본인 확인 통과
     };
   }
-}
 
-/** ===== helpers ===== */
+  // ============== Helpers ==============
 
-function toInt(input: string | number): number {
-  const n = typeof input === 'string' ? Number(input) : input;
-  if (!Number.isFinite(n)) throw new BadRequestException('VALIDATION_ERROR');
-  return n;
-}
-
-/** Date(UTC 기준) → 'yyyy-MM-dd' (Prisma @db.Date 안전 포맷) */
-function toYmdFromDate(dt: Date): string {
-  const y = dt.getUTCFullYear();
-  const m = String(dt.getUTCMonth() + 1).padStart(2, '0');
-  const d = String(dt.getUTCDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
+  private toInt(input: string | number): number {
+    const n = typeof input === 'string' ? Number(input) : input;
+    if (!Number.isFinite(n)) throw new BadRequestException('VALIDATION_ERROR');
+    return n;
+  }
 }
