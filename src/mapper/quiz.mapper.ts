@@ -5,10 +5,12 @@ import type {
     UpdateQuizRequestDto,
     UpdateQuizResponseData,
     DeleteQuizResponseData,
+    AnswerQuizRequestDto,
 } from 'pai-shared-types';
 import type { CreateQuizCommand } from '../application/command/create-quiz.command';
 import type { UpdateQuizCommand } from '../application/command/update-quiz.command';
 import type { DeleteQuizCommand } from '../application/command/delete-quiz.command';
+import type { AnswerQuizCommand } from '../application/port/in/answer-quiz.usecase';
 import type { Quiz } from '../domain/model/quiz';
 import { toYmdOrUndefined, toYmdFromDate } from '../utils/date.util';
 
@@ -81,6 +83,24 @@ export class QuizMapper {
     toDeleteResponse(quizId: number): DeleteQuizResponseData {
         return {
             quizId,
+        };
+    }
+
+    /**
+     * AnswerQuizRequestDto -> AnswerQuizCommand
+     * - answer: trim 처리하여 빈 문자열 방지
+     * - normalize: 기본값 false
+     */
+    toAnswerCommand(
+        req: AnswerQuizRequestDto,
+        quizId: number,
+        childProfileId: string,
+    ): AnswerQuizCommand {
+        return {
+            childProfileId,
+            quizId,
+            answer: String(req?.answer ?? '').trim(),
+            normalize: req?.normalize ?? false,
         };
     }
 }

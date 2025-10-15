@@ -20,6 +20,13 @@ import type {
   FindChildrenCompletedResult,
 } from '../../../application/port/out/quiz-children-query.repository.port';
 
+import type {
+  QuizChildrenAnswerRepositoryPort,
+  FindAnswerTargetParams,
+  AnswerTargetRow,
+  MarkSolvedParams,
+} from '../../../application/port/out/quiz-children-answer.repository.port';
+
 
 import type {
   QuizDetailQueryRepositoryPort,
@@ -29,7 +36,13 @@ import { toYmdFromDate, ymdToUtcDate, utcDayRangeForYmd,  } from '../../../utils
 import { toIntId } from '../../../utils/id.util';
 
 @Injectable()
-export class QuizQueryAdapter implements QuizQueryPort, QuizParentsQueryRepositoryPort, QuizDetailQueryRepositoryPort, QuizChildrenQueryRepositoryPort {
+export class QuizQueryAdapter 
+  implements 
+    QuizQueryPort, 
+    QuizParentsQueryRepositoryPort, 
+    QuizDetailQueryRepositoryPort, 
+    QuizChildrenQueryRepositoryPort, 
+    QuizChildrenAnswerRepositoryPort {
   constructor(private readonly prisma: PrismaService) {}
 
   async findLastScheduledDateYmd(parentProfileId: string): Promise<string | null> {
@@ -416,6 +429,72 @@ export class QuizQueryAdapter implements QuizQueryPort, QuizParentsQueryReposito
 
     return { items, hasNext };
   }
+
+    /**
+   * 정답 제출 대상 조회
+   * - 조건: 해당 자녀에게 배정 + status='TODAY' + publishDate=오늘(KST)
+   * - 없으면 null → 컨트롤러/유스케이스에서 404/403 처리
+   */
+  async findAnswerTarget(params: FindAnswerTargetParams): Promise<AnswerTargetRow | null> {
+    const { childProfileId, quizId, todayYmd } = params;
+    const cid = toIntId(childProfileId);
+    const { gte, lt } = utcDayRangeForYmd(todayYmd);
+
+    const row = await this.prisma.quiz.findFirst({
+      where: {
+        id: quizId,
+        status: 'TODAY',
+        publishDate: { gte, lt }, // @db.Date 기준 UTC 경계
+        assignments: {
+          some: { childProfileId: cid }, // 본인에게 배정된 퀴즈만
+        },
+      },
+      select: {
+        id: true,
+        status: true,
+        publishDate: true,
+        answer: true,
+        reward: true,
+        parentProfileId: true,
+        // 자녀 자신의 완료 여부만 조회
+        assignments: {
+          where: { childProfileId: cid },
+          select: { isSolved: true },
+          take: 1,
+        },
+      },
+    });
+
+    if (!row) return null;
+
+    return {
+      quizId: row.id,
+      status: row.status as AnswerTargetRow['status'],
+      publishDateYmd: toYmdFromDate(row.publishDate), // 'yyyy-MM-dd'
+      answer: row.answer,
+      reward: row.reward ?? null,
+      isSolved: !!row.assignments?.[0]?.isSolved,
+      authorParentProfileId: row.parentProfileId,
+      authorParentName: null,          // 프로필 보강이 필요하면 서비스 레이어에서 채움
+      authorParentAvatarMediaId: null, // 프로필 보강이 필요하면 서비스 레이어에서 채움
+    };
+  }
+
+  async markSolved(params: MarkSolvedParams): Promise<void> {
+    const { childProfileId, quizId } = params;
+    const cid = toIntId(childProfileId);
+
+    // Prisma 모델명: Assignment (delegate: prisma.assignment)
+    await this.prisma.assignment.upsert({
+      where: {
+        // @@unique([quizId, childProfileId]) 를 활용한 복합 고유 upsert
+        quizId_childProfileId: { quizId, childProfileId: cid },
+      },
+      update: { isSolved: true },
+      create: { quizId, childProfileId: cid, isSolved: true },
+    });
+  }
+
 
 }
 

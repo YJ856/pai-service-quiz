@@ -31,6 +31,8 @@ import type { CreateQuizRequestDto,
               ChildrenTodayResponseData,
               ChildrenCompletedQueryDto,
               ChildrenCompletedResponseData,
+              AnswerQuizRequestDto,
+              AnswerQuizResponseData,
              } from 'pai-shared-types';
 
 import { QUIZ_TOKENS } from '../../../../quiz.token';
@@ -45,7 +47,7 @@ import type { UpdateQuizUseCase } from '../../../../application/port/in/update-q
 import type { DeleteQuizUseCase } from '../../../../application/port/in/delete-quiz.usecase';
 import type { ListChildrenTodayUseCase } from '../../../../application/port/in/list-children-today.usecase';
 import type { ListChildrenCompletedUseCase } from '../../../../application/port/in/list-children-completed.usecase';
-
+import type { AnswerQuizUseCase } from '../../../../application/port/in/answer-quiz.usecase';
 
 import { QuizMapper } from '../../../../mapper/quiz.mapper';
 import { NextPublishDateMapper } from '../../../../mapper/next-publish-date.mapper';
@@ -90,6 +92,9 @@ export class QuizController {
 
     @Inject(QUIZ_TOKENS.ListChildrenCompletedUseCase)
     private readonly listChildrenCompleted: ListChildrenCompletedUseCase,
+
+    @Inject(QUIZ_TOKENS.AnswerQuizUseCase)
+    private readonly answerQuiz: AnswerQuizUseCase,
   ) {}
 
   @UseGuards(ParentGuard) 
@@ -341,6 +346,24 @@ export class QuizController {
     });
 
     return { success: true, message: '자녀용 완료된 퀴즈 조회 성공', data };
+  }
+
+  @UseGuards(ChildGuard)
+  @Post('children/:quizId/answer')
+  @HttpCode(HttpStatus.OK)
+  async answerQuizHandler(
+    @Auth('profileId') childProfileId: string,
+    @Param('quizId') quizIdParam: string,
+    @Body() body: AnswerQuizRequestDto,
+  ): Promise<BaseResponse<AnswerQuizResponseData>> {
+    // quizId 파싱 (검증은 Service 레이어에서 수행)
+    const quizId = Number(quizIdParam);
+
+    // Mapper를 통해 DTO -> Command 변환
+    const cmd = this.quizMapper.toAnswerCommand(body, quizId, childProfileId);
+    const data = await this.answerQuiz.execute(cmd);
+
+    return { success: true, message: '정답 제출 완료', data };
   }
 
 }
