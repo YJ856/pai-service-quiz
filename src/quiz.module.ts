@@ -3,7 +3,8 @@ import { HttpModule } from '@nestjs/axios';
 import { ScheduleModule } from '@nestjs/schedule';
 
 // Controllers
-import { QuizController } from './adapter/in/http/controllers/quiz.controller';
+import { ParentsQuizController } from './adapter/in/http/controllers/parents.quiz.controller';
+import { ChildrenQuizController } from './adapter/in/http/controllers/children.quiz.controller';
 
 // Tokens
 import { QUIZ_TOKENS } from './quiz.token';
@@ -26,8 +27,6 @@ import { AnswerQuizService } from './application/use-cases/answer-quiz.service';
 import { QuizRepositoryAdapter } from './adapter/out/persistence/quiz.repository.adapter';
 import { QuizQueryAdapter } from './adapter/out/persistence/quiz.query.adapter';
 import { ProfileDirectoryHttpAdapter } from './adapter/out/user/profile-directory.http.adapter';
-import { QuizUpdateAdapter } from './adapter/out/persistence/quiz.update.adapter';
-import { QuizDeleteAdapter } from './adapter/out/persistence/quiz.delete.adapter';
 import { QuizStatusTransitionAdapter } from './adapter/out/persistence/quiz.status-transition.adapter';
 
 // Infra (Prisma)
@@ -47,7 +46,7 @@ import { QuizCron } from './adapter/in/scheduler/quiz.cron';
 
 @Module({
   imports: [HttpModule, ScheduleModule.forRoot()],
-  controllers: [QuizController],
+  controllers: [ParentsQuizController, ChildrenQuizController],
   providers: [
     PrismaService,
     QuizMapper,
@@ -57,12 +56,12 @@ import { QuizCron } from './adapter/in/scheduler/quiz.cron';
     TransitionQuizStatusService,
     // Port ↔ Adapter
     { provide: QUIZ_TOKENS.QuizRepositoryPort, useClass: QuizRepositoryAdapter },
+    { provide: QUIZ_TOKENS.QuizUpdateRepositoryPort, useExisting: QUIZ_TOKENS.QuizRepositoryPort },
+    { provide: QUIZ_TOKENS.QuizDeleteRepositoryPort, useExisting: QUIZ_TOKENS.QuizRepositoryPort },
     { provide: QUIZ_TOKENS.QuizQueryPort, useClass: QuizQueryAdapter },
     { provide: QUIZ_TOKENS.QuizParentsQueryRepositoryPort, useExisting: QuizQueryAdapter },
     { provide: QUIZ_TOKENS.QuizDetailQueryRepositoryPort, useExisting: QuizQueryAdapter },
     { provide: QUIZ_TOKENS.ProfileDirectoryPort, useClass: ProfileDirectoryHttpAdapter },
-    { provide: QUIZ_TOKENS.QuizUpdateRepositoryPort, useClass: QuizUpdateAdapter },
-    { provide: QUIZ_TOKENS.QuizDeleteRepositoryPort, useClass: QuizDeleteAdapter },
     { provide: QUIZ_TOKENS.QuizStatusTransitionPort, useClass: QuizStatusTransitionAdapter },
     { provide: QUIZ_TOKENS.QuizChildrenQueryRepositoryPort, useExisting: QuizQueryAdapter },
     { provide: QUIZ_TOKENS.QuizChildrenAnswerRepositoryPort, useExisting: QuizQueryAdapter },
