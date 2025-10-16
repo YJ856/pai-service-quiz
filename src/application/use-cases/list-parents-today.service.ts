@@ -10,7 +10,7 @@ import type {
 } from '../port/in/list-parents-today.usecase';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
-import type { QuizParentsQueryRepositoryPort } from '../port/out/quiz-parents-query.repository.port';
+import type { QuizQueryPort } from '../port/out/quiz.query.port';
 import type {
   ProfileDirectoryPort,
   ParentProfileSummary,
@@ -30,8 +30,8 @@ import {
 @Injectable()
 export class ListParentsTodayService implements ListParentsTodayUseCase {
   constructor(
-    @Inject(QUIZ_TOKENS.QuizParentsQueryRepositoryPort)
-    private readonly repo: QuizParentsQueryRepositoryPort,
+    @Inject(QUIZ_TOKENS.QuizQueryPort)
+    private readonly repo: QuizQueryPort,
 
     // 외부 User 서비스 포트 주입
     @Inject(QUIZ_TOKENS.ProfileDirectoryPort)

@@ -14,8 +14,11 @@ import type {
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type {
-  QuizChildrenAnswerRepositoryPort,
-} from '../port/out/quiz-children-answer.repository.port';
+  QuizQueryPort,
+} from '../port/out/quiz.query.port';
+import type {
+  QuizCommandPort,
+} from '../port/out/quiz.command.port';
 
 // Utils
 import { getTodayYmdKST } from '../../utils/date.util';
@@ -23,8 +26,10 @@ import { getTodayYmdKST } from '../../utils/date.util';
 @Injectable()
 export class AnswerQuizService implements AnswerQuizUseCase {
   constructor(
-    @Inject(QUIZ_TOKENS.QuizChildrenAnswerRepositoryPort)
-    private readonly repo: QuizChildrenAnswerRepositoryPort,
+    @Inject(QUIZ_TOKENS.QuizQueryPort)
+    private readonly queryRepo: QuizQueryPort,
+    @Inject(QUIZ_TOKENS.QuizCommandPort)
+    private readonly commandRepo: QuizCommandPort,
   ) {}
 
   /**
@@ -50,7 +55,7 @@ export class AnswerQuizService implements AnswerQuizUseCase {
     const todayYmd = getTodayYmdKST();
 
     // 1) 제출 대상 조회 (본인 배정 + 오늘(TODAY) + 오늘 날짜)
-    const target = await this.repo.findAnswerTarget({
+    const target = await this.queryRepo.findAnswerTarget({
       childProfileId,
       quizId: cmd.quizId,
       todayYmd,
@@ -76,7 +81,7 @@ export class AnswerQuizService implements AnswerQuizUseCase {
 
     // 4) 저장 (정답이면서 아직 미해결인 경우에만)
     if (isCorrect && !target.isSolved) {
-      await this.repo.markSolved({
+      await this.commandRepo.markSolved({
         childProfileId,
         quizId: cmd.quizId,
       });
@@ -85,11 +90,17 @@ export class AnswerQuizService implements AnswerQuizUseCase {
     // 5) 응답 - 단순화
     // - 정답: isSolved=true, reward 반환
     // - 오답: isSolved=false, reward 없음
-    return {
+    const response: AnswerQuizResponseData = {
       quizId: cmd.quizId,
       isSolved: isCorrect,
-      reward: isCorrect ? (target.reward ?? undefined) : undefined,
     };
+
+    // 정답인 경우에만 reward 포함
+    if (isCorrect && target.reward) {
+      response.reward = target.reward;
+    }
+
+    return response;
   }
 
   // ===== Helpers =====

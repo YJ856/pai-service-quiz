@@ -4,7 +4,7 @@ import { Inject, Injectable, BadRequestException } from '@nestjs/common';
 // Port-In(인터페이스)는 타입 전용 import
 import type { CreateQuizUseCase } from '../port/in/create-quiz.usecase';
 import type { CreateQuizCommand } from '../command/create-quiz.command';
-import type { QuizRepositoryPort } from '../port/out/quiz.repository.port';
+import type { QuizCommandPort } from '../port/out/quiz.command.port';
 import type { QuizQueryPort } from '../port/out/quiz.query.port';
 // 도메인/토큰/런타임 클래스는 일반 import
 import { Quiz } from '../../domain/model/quiz';
@@ -14,8 +14,8 @@ import { todayYmd, plusOneYmd } from '../../utils/date.util';
 @Injectable()
 export class CreateQuizService implements CreateQuizUseCase {
   constructor(
-    @Inject(QUIZ_TOKENS.QuizRepositoryPort)
-    private readonly repo: QuizRepositoryPort,
+    @Inject(QUIZ_TOKENS.QuizCommandPort)
+    private readonly repo: QuizCommandPort,
     @Inject(QUIZ_TOKENS.QuizQueryPort)
     private readonly quizQuery: QuizQueryPort,
   ) {}

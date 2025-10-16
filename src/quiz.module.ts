@@ -55,16 +55,10 @@ import { QuizCron } from './adapter/in/scheduler/quiz.cron';
     NextPublishDateMapper,
     TransitionQuizStatusService,
     // Port ↔ Adapter
-    { provide: QUIZ_TOKENS.QuizRepositoryPort, useClass: QuizRepositoryAdapter },
-    { provide: QUIZ_TOKENS.QuizUpdateRepositoryPort, useExisting: QUIZ_TOKENS.QuizRepositoryPort },
-    { provide: QUIZ_TOKENS.QuizDeleteRepositoryPort, useExisting: QUIZ_TOKENS.QuizRepositoryPort },
     { provide: QUIZ_TOKENS.QuizQueryPort, useClass: QuizQueryAdapter },
-    { provide: QUIZ_TOKENS.QuizParentsQueryRepositoryPort, useExisting: QuizQueryAdapter },
-    { provide: QUIZ_TOKENS.QuizDetailQueryRepositoryPort, useExisting: QuizQueryAdapter },
+    { provide: QUIZ_TOKENS.QuizCommandPort, useClass: QuizRepositoryAdapter },
     { provide: QUIZ_TOKENS.ProfileDirectoryPort, useClass: ProfileDirectoryHttpAdapter },
     { provide: QUIZ_TOKENS.QuizStatusTransitionPort, useClass: QuizStatusTransitionAdapter },
-    { provide: QUIZ_TOKENS.QuizChildrenQueryRepositoryPort, useExisting: QuizQueryAdapter },
-    { provide: QUIZ_TOKENS.QuizChildrenAnswerRepositoryPort, useExisting: QuizQueryAdapter },
 
     // UseCase(계약) ↔ 구현
     { provide: QUIZ_TOKENS.CreateQuizUseCase, useClass: CreateQuizService },

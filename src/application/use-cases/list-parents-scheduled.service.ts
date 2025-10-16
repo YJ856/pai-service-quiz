@@ -8,9 +8,9 @@ import type {
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type {
-  QuizParentsQueryRepositoryPort,
+  QuizQueryPort,
   FindParentsScheduledParams,
-} from '../port/out/quiz-parents-query.repository.port';
+} from '../port/out/quiz.query.port';
 import type { ProfileDirectoryPort, ParentProfileSummary } from '../port/out/profile-directory.port';
 
 // Utils
@@ -21,8 +21,8 @@ import { getParentProfileSafe } from '../../utils/profile.util';
 @Injectable()
 export class ListParentsScheduledService implements ListParentsScheduledUseCase {
   constructor(
-    @Inject(QUIZ_TOKENS.QuizParentsQueryRepositoryPort)
-    private readonly repo: QuizParentsQueryRepositoryPort,
+    @Inject(QUIZ_TOKENS.QuizQueryPort)
+    private readonly repo: QuizQueryPort,
     @Inject(QUIZ_TOKENS.ProfileDirectoryPort)
     private readonly profiles: ProfileDirectoryPort,
   ) {}

@@ -11,9 +11,9 @@ import type {
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type {
-  QuizParentsQueryRepositoryPort,
+  QuizQueryPort,
   FindParentsCompletedParams,
-} from '../port/out/quiz-parents-query.repository.port';
+} from '../port/out/quiz.query.port';
 
 import type {
   ProfileDirectoryPort,
@@ -33,8 +33,8 @@ import {
 @Injectable()
 export class ListParentsCompletedService implements ListParentsCompletedUseCase {
   constructor(
-    @Inject(QUIZ_TOKENS.QuizParentsQueryRepositoryPort)
-    private readonly repo: QuizParentsQueryRepositoryPort,
+    @Inject(QUIZ_TOKENS.QuizQueryPort)
+    private readonly repo: QuizQueryPort,
 
     @Inject(QUIZ_TOKENS.ProfileDirectoryPort)
     private readonly profiles: ProfileDirectoryPort,

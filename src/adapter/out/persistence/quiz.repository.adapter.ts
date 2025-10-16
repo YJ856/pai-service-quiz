@@ -1,18 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from './prisma/prisma.service';
 import { Quiz } from '../../../domain/model/quiz';
-import type { QuizRepositoryPort } from '../../../application/port/out/quiz.repository.port';
 import type {
-  QuizUpdateRepositoryPort,
+  QuizCommandPort,
   QuizUpdateRepoPatch,
-} from '../../../application/port/out/quiz-update.repository.port';
-import type { QuizDeleteRepositoryPort } from '../../../application/port/out/quiz-delete.repository.port';
+  MarkSolvedParams,
+} from '../../../application/port/out/quiz.command.port';
 import { ymdToUtcDate, utcDateToYmd } from '../../../utils/date.util';
+import { toIntId } from '../../../utils/id.util';
 
 @Injectable()
-export class QuizRepositoryAdapter
-  implements QuizRepositoryPort, QuizUpdateRepositoryPort, QuizDeleteRepositoryPort
-{
+export class QuizRepositoryAdapter implements QuizCommandPort {
   constructor(private readonly prisma: PrismaService) {}
 
   /** 신규 퀴즈 저장: 도메인(문자열 날짜) → Prisma(Date) */
@@ -120,5 +118,22 @@ export class QuizRepositoryAdapter
     });
 
     return result.count ?? 0;
+  }
+
+  /**
+   * 정답 처리: 해당 자녀-퀴즈 assignment에 isSolved=true 저장
+   * - 이미 isSolved=true면 멱등 처리(에러 없이 그대로 유지)
+   */
+  async markSolved(params: MarkSolvedParams): Promise<void> {
+    const { childProfileId, quizId } = params;
+    const cid = toIntId(childProfileId);
+
+    await this.prisma.assignment.upsert({
+      where: {
+        quizId_childProfileId: { quizId, childProfileId: cid },
+      },
+      update: { isSolved: true },
+      create: { quizId, childProfileId: cid, isSolved: true },
+    });
   }
 }

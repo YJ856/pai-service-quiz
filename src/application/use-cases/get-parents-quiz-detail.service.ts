@@ -16,8 +16,8 @@ import type {
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type {
-  QuizDetailQueryRepositoryPort,
-} from '../port/out/quiz-detail-query.repository.port';
+  QuizQueryPort,
+} from '../port/out/quiz.query.port';
 
 // Utils
 import { toYmdFromDate } from '../../utils/date.util';
@@ -25,8 +25,8 @@ import { toYmdFromDate } from '../../utils/date.util';
 @Injectable()
 export class GetParentsQuizDetailService implements GetParentsQuizDetailUseCase {
   constructor(
-    @Inject(QUIZ_TOKENS.QuizDetailQueryRepositoryPort)
-    private readonly repo: QuizDetailQueryRepositoryPort,
+    @Inject(QUIZ_TOKENS.QuizQueryPort)
+    private readonly repo: QuizQueryPort,
   ) {}
 
   /**
@@ -40,7 +40,7 @@ export class GetParentsQuizDetailService implements GetParentsQuizDetailUseCase 
     const requesterPid = this.toInt(query.parentProfileId);
 
     // 1) 단건 조회
-    const row = await this.repo.findById(quizId);
+    const row = await this.repo.findDetailById(quizId);
     if (!row) throw new NotFoundException('QUIZ_NOT_FOUND');
 
     // 2) 권한 체크 (출제자 == 요청자)

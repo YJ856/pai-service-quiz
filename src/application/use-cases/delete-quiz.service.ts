@@ -10,16 +10,16 @@ import { QUIZ_TOKENS } from '../../quiz.token';
 
 import type { DeleteQuizCommand } from '../command/delete-quiz.command';
 import type { DeleteQuizUseCase } from '../port/in/delete-quiz.usecase';
-import type { QuizDetailQueryRepositoryPort } from '../port/out/quiz-detail-query.repository.port';
-import type { QuizDeleteRepositoryPort } from '../port/out/quiz-delete.repository.port';
+import type { QuizQueryPort } from '../port/out/quiz.query.port';
+import type { QuizCommandPort } from '../port/out/quiz.command.port';
 
 @Injectable()
 export class DeleteQuizService implements DeleteQuizUseCase {
   constructor(
-    @Inject(QUIZ_TOKENS.QuizDetailQueryRepositoryPort)
-    private readonly detailRepo: QuizDetailQueryRepositoryPort,
-    @Inject(QUIZ_TOKENS.QuizDeleteRepositoryPort)
-    private readonly deleteRepo: QuizDeleteRepositoryPort,
+    @Inject(QUIZ_TOKENS.QuizQueryPort)
+    private readonly detailRepo: QuizQueryPort,
+    @Inject(QUIZ_TOKENS.QuizCommandPort)
+    private readonly deleteRepo: QuizCommandPort,
   ) {}
 
   /**
@@ -31,7 +31,7 @@ export class DeleteQuizService implements DeleteQuizUseCase {
     const { quizId, parentProfileId } = cmd;
 
     // 1) 대상 조회
-    const quiz = await this.detailRepo.findById(quizId);
+    const quiz = await this.detailRepo.findDetailById(quizId);
     if (!quiz) throw new NotFoundException('QUIZ_NOT_FOUND');
 
     // 2) 권한 체크 (작성자 확인)

@@ -1,13 +1,8 @@
 export const QUIZ_TOKENS = {
-    QuizRepositoryPort: Symbol('QuizRepositoryPort'),
+    // 통합 포트
     QuizQueryPort: Symbol('QuizQueryPort'),
-    QuizParentsQueryRepositoryPort: Symbol('QuizParentsQueryRepositoryPort'),
-    QuizDetailQueryRepositoryPort: Symbol('QuizDetailQueryRepositoryPort'),
-    QuizUpdateRepositoryPort: Symbol('QuizUpdateRepositoryPort'),
-    QuizDeleteRepositoryPort: Symbol('QuizDeleteRepositoryPort'),
+    QuizCommandPort: Symbol('QuizCommandPort'),
     QuizStatusTransitionPort: Symbol('QuizStatusTransitionPort'),
-    QuizChildrenQueryRepositoryPort: Symbol('QuizChildrenQueryRepositoryPort'),
-    QuizChildrenAnswerRepositoryPort: Symbol('QuizChildrenAnswerRepositoryPort'),
 
     CreateQuizUseCase: Symbol('CreateQuizUseCase'),
     GetNextPublishDateUseCase: Symbol('GetNextPublishDateUseCase'),

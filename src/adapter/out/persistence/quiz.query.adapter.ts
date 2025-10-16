@@ -1,48 +1,28 @@
 // src/adapter/out/persistence/quiz.query.adapter.ts
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from './prisma/prisma.service';
-import type { QuizQueryPort } from '../../../application/port/out/quiz.query.port';
 import type {
-  QuizParentsQueryRepositoryPort,
+  QuizQueryPort,
   FindParentsTodayParams,
   FindParentsTodayResult,
   FindParentsCompletedParams,
   FindParentsCompletedResult,
   FindParentsScheduledParams,
   FindParentsScheduledResult,
-} from '../../../application/port/out/quiz-parents-query.repository.port';
-
-import type {
-  QuizChildrenQueryRepositoryPort,
   FindChildrenTodayParams,
   FindChildrenTodayResult,
   FindChildrenCompletedParams,
   FindChildrenCompletedResult,
-} from '../../../application/port/out/quiz-children-query.repository.port';
-
-import type {
-  QuizChildrenAnswerRepositoryPort,
   FindAnswerTargetParams,
   AnswerTargetRow,
-  MarkSolvedParams,
-} from '../../../application/port/out/quiz-children-answer.repository.port';
-
-
-import type {
-  QuizDetailQueryRepositoryPort,
   QuizDetailRow,
-} from '../../../application/port/out/quiz-detail-query.repository.port';
-import { toYmdFromDate, ymdToUtcDate, utcDayRangeForYmd,  } from '../../../utils/date.util';
+} from '../../../application/port/out/quiz.query.port';
+import type { MarkSolvedParams } from '../../../application/port/out/quiz.command.port';
+import { toYmdFromDate, ymdToUtcDate, utcDayRangeForYmd } from '../../../utils/date.util';
 import { toIntId } from '../../../utils/id.util';
 
 @Injectable()
-export class QuizQueryAdapter 
-  implements 
-    QuizQueryPort, 
-    QuizParentsQueryRepositoryPort, 
-    QuizDetailQueryRepositoryPort, 
-    QuizChildrenQueryRepositoryPort, 
-    QuizChildrenAnswerRepositoryPort {
+export class QuizQueryAdapter implements QuizQueryPort {
   constructor(private readonly prisma: PrismaService) {}
 
   async findLastScheduledDateYmd(parentProfileId: string): Promise<string | null> {
@@ -269,7 +249,7 @@ export class QuizQueryAdapter
     return { items, hasNext };
   }
 
-  async findById(quizId: number): Promise<QuizDetailRow | null> {
+  async findDetailById(quizId: number): Promise<QuizDetailRow | null> {
     const row = await this.prisma.quiz.findUnique({
       where: { id: quizId },
       select: {

@@ -12,20 +12,20 @@ import { isValidYmd, ymdToUtcDate } from '../../utils/date.util';
 
 import type { UpdateQuizCommand } from '../command/update-quiz.command';
 import type { UpdateQuizUseCase } from '../port/in/update-quiz.usecase';
-import type { QuizDetailQueryRepositoryPort } from '../port/out/quiz-detail-query.repository.port';
+import type { QuizQueryPort } from '../port/out/quiz.query.port';
 import type {
-  QuizUpdateRepositoryPort,
+  QuizCommandPort,
   QuizUpdateRepoPatch,
-} from '../port/out/quiz-update.repository.port';
+} from '../port/out/quiz.command.port';
 
 @Injectable()
 export class UpdateQuizService implements UpdateQuizUseCase {
   constructor(
-    @Inject(QUIZ_TOKENS.QuizDetailQueryRepositoryPort)
-    private readonly detailRepo: QuizDetailQueryRepositoryPort,
+    @Inject(QUIZ_TOKENS.QuizQueryPort)
+    private readonly detailRepo: QuizQueryPort,
 
-    @Inject(QUIZ_TOKENS.QuizUpdateRepositoryPort)
-    private readonly updateRepo: QuizUpdateRepositoryPort,
+    @Inject(QUIZ_TOKENS.QuizCommandPort)
+    private readonly updateRepo: QuizCommandPort,
   ) {}
 
   /**
@@ -45,7 +45,7 @@ export class UpdateQuizService implements UpdateQuizUseCase {
     }
 
     // 1) 대상 조회
-    const row = await this.detailRepo.findById(quizId);
+    const row = await this.detailRepo.findDetailById(quizId);
     if (!row) throw new NotFoundException('QUIZ_NOT_FOUND');
 
     // 2) 권한 & 상태 체크
@@ -98,7 +98,7 @@ export class UpdateQuizService implements UpdateQuizUseCase {
     }
 
     // 6) 수정된 퀴즈를 다시 조회하여 반환
-    const updatedQuiz = await this.detailRepo.findById(quizId);
+    const updatedQuiz = await this.detailRepo.findDetailById(quizId);
     if (!updatedQuiz) throw new NotFoundException('QUIZ_NOT_FOUND');
 
     return updatedQuiz;
