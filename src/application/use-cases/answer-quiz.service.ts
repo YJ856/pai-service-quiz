@@ -73,28 +73,22 @@ export class AnswerQuizService implements AnswerQuizUseCase {
 
     // 3) 채점 (trim된 답안 사용)
     const isCorrect = this.checkAnswer(trimmedAnswer, target.answer, !!cmd.normalize);
-    const alreadySolved = !!target.isSolved;
 
     // 4) 저장 (정답이면서 아직 미해결인 경우에만)
-    if (isCorrect && !alreadySolved) {
+    if (isCorrect && !target.isSolved) {
       await this.repo.markSolved({
         childProfileId,
         quizId: cmd.quizId,
       });
     }
 
-    // 5) 응답
-    // 보상 노출 정책:
-    // - 이번 제출이 정답: 보상 노출 (첫 정답이든 재정답이든)
-    // - 이번 제출이 오답 + 이미 해결됨: 보상 노출 (과거에 맞혔으므로)
-    // 결론: isSolved가 true면 항상 보상 노출
-    const finalIsSolved = isCorrect || alreadySolved;
-
+    // 5) 응답 - 단순화
+    // - 정답: isSolved=true, reward 반환
+    // - 오답: isSolved=false, reward 없음
     return {
       quizId: cmd.quizId,
-      isCorrect,
-      isSolved: finalIsSolved,
-      reward: finalIsSolved ? (target.reward ?? undefined) : undefined,
+      isSolved: isCorrect,
+      reward: isCorrect ? (target.reward ?? undefined) : undefined,
     };
   }
 

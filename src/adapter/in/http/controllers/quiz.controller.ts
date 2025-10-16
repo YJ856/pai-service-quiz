@@ -11,6 +11,7 @@ import {
   Param,
   Patch,
   Delete,
+  BadRequestException,
 } from '@nestjs/common';
 
 import type { CreateQuizRequestDto,
@@ -56,7 +57,8 @@ import { ParentGuard } from '../auth/guards/parent.guard';
 import { ChildGuard } from '../auth/guards/child.guard';
 import { Auth } from '../decorators/auth.decorator';
 
-
+// Utils
+import { clampLimit } from '../../../../utils/pagination.util';
 
 @Controller('api/quiz') // 이 컨트롤러의 모든 핸들러는 parentGuard를 반드시 통과해야 함
 export class QuizController {
@@ -121,26 +123,17 @@ export class QuizController {
     return { success: true, message: '퀴즈 생성 성공', data };
   }
 
-  @UseGuards(ParentGuard) 
+  @UseGuards(ParentGuard)
   @Get('parents/today')
   @HttpCode(HttpStatus.OK)
   async listParentsTodayHandler(
     @Auth('profileId') parentProfileId: string,
     @Query() query: ParentsTodayQueryDto,
   ): Promise<BaseResponse<ParentsTodayResponseData>> {
-    const rawLimit = (query as any)?.limit;
-    let limit = 20; // 기본값
-    if (rawLimit !== undefined) {
-      const x = Number(rawLimit);
-      if (Number.isFinite(x)) {
-        limit = Math.max(1, Math.min(x, 50));
-      }
-    }
-
-    const cursor =
-      query?.cursor && String(query.cursor).trim() !== ''
-        ? String(query.cursor).trim()
-        : null; // 빈 문자열이면 null 처리
+    const limit = clampLimit(query.limit);
+    const cursor = query?.cursor && String(query.cursor).trim() !== ''
+      ? String(query.cursor).trim()
+      : null;
 
     const data = await this.listParentsToday.execute({
       parentProfileId,
@@ -151,28 +144,17 @@ export class QuizController {
     return { success: true, message: '오늘의 퀴즈 조회 성공', data };
   }
 
-  @UseGuards(ParentGuard) 
+  @UseGuards(ParentGuard)
   @Get('parents/completed')
   @HttpCode(HttpStatus.OK)
   async listParentsCompletedHandler(
     @Auth('profileId') parentProfileId: string,
     @Query() query: ParentsCompletedQueryDto,
   ): Promise<BaseResponse<ParentsCompletedResponseData>> {
-    // limit 안전 파싱 + 클램프
-    const rawLimit = (query as any)?.limit;
-    let limit = 20; // 기본값
-    if (rawLimit !== undefined) {
-      const x = Number(rawLimit);
-      if (Number.isFinite(x)) {
-        limit = Math.max(1, Math.min(x, 50));
-      }
-    }
-
-    // 빈 문자열 커서는 null 처리
-    const cursor =
-      query?.cursor && String(query.cursor).trim() !== ''
-        ? String(query.cursor).trim()
-        : null;
+    const limit = clampLimit(query.limit as any);
+    const cursor = query?.cursor && String(query.cursor).trim() !== ''
+      ? String(query.cursor).trim()
+      : null;
 
     const data = await this.listParentsCompleted.execute({
       parentProfileId,
@@ -183,26 +165,17 @@ export class QuizController {
     return { success: true, message: '완료된 퀴즈 조회 성공', data };
   }
 
-  @UseGuards(ParentGuard) 
+  @UseGuards(ParentGuard)
   @Get('parents/scheduled')
   @HttpCode(HttpStatus.OK)
   async listParentsScheduledHandler(
     @Auth('profileId') parentProfileId: string,
     @Query() query: ParentsScheduledQueryDto,
   ): Promise<BaseResponse<ParentsScheduledResponseData>> {
-    // limit 안전 파싱 + 클램프
-    const rawLimit = (query as any)?.limit;
-    let limit = 20;
-    if (rawLimit !== undefined) {
-      const x = Number(rawLimit);
-      if (Number.isFinite(x)) limit = Math.max(1, Math.min(x, 50));
-    }
-
-    // 빈 문자열 커서는 null 처리
-    const cursor =
-      query?.cursor && String(query.cursor).trim() !== ''
-        ? String(query.cursor).trim()
-        : null;
+    const limit = clampLimit(query.limit as any);
+    const cursor = query?.cursor && String(query.cursor).trim() !== ''
+      ? String(query.cursor).trim()
+      : null;
 
     const data = await this.listParentsScheduled.execute({
       parentProfileId,
@@ -213,18 +186,16 @@ export class QuizController {
     return { success: true, message: '예정된 퀴즈 조회 성공', data };
   }
 
-  @UseGuards(ParentGuard) 
+  @UseGuards(ParentGuard)
   @Get(':quizId')
   @HttpCode(HttpStatus.OK)
   async getParentsQuizDetailHandler(
     @Param('quizId') quizIdParam: string,
     @Auth('profileId') parentProfileId: string,
   ): Promise<BaseResponse<ParentsQuizDetailResponseData>> {
-    // 숫자 파싱 + 검증 (잘못된 형식이면 400)
     const quizId = Number(quizIdParam);
     if (!Number.isFinite(quizId) || quizId <= 0) {
-      // 컨트롤러에서 에러 throw 대신, 일관된 메시지를 원하면 BadRequestException 던져도 OK
-      throw new Error('VALIDATION_ERROR');
+      throw new BadRequestException('VALIDATION_ERROR');
     }
 
     const data = await this.getParentsQuizDetail.execute({
@@ -235,7 +206,7 @@ export class QuizController {
     return { success: true, message: '퀴즈 상세 조회 성공', data };
   }
 
-  @UseGuards(ParentGuard) 
+  @UseGuards(ParentGuard)
   @Patch(':quizId')
   @HttpCode(HttpStatus.OK)
   async updateQuizHandler(
@@ -243,46 +214,32 @@ export class QuizController {
     @Auth('profileId') parentProfileId: string,
     @Body() body: UpdateQuizRequestDto,
   ): Promise<BaseResponse<UpdateQuizResponseData>> {
-    // Path 파싱
     const quizId = Number(quizIdParam);
     if (!Number.isFinite(quizId) || quizId <= 0) {
-      // 컨벤션: 서비스에서 BadRequestException을 던지게 할 수도 있지만,
-      // 여기서도 빠르게 필터링 가능
-      throw new Error('VALIDATION_ERROR');
+      throw new BadRequestException('VALIDATION_ERROR');
     }
 
-    // DTO를 Command로 변환
     const cmd = this.quizMapper.toUpdateCommand(body ?? {}, quizId, parentProfileId);
-
-    // 유스케이스 실행 (에러는 필터에서 공통 처리)
     const updatedQuiz = await this.updateQuiz.execute(cmd);
-
-    // 수정된 퀴즈를 Response DTO로 변환
     const data = this.quizMapper.toUpdateResponse(updatedQuiz);
 
     return { success: true, message: '수정이 완료되었습니다!', data };
   }
 
-  @UseGuards(ParentGuard) 
+  @UseGuards(ParentGuard)
   @Delete(':quizId')
   @HttpCode(HttpStatus.OK)
   async deleteQuizHandler(
     @Param('quizId') quizIdParam: string,
     @Auth('profileId') parentProfileId: string,
   ): Promise<BaseResponse<DeleteQuizResponseData>> {
-    // Path 파싱
     const quizId = Number(quizIdParam);
     if (!Number.isFinite(quizId) || quizId <= 0) {
-      throw new Error('VALIDATION_ERROR');
+      throw new BadRequestException('VALIDATION_ERROR');
     }
 
-    // DTO를 Command로 변환
     const cmd = this.quizMapper.toDeleteCommand(quizId, parentProfileId);
-
-    // 유스케이스 실행 (에러는 필터에서 공통 처리)
     await this.deleteQuiz.execute(cmd);
-
-    // 응답 DTO 생성
     const data = this.quizMapper.toDeleteResponse(quizId);
 
     return { success: true, message: '삭제가 완료되었습니다!', data };
@@ -295,19 +252,10 @@ export class QuizController {
     @Auth('profileId') childProfileId: string,
     @Query() query: ChildrenTodayQueryDto,
   ): Promise<BaseResponse<ChildrenTodayResponseData>> {
-    // limit 안전 파싱 + 클램프(기본 20, 1..50)
-    const rawLimit = (query as any)?.limit;
-    let limit = 20;
-    if (rawLimit !== undefined) {
-      const x = Number(rawLimit);
-      if (Number.isFinite(x)) limit = Math.max(1, Math.min(x, 50));
-    }
-
-    // 빈 문자열 커서는 null 처리
-    const cursor =
-      query?.cursor && String(query.cursor).trim() !== ''
-        ? String(query.cursor).trim()
-        : null;
+    const limit = clampLimit(query.limit);
+    const cursor = query?.cursor && String(query.cursor).trim() !== ''
+      ? String(query.cursor).trim()
+      : null;
 
     const data = await this.listChildrenToday.execute({
       childProfileId,
@@ -325,19 +273,10 @@ export class QuizController {
     @Auth('profileId') childProfileId: string,
     @Query() query: ChildrenCompletedQueryDto,
   ): Promise<BaseResponse<ChildrenCompletedResponseData>> {
-    // limit 안전 파싱 + 클램프(기본 20, 1..50)
-    const rawLimit = (query as any)?.limit;
-    let limit = 20;
-    if (rawLimit !== undefined) {
-      const x = Number(rawLimit);
-      if (Number.isFinite(x)) limit = Math.max(1, Math.min(x, 50));
-    }
-
-    // 빈 문자열 커서는 null 처리 (Base64("yyyy-MM-dd|quizId"))
-    const cursor =
-      query?.cursor && String(query.cursor).trim() !== ''
-        ? String(query.cursor).trim()
-        : null;
+    const limit = clampLimit(query.limit as any);
+    const cursor = query?.cursor && String(query.cursor).trim() !== ''
+      ? String(query.cursor).trim()
+      : null;
 
     const data = await this.listChildrenCompleted.execute({
       childProfileId,
@@ -356,14 +295,14 @@ export class QuizController {
     @Param('quizId') quizIdParam: string,
     @Body() body: AnswerQuizRequestDto,
   ): Promise<BaseResponse<AnswerQuizResponseData>> {
-    // quizId 파싱 (검증은 Service 레이어에서 수행)
     const quizId = Number(quizIdParam);
-
-    // Mapper를 통해 DTO -> Command 변환
     const cmd = this.quizMapper.toAnswerCommand(body, quizId, childProfileId);
     const data = await this.answerQuiz.execute(cmd);
 
-    return { success: true, message: '정답 제출 완료', data };
+    // isSolved 값에 따라 message 변경
+    const message = data.isSolved ? '정답입니다.' : '오답입니다.';
+
+    return { success: true, message, data };
   }
 
 }
