@@ -17,7 +17,7 @@ import type {
   AnswerTargetRow,
   QuizDetailRow,
 } from '../../../application/port/out/quiz.query.port';
-import type { MarkSolvedParams } from '../../../application/port/out/quiz.command.port';
+import type { MarkSolvedParams } from '../../../application/port/out/quiz.repository.port';
 import { toYmdFromDate, ymdToUtcDate, utcDayRangeForYmd } from '../../../utils/date.util';
 import { toIntId } from '../../../utils/id.util';
 

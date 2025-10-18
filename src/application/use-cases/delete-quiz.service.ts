@@ -11,7 +11,7 @@ import { QUIZ_TOKENS } from '../../quiz.token';
 import type { DeleteQuizCommand } from '../command/delete-quiz.command';
 import type { DeleteQuizUseCase } from '../port/in/delete-quiz.usecase';
 import type { QuizQueryPort } from '../port/out/quiz.query.port';
-import type { QuizCommandPort } from '../port/out/quiz.command.port';
+import type { QuizCommandPort } from '../port/out/quiz.repository.port';
 
 @Injectable()
 export class DeleteQuizService implements DeleteQuizUseCase {

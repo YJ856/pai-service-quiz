@@ -5,7 +5,7 @@ import type {
   QuizCommandPort,
   QuizUpdateRepoPatch,
   MarkSolvedParams,
-} from '../../../application/port/out/quiz.command.port';
+} from '../../../application/port/out/quiz.repository.port';
 import { ymdToUtcDate, utcDateToYmd } from '../../../utils/date.util';
 import { toIntId } from '../../../utils/id.util';
 

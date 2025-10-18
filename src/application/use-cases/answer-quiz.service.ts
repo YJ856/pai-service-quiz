@@ -18,7 +18,7 @@ import type {
 } from '../port/out/quiz.query.port';
 import type {
   QuizCommandPort,
-} from '../port/out/quiz.command.port';
+} from '../port/out/quiz.repository.port';
 
 // Utils
 import { getTodayYmdKST } from '../../utils/date.util';

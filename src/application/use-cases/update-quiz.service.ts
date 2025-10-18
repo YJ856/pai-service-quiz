@@ -16,7 +16,7 @@ import type { QuizQueryPort } from '../port/out/quiz.query.port';
 import type {
   QuizCommandPort,
   QuizUpdateRepoPatch,
-} from '../port/out/quiz.command.port';
+} from '../port/out/quiz.repository.port';
 
 @Injectable()
 export class UpdateQuizService implements UpdateQuizUseCase {

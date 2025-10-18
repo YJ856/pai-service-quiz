@@ -4,7 +4,7 @@ import { Inject, Injectable, BadRequestException } from '@nestjs/common';
 // Port-In(인터페이스)는 타입 전용 import
 import type { CreateQuizUseCase } from '../port/in/create-quiz.usecase';
 import type { CreateQuizCommand } from '../command/create-quiz.command';
-import type { QuizCommandPort } from '../port/out/quiz.command.port';
+import type { QuizCommandPort } from '../port/out/quiz.repository.port';
 import type { QuizQueryPort } from '../port/out/quiz.query.port';
 // 도메인/토큰/런타임 클래스는 일반 import
 import { Quiz } from '../../domain/model/quiz';
