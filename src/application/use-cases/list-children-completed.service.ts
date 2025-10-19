@@ -86,7 +86,7 @@ export class ListChildrenCompletedService implements ListChildrenCompletedUseCas
       const parent = parentMap[q.authorParentProfileId];
       return {
         quizId: q.quizId,
-        status: q.status, // 'COMPLETED'
+        status: 'COMPLETED' as const, // publishDate < today 이므로 항상 COMPLETED
         publishDate: q.publishDate,
         question: q.question,
         answer: q.answer,

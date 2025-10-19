@@ -6,7 +6,7 @@ import type {
   QuizUpdateRepoPatch,
   MarkSolvedParams,
 } from '../../../application/port/out/quiz.repository.port';
-import { ymdToUtcDate, utcDateToYmd } from '../../../utils/date.util';
+import { ymdToUtcDate, utcDateToYmd, todayYmd } from '../../../utils/date.util';
 import { toIntId } from '../../../utils/id.util';
 
 @Injectable()
@@ -22,8 +22,7 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
         answer: q.answer,
         reward: q.reward ?? null,
         hint: q.hint ?? null,
-        publishDate: ymdToUtcDate(q.publishDate), // ← 변환
-        status: q.status as any, // 'SCHEDULED' | 'TODAY' | 'COMPLETED'
+        publishDate: ymdToUtcDate(q.publishDate),
       },
     });
 
@@ -32,7 +31,6 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
       created.question,
       created.answer,
       utcDateToYmd(created.publishDate),
-      created.status as any,
       created.parentProfileId,
       created.hint ?? null,
       created.reward ?? null,
@@ -42,8 +40,13 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
 
   /** 가족의 마지막 예약일(yyyy-MM-dd) */
   async findLastScheduledDateByFamily(parentProfileId: number | string): Promise<string | null> {
+    const today = todayYmd();
+    // SCHEDULED = publishDate > today(KST)
     const row = await this.prisma.quiz.findFirst({
-      where: { parentProfileId: Number(parentProfileId), status: 'SCHEDULED' as any },
+      where: {
+        parentProfileId: Number(parentProfileId),
+        publishDate: { gt: ymdToUtcDate(today) }  // publishDate > today
+      },
       orderBy: { publishDate: 'desc' },
       select: { publishDate: true },
     });
@@ -58,7 +61,6 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
       r.question,
       r.answer,
       utcDateToYmd(r.publishDate),
-      r.status as any,
       r.parentProfileId,
       r.hint ?? null,
       r.reward ?? null,
@@ -68,7 +70,7 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
 
   /**
    * 작성자 + SCHEDULED 조건을 만족할 때만 부분 수정
-   * - where: id, parentProfileId, status='SCHEDULED'
+   * - where: id, parentProfileId, publishDate > today(KST)
    * - data: 전달된 필드만 갱신(undefined 는 무시, null 은 DB null)
    * - return: 실제 갱신된 행 수(0 | 1)
    */
@@ -78,6 +80,7 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
     patch: QuizUpdateRepoPatch;
   }): Promise<number> {
     const { quizId, ParentProfileId, patch } = params;
+    const today = todayYmd();
 
     // Prisma updateMany의 data: undefined는 "변경 없음", null은 "null로 세팅"
     const data: Record<string, any> = {};
@@ -90,8 +93,13 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
     // 변경할 게 없으면 굳이 쿼리 안 보냄
     if (Object.keys(data).length === 0) return 0;
 
+    // SCHEDULED = publishDate > today(KST)
     const result = await this.prisma.quiz.updateMany({
-      where: { id: quizId, parentProfileId: ParentProfileId, status: 'SCHEDULED' },
+      where: {
+        id: quizId,
+        parentProfileId: ParentProfileId,
+        publishDate: { gt: ymdToUtcDate(today) }  // publishDate > today
+      },
       data,
     });
 
@@ -108,12 +116,14 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
     parentProfileId: number;
   }): Promise<number> {
     const { quizId, parentProfileId } = params;
+    const today = todayYmd();
 
+    // SCHEDULED = publishDate > today(KST)
     const result = await this.prisma.quiz.deleteMany({
       where: {
         id: quizId,
         parentProfileId,
-        status: 'SCHEDULED',
+        publishDate: { gt: ymdToUtcDate(today) }  // publishDate > today
       },
     });
 

@@ -12,14 +12,10 @@ import type { UpdateQuizCommand } from '../application/command/update-quiz.comma
 import type { DeleteQuizCommand } from '../application/command/delete-quiz.command';
 import type { AnswerQuizCommand } from '../application/port/in/answer-quiz.usecase';
 import type { Quiz } from '../domain/model/quiz';
-import { toYmdOrUndefined, toYmdFromDate } from '../utils/date.util';
+import { toYmdOrUndefined, toYmdFromDate, todayYmd } from '../utils/date.util';
+import { deriveStatus } from '../domain/policy/quiz.policy';
 
-/**
- * DTO(shared-type) <-> Command <-> Domain 변환 담당
- * - 외부 계약 변경의 파급을 여기서 흡수
- * - Controller/UseCase/Domain은 계약 변화로부터 보호됨
- * - 날짜: 'yyyy-MM-dd'는 **형식 유효성만 체크**하고 문자열 그대로 전달
- */
+
 @Injectable()
 export class QuizMapper {
     toCreateCommand(req: CreateQuizRequestDto, parentProfileId: string): CreateQuizCommand {
@@ -59,14 +55,18 @@ export class QuizMapper {
     }
 
     toUpdateResponse(quiz: any): UpdateQuizResponseData {
+        const publishDateYmd = toYmdFromDate(quiz.publishDate);
+        const today = todayYmd();
+        const status = deriveStatus(publishDateYmd, today);
+
         return {
             quizId: quiz.id,
             question: quiz.question,
             answer: quiz.answer,
             hint: quiz.hint ?? undefined,
             reward: quiz.reward ?? undefined,
-            publishDate: toYmdFromDate(quiz.publishDate),
-            isEditable: quiz.status === 'SCHEDULED',
+            publishDate: publishDateYmd,
+            isEditable: status === 'SCHEDULED',  // publishDate > today
         };
     }
 

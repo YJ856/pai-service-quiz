@@ -17,6 +17,8 @@ import type { ProfileDirectoryPort, ParentProfileSummary } from '../port/out/pro
 import { clampLimit } from '../../utils/pagination.util';
 import { decodeCompositeCursor, encodeCompositeCursor } from '../../utils/cursor.util';
 import { getParentProfileSafe } from '../../utils/profile.util';
+import { todayYmd } from '../../utils/date.util';
+import { isEditable } from '../../domain/policy/quiz.policy';
 
 @Injectable()
 export class ListParentsScheduledService implements ListParentsScheduledUseCase {
@@ -67,14 +69,22 @@ export class ListParentsScheduledService implements ListParentsScheduledUseCase 
     parent: ParentProfileSummary | null,
     requesterParentId: number,
   ): ParentsScheduledItemDto[] {
+    const today = todayYmd();
+
     return rows.map((q) => {
-      const isEditable =
-        q.status === 'SCHEDULED' && q.authorParentProfileId === requesterParentId;
+      // 도메인 정책 사용: publishDate > today && 본인 작성
+      const editable = isEditable(
+        q.publishDate,
+        q.authorParentProfileId,
+        requesterParentId,
+        today,
+      );
+
       return {
         ...q,
         authorParentName: parent?.name ?? q.authorParentName ?? '부모',
         authorParentAvatarMediaId: parent?.avatarMediaId ?? q.authorParentAvatarMediaId ?? null,
-        isEditable,
+        isEditable: editable,
       };
     });
   }

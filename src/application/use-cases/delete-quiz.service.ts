@@ -7,6 +7,8 @@ import {
 } from '@nestjs/common';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
+import { toYmdFromDate, todayYmd } from '../../utils/date.util';
+import { deriveStatus } from '../../domain/policy/quiz.policy';
 
 import type { DeleteQuizCommand } from '../command/delete-quiz.command';
 import type { DeleteQuizUseCase } from '../port/in/delete-quiz.usecase';
@@ -39,8 +41,12 @@ export class DeleteQuizService implements DeleteQuizUseCase {
       throw new ForbiddenException('FORBIDDEN');
     }
 
-    // 3) 상태 체크 (SCHEDULED만 삭제 가능)
-    if (quiz.status !== 'SCHEDULED') {
+    // 3) 상태 체크 (SCHEDULED만 삭제 가능: publishDate > today)
+    const today = todayYmd();
+    const publishDateYmd = toYmdFromDate(quiz.publishDate);
+    const status = deriveStatus(publishDateYmd, today);
+
+    if (status !== 'SCHEDULED') {
       throw new ConflictException('NOT_SCHEDULED');
     }
 

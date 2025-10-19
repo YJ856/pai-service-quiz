@@ -45,7 +45,7 @@ import type { DeleteQuizUseCase } from '../../../../application/port/in/delete-q
 import { QuizMapper } from '../../../../mapper/quiz.mapper';
 import { NextPublishDateMapper } from '../../../../mapper/next-publish-date.mapper';
 
-import { ParentGuard } from '../auth/guards/parent.guard';
+import { ParentGuard } from '../auth/guards/auth.guard';
 import { Auth } from '../decorators/auth.decorator';
 
 import { clampLimit } from '../../../../utils/pagination.util';

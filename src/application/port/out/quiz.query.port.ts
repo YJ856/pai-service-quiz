@@ -101,7 +101,7 @@ export type QuizDetailRow = {
   reward: string | null;
   publishDate: Date;
   parentProfileId: number;
-  status: 'SCHEDULED' | 'TODAY' | 'COMPLETED';
+  // status는 제거 - publishDate 기반으로 계산
 };
 
 // ============================================================
@@ -116,7 +116,6 @@ export interface FindAnswerTargetParams {
 
 export interface AnswerTargetRow {
   quizId: number;
-  status: 'SCHEDULED' | 'TODAY' | 'COMPLETED';
   publishDateYmd: string;
   answer: string;
   reward?: string | null;
@@ -124,6 +123,7 @@ export interface AnswerTargetRow {
   authorParentProfileId: number;
   authorParentName?: string | null;
   authorParentAvatarMediaId?: number | null;
+  // status는 제거 - publishDate 기반으로 계산
 }
 
 // ============================================================

@@ -2,7 +2,7 @@ import { createRemoteJWKSet, jwtVerify, JWTPayload } from 'jose';
 
 export type AuthClaims = JWTPayload & {
   sub: string; // userId (가족 계정)
-  profileId?: string; // 프로필 ID (부모/자녀)
+  profileId?: string | number; // 프로필 ID (부모/자녀)
   profileType?: 'parent' | 'child';
 };
 

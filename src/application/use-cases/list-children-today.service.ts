@@ -86,7 +86,7 @@ export class ListChildrenTodayService implements ListChildrenTodayUseCase {
       const parent = parentMap[q.authorParentProfileId];
       return {
         quizId: q.quizId,
-        status: q.status, // 'TODAY'
+        status: 'TODAY' as const, // publishDate = today 이므로 항상 TODAY
         question: q.question,
         hint: q.hint ?? undefined,
         // 정책: 미해결이면 reward 미포함(또는 null). 현재는 미포함 쪽으로 매핑.

@@ -1,16 +1,23 @@
-export type QuizStatus = 'SCHEDULED' | 'TODAY' | 'COMPLETED';
+import { deriveStatus, type QuizStatus } from '../policy/quiz.policy';
+import { todayYmd } from '../../utils/date.util';
 
 export class Quiz {
     constructor(
         public question: string,
         public answer: string,
         public publishDate: string, // yyyy-MM-dd(문자열)
-        public status: QuizStatus,
         public authorParentProfileId: number | string,
         public hint?: string | null,
         public reward?: string | null,
         public id?: number, // 저장 전엔 없음, 저장 후 채워짐
     ) {}
+
+    /**
+     * publishDate 기반으로 퀴즈 상태를 계산 (도메인 정책 사용)
+     */
+    getStatus(): QuizStatus {
+        return deriveStatus(this.publishDate, todayYmd());
+    }
 
     static create(args: {
         question: string;
@@ -33,7 +40,6 @@ export class Quiz {
             question,
             answer,
             args.publishDate,
-            'SCHEDULED', // 생성 시 고정
             args.authorParentProfileId,
             args.hint ?? null,
             args.reward ?? null,

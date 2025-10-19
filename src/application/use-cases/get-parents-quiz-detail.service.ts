@@ -20,7 +20,8 @@ import type {
 } from '../port/out/quiz.query.port';
 
 // Utils
-import { toYmdFromDate } from '../../utils/date.util';
+import { toYmdFromDate, todayYmd } from '../../utils/date.util';
+import { deriveStatus } from '../../domain/policy/quiz.policy';
 
 @Injectable()
 export class GetParentsQuizDetailService implements GetParentsQuizDetailUseCase {
@@ -48,8 +49,12 @@ export class GetParentsQuizDetailService implements GetParentsQuizDetailUseCase 
       throw new ForbiddenException('FORBIDDEN');
     }
 
-    // 3) 상태 체크 (예정만 수정 가능)
-    if (row.status !== 'SCHEDULED') {
+    const today = todayYmd();
+    const publishDateYmd = toYmdFromDate(row.publishDate);
+    const status = deriveStatus(publishDateYmd, today);
+
+    // 3) 상태 체크 (예정만 수정 가능: publishDate > today)
+    if (status !== 'SCHEDULED') {
       throw new ConflictException('NOT_SCHEDULED');
     }
 
@@ -60,7 +65,7 @@ export class GetParentsQuizDetailService implements GetParentsQuizDetailUseCase 
       answer: row.answer,
       hint: row.hint ?? undefined,
       reward: row.reward ?? undefined,
-      publishDate: toYmdFromDate(row.publishDate), // 'yyyy-MM-dd'
+      publishDate: publishDateYmd,
       isEditable: true, // 위에서 SCHEDULED & 본인 확인 통과
     };
   }

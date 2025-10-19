@@ -1,7 +1,7 @@
 import type { ChildrenTodayResponseData } from 'pai-shared-types';
 
 export interface ListChildrenTodayQuery {
-  childProfileId: string;
+  childProfileId: number;
   limit: number;
   cursor: string | null;
 }

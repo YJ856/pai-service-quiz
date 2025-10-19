@@ -8,7 +8,8 @@ import {
 } from '@nestjs/common';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
-import { isValidYmd, ymdToUtcDate } from '../../utils/date.util';
+import { isValidYmd, ymdToUtcDate, toYmdFromDate, todayYmd } from '../../utils/date.util';
+import { deriveStatus } from '../../domain/policy/quiz.policy';
 
 import type { UpdateQuizCommand } from '../command/update-quiz.command';
 import type { UpdateQuizUseCase } from '../port/in/update-quiz.usecase';
@@ -52,7 +53,13 @@ export class UpdateQuizService implements UpdateQuizUseCase {
     if (row.parentProfileId !== requesterPid) {
       throw new ForbiddenException('FORBIDDEN');
     }
-    if (row.status !== 'SCHEDULED') {
+
+    // 상태 체크: publishDate > today 일 때만 수정 가능 (SCHEDULED)
+    const today = todayYmd();
+    const publishDateYmd = toYmdFromDate(row.publishDate);
+    const status = deriveStatus(publishDateYmd, today);
+
+    if (status !== 'SCHEDULED') {
       throw new ConflictException('NOT_SCHEDULED');
     }
 

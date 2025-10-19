@@ -54,23 +54,20 @@ export class AnswerQuizService implements AnswerQuizUseCase {
 
     const todayYmd = getTodayYmdKST();
 
-    // 1) 제출 대상 조회 (본인 배정 + 오늘(TODAY) + 오늘 날짜)
+    // 1) 제출 대상 조회 (본인 배정 + publishDate = today)
     const target = await this.queryRepo.findAnswerTarget({
       childProfileId,
       quizId: cmd.quizId,
       todayYmd,
     });
     if (!target) {
-      // 배정되지 않았거나 존재하지 않는 퀴즈
+      // 배정되지 않았거나 존재하지 않는 퀴즈 또는 오늘이 아님
       throw new NotFoundException('QUIZ_NOT_ASSIGNED_OR_NOT_FOUND');
     }
 
-    // 2) 오늘만 풀 수 있음: status='TODAY' && publishDate==today
-    if (target.status !== 'TODAY') {
-      // 퀴즈가 TODAY 상태가 아님 (SCHEDULED 또는 COMPLETED)
-      throw new ForbiddenException('QUIZ_NOT_AVAILABLE_TODAY');
-    }
-
+    // 2) 오늘만 풀 수 있음: publishDate == today (쿼리에서 이미 필터링됨)
+    // findAnswerTarget이 publishDate = today 조건으로 조회하므로
+    // target이 있다면 이미 오늘 퀴즈임이 보장됨
     if (target.publishDateYmd !== todayYmd) {
       // 요구사항: 해당 날짜가 지나면 더 이상 풀 수 없음
       throw new ForbiddenException('QUIZ_DATE_EXPIRED');
