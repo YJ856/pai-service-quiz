@@ -32,8 +32,6 @@ import { QuizMapper } from '../../../../mapper/quiz.mapper';
 import { ChildGuard } from '../auth/guards/auth.guard';
 import { Auth } from '../decorators/auth.decorator';
 
-import { clampLimit } from '../../../../utils/pagination.util';
-
 @Controller('api/quiz/children')
 @UseGuards(ChildGuard)
 export class ChildrenQuizController {
@@ -56,7 +54,6 @@ export class ChildrenQuizController {
     @Auth('profileId') childProfileId: number,
     @Query() query: ChildrenTodayQueryDto, // 바인딩된 쿼리 객체를 타입 지정
   ): Promise<BaseResponse<ChildrenTodayResponseData>> {
-    const limit = clampLimit(query.limit);
     
     const raw = query?.cursor; // unknown | string | undefined
     const s = raw == null ? '' : String(raw).trim();

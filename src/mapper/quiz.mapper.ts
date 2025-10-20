@@ -21,7 +21,6 @@ export class QuizMapper {
     toCreateCommand(req: CreateQuizRequestDto, parentProfileId: string): CreateQuizCommand {
         const norm = (v: unknown) => (v == null ? null : String(v).trim());
 
-        // 유효성 검사 후 문자열(yyyy-MM-dd) 그대로 사용
         const ymd = toYmdOrUndefined(req.publishDate ?? undefined);
 
         return {
@@ -35,7 +34,7 @@ export class QuizMapper {
     }
 
     toCreateResponse(saved: Quiz): CreateQuizResponseData {
-        return { quizId: (saved as any).id as number };
+        return { quizId: String(saved.id), };
     }
 
     toUpdateCommand(

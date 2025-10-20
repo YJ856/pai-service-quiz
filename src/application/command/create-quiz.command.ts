@@ -5,7 +5,7 @@ export class CreateQuizCommand {
     public readonly answer: string,
     public readonly hint: string | null,
     public readonly reward: string | null,
-    public readonly authorParentProfileId: string | number,
+    public readonly authorParentProfileId: string,
     public readonly publishDate?: string,
   ) {
     if (!question) throw new Error('question required');
