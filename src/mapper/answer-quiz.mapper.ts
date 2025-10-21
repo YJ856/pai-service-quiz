@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { AnswerQuizPathParam, AnswerQuizRequestDto } from "src/adapter/in/http/dto/answer-quiz.request.dto";
+import { AnswerQuizPathParam, AnswerQuizRequestDto } from "src/adapter/in/http/dto/request/answer-quiz.request.dto";
 import { AnswerQuizResponseData } from "pai-shared-types";
 import { AnswerQuizCommand } from "src/application/command/answer-quiz.command";
 

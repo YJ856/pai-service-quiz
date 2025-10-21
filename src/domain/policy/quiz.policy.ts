@@ -25,7 +25,7 @@ export function deriveStatus(publishDate: string, todayKst: string): QuizStatus 
   return 'COMPLETED';
 }
 
-/**
+/**.
  * 퀴즈 수정 가능 여부 판단 (정책 정의)
  *
  * @param publishDate - 'yyyy-MM-dd' 형식의 퀴즈 발행일

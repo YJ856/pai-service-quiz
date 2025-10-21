@@ -1,9 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { ChildrenCompletedResponseData } from 'pai-shared-types';
+import type { ChildrenCompletedResponseResult } from 'src/adapter/in/http/dto/result/children-completed.result.dto';
 
-import type {
-  ListChildrenCompletedUseCase,
-} from '../port/in/list-children-completed.usecase';
+import type { ListChildrenCompletedUseCase } from '../port/in/list-children-completed.usecase';
 import type { ChildrenCompletedCommand } from '../command/children-completed.command';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
@@ -40,7 +38,7 @@ export class ListChildrenCompletedService implements ListChildrenCompletedUseCas
     private readonly profiles: ProfileDirectoryPort,
   ) {}
 
-  async execute(cmd: ChildrenCompletedCommand): Promise<ChildrenCompletedResponseData> {
+  async execute(cmd: ChildrenCompletedCommand): Promise<ChildrenCompletedResponseResult> {
     const limit = cmd.limit;
     const after = decodeCompositeCursor(cmd.cursor ?? null);
 

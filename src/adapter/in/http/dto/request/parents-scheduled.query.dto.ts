@@ -1,6 +1,6 @@
 import { IsInt, Min, Max, IsOptional, IsString, IsBase64 } from "class-validator";
 import type { ParentsScheduledQueryDto as SharedParentsScheduledQueryDto } from "pai-shared-types";
-import { TrimToUndefined, ToNumberClamped } from "./common/transforms";
+import { TrimToUndefined, ToNumberClamped } from "../common/transforms";
 
 export class ParentsScheduledQueryDto implements SharedParentsScheduledQueryDto {
     @ToNumberClamped(20, 1, 50)

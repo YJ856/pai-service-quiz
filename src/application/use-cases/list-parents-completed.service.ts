@@ -1,12 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type {
-  ParentsCompletedResponseData,
-  ParentsCompletedItemDto,
-} from 'pai-shared-types';
+import type { ParentsCompletedResponseResult, ParentsCompletedItemDto, } from 'src/adapter/in/http/dto/result/parents-completed.result.dto';
 
-import type {
-  ListParentsCompletedUseCase,
-} from '../port/in/list-parents-completed.usecase';
+import type { ListParentsCompletedUseCase,} from '../port/in/list-parents-completed.usecase';
 import type { ParentsCompletedCommand } from '../command/parents-completed.command';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
@@ -44,7 +39,7 @@ export class ListParentsCompletedService implements ListParentsCompletedUseCase 
    * - 정렬: publishDate DESC, quizId DESC
    * - 커서: Base64("\"yyyy-MM-dd|quizId\"")
    */
-  async execute(cmd: ParentsCompletedCommand): Promise<ParentsCompletedResponseData> {
+  async execute(cmd: ParentsCompletedCommand): Promise<ParentsCompletedResponseResult> {
     const { parentProfileId } = cmd;
     const limit = cmd.limit;
     const after = decodeCompositeCursor(cmd.cursor ?? null);

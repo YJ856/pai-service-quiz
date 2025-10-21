@@ -7,27 +7,30 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import type { ParentsQuizDetailResponseData } from 'pai-shared-types';
+import type { ParentsQuizDetailResponseResult } from 'src/adapter/in/http/dto/result/detail-quiz.result.dto';
 
-import type {
-  GetParentsQuizDetailQuery,
-  GetParentsQuizDetailUseCase,
-} from '../port/in/get-parents-quiz-detail.usecase';
+import type { GetParentsQuizDetailUseCase } from '../port/in/get-parents-quiz-detail.usecase';
+import { DetailQuizCommand } from '../command/detail-quiz.command';
+import { DetailQuizMapper } from '../../mapper/detail-quiz.mapper';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type {
   QuizQueryPort,
 } from '../port/out/quiz.query.port';
 
+// Domain
+import { Quiz } from '../../domain/model/quiz';
+import { canEdit } from '../../domain/policy/quiz.policy';
+
 // Utils
 import { toYmdFromDate, todayYmd } from '../../utils/date.util';
-import { deriveStatus } from '../../domain/policy/quiz.policy';
 
 @Injectable()
 export class GetParentsQuizDetailService implements GetParentsQuizDetailUseCase {
   constructor(
     @Inject(QUIZ_TOKENS.QuizQueryPort)
     private readonly repo: QuizQueryPort,
+    private readonly detailQuizMapper: DetailQuizMapper,
   ) {}
 
   /**
@@ -36,38 +39,39 @@ export class GetParentsQuizDetailService implements GetParentsQuizDetailUseCase 
    * - 상태: SCHEDULED만 수정 가능(아니면 409 NOT_SCHEDULED)
    * - 성공 시: 상세 데이터 + isEditable 반환
    */
-  async execute(query: GetParentsQuizDetailQuery): Promise<ParentsQuizDetailResponseData> {
-    const quizId = query.quizId;
-    const requesterPid = this.toInt(query.parentProfileId);
+  async execute(cmd: DetailQuizCommand): Promise<ParentsQuizDetailResponseResult> {
+    const quizId = cmd.quizId;
+    const requesterPid = this.toInt(cmd.parentProfileId);
 
     // 1) 단건 조회
     const row = await this.repo.findDetailById(quizId);
     if (!row) throw new NotFoundException('QUIZ_NOT_FOUND');
 
-    // 2) 권한 체크 (출제자 == 요청자)
-    if (row.parentProfileId !== requesterPid) {
-      throw new ForbiddenException('FORBIDDEN');
-    }
-
+    // 2) 권한 & 상태 체크 (도메인 정책 활용)
     const today = todayYmd();
     const publishDateYmd = toYmdFromDate(row.publishDate);
-    const status = deriveStatus(publishDateYmd, today);
 
-    // 3) 상태 체크 (예정만 수정 가능: publishDate > today)
-    if (status !== 'SCHEDULED') {
+    if (!canEdit(publishDateYmd, row.parentProfileId, requesterPid, today)) {
+      // 작성자가 아니거나 SCHEDULED 상태가 아님
+      if (row.parentProfileId !== requesterPid) {
+        throw new ForbiddenException('FORBIDDEN');
+      }
       throw new ConflictException('NOT_SCHEDULED');
     }
 
-    // 4) 응답 매핑
-    return {
-      quizId: row.id,
-      question: row.question,
-      answer: row.answer,
-      hint: row.hint ?? undefined,
-      reward: row.reward ?? undefined,
-      publishDate: publishDateYmd,
-      isEditable: true, // 위에서 SCHEDULED & 본인 확인 통과
-    };
+    // 3) Quiz 도메인 객체 생성
+    const quiz = new Quiz(
+      row.question,
+      row.answer,
+      publishDateYmd,
+      row.parentProfileId,
+      row.hint,
+      row.reward,
+      row.id
+    );
+
+    // 4) Mapper를 통해 Result DTO 변환
+    return this.detailQuizMapper.toResponseResult(quiz);
   }
 
   // ============== Helpers ==============

@@ -1,4 +1,4 @@
-import type { ParentsQuizDetailResponseData } from 'pai-shared-types';
+import type { ParentsQuizDetailResponseResult } from '../../../adapter/in/http/dto/result/detail-quiz.result.dto';
 import type { DetailQuizCommand } from '../../command/detail-quiz.command';
 
 /**
@@ -6,5 +6,5 @@ import type { DetailQuizCommand } from '../../command/detail-quiz.command';
  * - 작성자 본인 확인 + 상세 데이터 반환
  */
 export interface GetParentsQuizDetailUseCase {
-  execute(cmd: DetailQuizCommand): Promise<ParentsQuizDetailResponseData>;
+  execute(cmd: DetailQuizCommand): Promise<ParentsQuizDetailResponseResult>;
 }

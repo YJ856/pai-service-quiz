@@ -1,6 +1,6 @@
 import { IsOptional, IsNotEmpty, IsString } from 'class-validator';
 import type { CreateQuizRequestDto as SharedCreateQuizRequestDto } from 'pai-shared-types';
-import { TrimToNull, TrimString } from './common/transforms';
+import { TrimToNull, TrimString } from '../common/transforms';
 
 export class CreateQuizRequestDto implements SharedCreateQuizRequestDto {
     @IsString() @IsNotEmpty() @TrimString()

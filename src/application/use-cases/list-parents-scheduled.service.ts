@@ -1,9 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { ParentsScheduledResponseData, ParentsScheduledItemDto } from 'pai-shared-types';
+import type { ParentsScheduledResponseResult, ParentsScheduledItemDto } from 'src/adapter/in/http/dto/result/parents-scheduled.result.dto';
 
-import type {
-  ListParentsScheduledUseCase,
-} from '../port/in/list-parents-scheduled.usecase';
+import type { ListParentsScheduledUseCase,} from '../port/in/list-parents-scheduled.usecase';
 import type { ParentsScheduledCommand } from '../command/parents-scheduled.command';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
@@ -33,7 +31,7 @@ export class ListParentsScheduledService implements ListParentsScheduledUseCase 
    * - 정렬: publishDate ASC, quizId ASC
    * - 커서: Base64("\"yyyy-MM-dd|quizId\"")
    */
-  async execute(cmd: ParentsScheduledCommand): Promise<ParentsScheduledResponseData> {
+  async execute(cmd: ParentsScheduledCommand): Promise<ParentsScheduledResponseResult> {
     const { parentProfileId } = cmd;
     const limit = cmd.limit;
     const after = decodeCompositeCursor(cmd.cursor ?? null);

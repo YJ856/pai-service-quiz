@@ -1,8 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type {
-  ParentsTodayResponseData,
-  ParentsTodayItemDto,
-} from 'pai-shared-types';
+import type { ParentsTodayResponseResult, ParentsTodayItemDto, } from 'src/adapter/in/http/dto/result/parents-today.result.dto';
 
 import type {
   ListParentsTodayUseCase,
@@ -42,7 +39,7 @@ export class ListParentsTodayService implements ListParentsTodayUseCase {
    * - 기준 날짜: Asia/Seoul(UTC+9)
    * - 커서: Base64("quizId")
    */
-  async execute(cmd: ParentsTodayCommand): Promise<ParentsTodayResponseData> {
+  async execute(cmd: ParentsTodayCommand): Promise<ParentsTodayResponseResult> {
     const { parentProfileId } = cmd;
     const limit = cmd.limit;
     const afterQuizId = decodeIdCursor(cmd.cursor ?? null);

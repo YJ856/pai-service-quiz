@@ -1,4 +1,4 @@
-// 입력(Command) → 기본 출제일 계산 → 도메인 생성(불변식 검증, SCHEDULED 고정) → 저장(Adapter) → 도메인 반환
+// 입력(Command) → 기본 출제일 계산 → 도메인 생성(불변식 검증, SCHEDULED 고정) → 저장(Adapter) → Result DTO 반환
 import { Inject, Injectable, BadRequestException } from '@nestjs/common';
 
 // Port-In(인터페이스)는 타입 전용 import
@@ -6,10 +6,12 @@ import type { CreateQuizUseCase } from '../port/in/create-quiz.usecase';
 import type { CreateQuizCommand } from '../command/create-quiz.command';
 import type { QuizCommandPort } from '../port/out/quiz.repository.port';
 import type { QuizQueryPort } from '../port/out/quiz.query.port';
+import type { CreateQuizResponseResult } from '../../adapter/in/http/dto/result/create-quiz.result.dto';
 // 도메인/토큰/런타임 클래스는 일반 import
 import { Quiz } from '../../domain/model/quiz';
 import { QUIZ_TOKENS } from '../../quiz.token';
 import { todayYmd, plusOneYmd } from '../../utils/date.util';
+import { CreateQuizMapper } from '../../mapper/create-quiz.mapper';
 
 @Injectable()
 export class CreateQuizService implements CreateQuizUseCase {
@@ -18,15 +20,16 @@ export class CreateQuizService implements CreateQuizUseCase {
     private readonly repo: QuizCommandPort,
     @Inject(QUIZ_TOKENS.QuizQueryPort)
     private readonly quizQuery: QuizQueryPort,
+    private readonly createQuizMapper: CreateQuizMapper,
   ) {}
 
-  async execute(cmd: CreateQuizCommand): Promise<Quiz> {
+  async execute(cmd: CreateQuizCommand): Promise<CreateQuizResponseResult> {
     // 0) 필수 헤더(부모 프로필) 확인 — Guard/@Auth에서 주입되지만 방어적으로 확인
-    if (cmd.authorParentProfileId == null || cmd.authorParentProfileId === '') {
+    if (cmd.parentProfileId == null) {
       // 팀 정책에 맞춰 400/401/403 중 선택
-      throw new BadRequestException('VALIDATION_ERROR: authorParentProfileId required');
+      throw new BadRequestException('VALIDATION_ERROR: parentProfileId required');
     }
-    const parentProfileId = cmd.authorParentProfileId;
+    const parentProfileId = cmd.parentProfileId;
 
     // 1) publishDate 결정(yyyy-MM-dd)
     const publishDate =
@@ -43,7 +46,10 @@ export class CreateQuizService implements CreateQuizUseCase {
     });
 
     // 3) 저장
-    return this.repo.save(domain);
+    const saved = await this.repo.save(domain);
+
+    // 4) Result DTO로 변환
+    return this.createQuizMapper.toResponseResult(saved);
   }
 
   /**
@@ -55,10 +61,9 @@ export class CreateQuizService implements CreateQuizUseCase {
    *    - 오늘 이미 있으면: 내일
    */
   private async nextDefaultDateForFamily(
-    parentProfileId: number | string,
+    parentProfileId: number,
   ): Promise<string> {
-    // parentProfileId를 string으로 변환 (QuizQueryPort는 string을 받음)
-    const pid = String(parentProfileId);
+    const pid = parentProfileId;
 
     const last = await this.quizQuery.findLastScheduledDateYmd(pid);
     if (last) return plusOneYmd(last);

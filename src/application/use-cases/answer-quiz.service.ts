@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { AnswerQuizResponseData } from 'pai-shared-types';
+import type { AnswerQuizResponseResult } from 'src/adapter/in/http/dto/result/answer-quiz.result.dto';
 
 import type { AnswerQuizUseCase } from '../port/in/answer-quiz.usecase';
 import { AnswerQuizCommand } from '../command/answer-quiz.command';
@@ -37,7 +37,7 @@ export class AnswerQuizService implements AnswerQuizUseCase {
    * - 해당 날짜(Asia/Seoul)가 지나면 제출 불가
    * - 채점: 기본 완전 일치, normalize=true 시 간단 정규화 후 비교
    */
-  async execute(cmd: AnswerQuizCommand): Promise<AnswerQuizResponseData> {
+  async execute(cmd: AnswerQuizCommand): Promise<AnswerQuizResponseResult> {
     const { childProfileId, quizId } = cmd;
 
     // quizId 검증
@@ -72,8 +72,8 @@ export class AnswerQuizService implements AnswerQuizUseCase {
       throw new ForbiddenException('QUIZ_DATE_EXPIRED');
     }
 
-    // 3) 채점 (완전 일치)
-    const isCorrect = this.checkAnswer(trimmedAnswer, target.answer, false);
+    // 3) 채점 (정규화 후 비교: 대소문자 무시, 공백/기호 제거)
+    const isCorrect = this.checkAnswer(trimmedAnswer, target.answer, true);
 
     // 4) 저장 (정답이면서 아직 미해결인 경우에만)
     if (isCorrect && !target.isSolved) {
@@ -86,7 +86,7 @@ export class AnswerQuizService implements AnswerQuizUseCase {
     // 5) 응답 - 단순화
     // - 정답: isSolved=true, reward 반환
     // - 오답: isSolved=false, reward 없음
-    const response: AnswerQuizResponseData = {
+    const response: AnswerQuizResponseResult = {
       quizId,
       isSolved: isCorrect,
     };

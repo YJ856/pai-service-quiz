@@ -3,7 +3,7 @@ import type {
     UpdateQuizPathParam as SharedPath, 
     UpdateQuizRequestDto as SharedBody 
 } from "pai-shared-types";
-import { TrimString, TrimToNull, TrimToUndefined } from "./common/transforms";
+import { TrimString, TrimToNull, TrimToUndefined } from "../common/transforms";
 
 export class UpdateQuizPathParam implements SharedPath {
     @IsInt() @IsNotEmpty()

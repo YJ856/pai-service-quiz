@@ -1,4 +1,4 @@
-import type { Quiz } from '../../../domain/model/quiz';
+import type { UpdateQuizResponseResult } from '../../../adapter/in/http/dto/result/update-quiz.result.dto';
 import type { UpdateQuizCommand } from '../../command/update-quiz.command';
 
 /**
@@ -8,5 +8,5 @@ import type { UpdateQuizCommand } from '../../command/update-quiz.command';
  * - 전달된 필드만 부분 수정 (hint/reward = null 이면 제거)
  */
 export interface UpdateQuizUseCase {
-  execute(cmd: UpdateQuizCommand): Promise<Quiz>;
+  execute(cmd: UpdateQuizCommand): Promise<UpdateQuizResponseResult>;
 }

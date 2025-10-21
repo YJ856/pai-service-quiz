@@ -9,7 +9,9 @@ import {
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import { isValidYmd, ymdToUtcDate, toYmdFromDate, todayYmd } from '../../utils/date.util';
-import { deriveStatus } from '../../domain/policy/quiz.policy';
+import { canEdit } from '../../domain/policy/quiz.policy';
+import { Quiz } from '../../domain/model/quiz';
+import { UpdateQuizMapper } from '../../mapper/update-quiz.mapper';
 
 import type { UpdateQuizCommand } from '../command/update-quiz.command';
 import type { UpdateQuizUseCase } from '../port/in/update-quiz.usecase';
@@ -18,6 +20,7 @@ import type {
   QuizCommandPort,
   QuizUpdateRepoPatch,
 } from '../port/out/quiz.repository.port';
+import type { UpdateQuizResponseResult } from '../../adapter/in/http/dto/result/update-quiz.result.dto';
 
 @Injectable()
 export class UpdateQuizService implements UpdateQuizUseCase {
@@ -27,6 +30,8 @@ export class UpdateQuizService implements UpdateQuizUseCase {
 
     @Inject(QUIZ_TOKENS.QuizCommandPort)
     private readonly updateRepo: QuizCommandPort,
+
+    private readonly updateQuizMapper: UpdateQuizMapper,
   ) {}
 
   /**
@@ -34,9 +39,9 @@ export class UpdateQuizService implements UpdateQuizUseCase {
    * - 작성자 본인만
    * - 상태가 SCHEDULED인 경우에만
    * - 전달된 필드만 부분 수정 (hint/reward === null 이면 제거)
-   * - 수정된 퀴즈 도메인을 반환
+   * - 수정된 퀴즈 Result DTO 반환
    */
-  async execute(cmd: UpdateQuizCommand): Promise<any> {
+  async execute(cmd: UpdateQuizCommand): Promise<UpdateQuizResponseResult> {
     const quizId = cmd.quizId;
     const requesterPid = this.toInt(cmd.parentProfileId);
 
@@ -49,17 +54,15 @@ export class UpdateQuizService implements UpdateQuizUseCase {
     const row = await this.detailRepo.findDetailById(quizId);
     if (!row) throw new NotFoundException('QUIZ_NOT_FOUND');
 
-    // 2) 권한 & 상태 체크
-    if (row.parentProfileId !== requesterPid) {
-      throw new ForbiddenException('FORBIDDEN');
-    }
-
-    // 상태 체크: publishDate > today 일 때만 수정 가능 (SCHEDULED)
+    // 2) 권한 & 상태 체크 (도메인 정책 활용)
     const today = todayYmd();
     const publishDateYmd = toYmdFromDate(row.publishDate);
-    const status = deriveStatus(publishDateYmd, today);
 
-    if (status !== 'SCHEDULED') {
+    if (!canEdit(publishDateYmd, row.parentProfileId, requesterPid, today)) {
+      // 작성자가 아니거나 SCHEDULED 상태가 아님
+      if (row.parentProfileId !== requesterPid) {
+        throw new ForbiddenException('FORBIDDEN');
+      }
       throw new ConflictException('NOT_SCHEDULED');
     }
 
@@ -104,11 +107,22 @@ export class UpdateQuizService implements UpdateQuizUseCase {
       throw new ConflictException('NOT_SCHEDULED');
     }
 
-    // 6) 수정된 퀴즈를 다시 조회하여 반환
-    const updatedQuiz = await this.detailRepo.findDetailById(quizId);
-    if (!updatedQuiz) throw new NotFoundException('QUIZ_NOT_FOUND');
+    // 6) 수정된 퀴즈를 다시 조회하여 Quiz 도메인 객체 생성
+    const updatedRow = await this.detailRepo.findDetailById(quizId);
+    if (!updatedRow) throw new NotFoundException('QUIZ_NOT_FOUND');
 
-    return updatedQuiz;
+    const quiz = new Quiz(
+      updatedRow.question,
+      updatedRow.answer,
+      toYmdFromDate(updatedRow.publishDate),
+      updatedRow.parentProfileId,
+      updatedRow.hint,
+      updatedRow.reward,
+      updatedRow.id
+    );
+
+    // 7) Result DTO로 변환
+    return this.updateQuizMapper.toResponseResult(quiz);
   }
 
   // ===== helpers =====

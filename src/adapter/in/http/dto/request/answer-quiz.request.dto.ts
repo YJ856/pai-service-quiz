@@ -1,5 +1,5 @@
 import { IsString, IsNotEmpty, IsInt } from 'class-validator';
-import { TrimToUndefined } from './common/transforms';
+import { TrimToUndefined } from '../common/transforms';
 import { 
   AnswerQuizPathParam as SharedPath,
   AnswerQuizRequestDto as SharedBody

@@ -8,7 +8,7 @@ import {
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import { toYmdFromDate, todayYmd } from '../../utils/date.util';
-import { deriveStatus } from '../../domain/policy/quiz.policy';
+import { canDelete } from '../../domain/policy/quiz.policy';
 
 import type { DeleteQuizCommand } from '../command/delete-quiz.command';
 import type { DeleteQuizUseCase } from '../port/in/delete-quiz.usecase';
@@ -36,17 +36,15 @@ export class DeleteQuizService implements DeleteQuizUseCase {
     const quiz = await this.detailRepo.findDetailById(quizId);
     if (!quiz) throw new NotFoundException('QUIZ_NOT_FOUND');
 
-    // 2) 권한 체크 (작성자 확인)
-    if (quiz.parentProfileId !== parentProfileId) {
-      throw new ForbiddenException('FORBIDDEN');
-    }
-
-    // 3) 상태 체크 (SCHEDULED만 삭제 가능: publishDate > today)
+    // 2) 권한 & 상태 체크 (도메인 정책 활용)
     const today = todayYmd();
     const publishDateYmd = toYmdFromDate(quiz.publishDate);
-    const status = deriveStatus(publishDateYmd, today);
 
-    if (status !== 'SCHEDULED') {
+    if (!canDelete(publishDateYmd, quiz.parentProfileId, parentProfileId, today)) {
+      // 작성자가 아니거나 SCHEDULED 상태가 아님
+      if (quiz.parentProfileId !== parentProfileId) {
+        throw new ForbiddenException('FORBIDDEN');
+      }
       throw new ConflictException('NOT_SCHEDULED');
     }
 

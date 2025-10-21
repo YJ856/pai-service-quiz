@@ -1,6 +1,6 @@
 // src/adapter/in/http/mapper/children-completed.mapper.ts
 import { Injectable } from '@nestjs/common';
-import { ChildrenCompletedQueryDto } from 'src/adapter/in/http/dto/children-completed.query.dto'; // 로컬 DTO 클래스
+import { ChildrenCompletedQueryDto } from 'src/adapter/in/http/dto/request/children-completed.query.dto'; // 로컬 DTO 클래스
 import { ChildrenCompletedCommand } from 'src/application/command/children-completed.command';
 import type { ChildrenCompletedResponseData, } from 'pai-shared-types'; // 출력은 shared 타입으로 계약 고정
 

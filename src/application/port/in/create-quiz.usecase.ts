@@ -9,7 +9,7 @@
 
 // 여기서는 type만 필요
 import type { CreateQuizCommand } from '../../command/create-quiz.command';
-import type { Quiz } from '../../../domain/model/quiz';
+import type { CreateQuizResponseResult } from '../../../adapter/in/http/dto/result/create-quiz.result.dto';
 
 /**
  * 부모가 퀴즈를 생성하는 유즈케이스의 "계약"
@@ -17,11 +17,11 @@ import type { Quiz } from '../../../domain/model/quiz';
  */
 
 export interface CreateQuizUseCase { // 컨트롤러 -> 유즈케이스(피호출자)의 계약에 의존
-    execute(command: CreateQuizCommand): Promise<Quiz>;
+    execute(command: CreateQuizCommand): Promise<CreateQuizResponseResult>;
     /** 약속
-     * execute라는 이름의 함수가 반드시 존재하고, 
+     * execute라는 이름의 함수가 반드시 존재하고,
      * 입력은 CreateQuizCommand 1개,
-     * 출력은 Promise<Quiz> (도메인 객체)
+     * 출력은 Promise<CreateQuizResponseResult> (Result DTO)
      */
 }
 

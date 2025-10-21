@@ -1,9 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { ChildrenTodayResponseData } from 'pai-shared-types';
+import type { ChildrenTodayResponseResult } from 'src/adapter/in/http/dto/result/children-today.result.dto';
 
-import type {
-  ListChildrenTodayUseCase,
-} from '../port/in/list-children-today.usecase';
+import type { ListChildrenTodayUseCase } from '../port/in/list-children-today.usecase';
 import type { ChildrenTodayCommand } from '../command/children-today.command';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
@@ -39,7 +37,7 @@ export class ListChildrenTodayService implements ListChildrenTodayUseCase {
    * - 기준 날짜: Asia/Seoul(UTC+9)
    * - 커서: Base64("quizId")
    */
-  async execute(cmd: ChildrenTodayCommand): Promise<ChildrenTodayResponseData> {
+  async execute(cmd: ChildrenTodayCommand): Promise<ChildrenTodayResponseResult> {
     const { childProfileId } = cmd;
     const limit = cmd.limit;
     const afterQuizId = decodeIdCursor(cmd.cursor ?? null);
