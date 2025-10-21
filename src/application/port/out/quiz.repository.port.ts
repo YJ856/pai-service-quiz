@@ -25,7 +25,7 @@ export type QuizUpdateRepoPatch = {
 // ============================================================
 
 export interface MarkSolvedParams {
-  childProfileId: string;
+  childProfileId: number;
   quizId: number;
 }
 

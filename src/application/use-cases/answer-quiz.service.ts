@@ -7,10 +7,8 @@ import {
 } from '@nestjs/common';
 import type { AnswerQuizResponseData } from 'pai-shared-types';
 
-import type {
-  AnswerQuizUseCase,
-  AnswerQuizCommand,
-} from '../port/in/answer-quiz.usecase';
+import type { AnswerQuizUseCase } from '../port/in/answer-quiz.usecase';
+import { AnswerQuizCommand } from '../command/answer-quiz.command';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type {
@@ -40,9 +38,10 @@ export class AnswerQuizService implements AnswerQuizUseCase {
    * - 채점: 기본 완전 일치, normalize=true 시 간단 정규화 후 비교
    */
   async execute(cmd: AnswerQuizCommand): Promise<AnswerQuizResponseData> {
-    const { childProfileId } = cmd;
+    const { childProfileId, quizId } = cmd;
 
-    if (!cmd.quizId || !Number.isFinite(cmd.quizId) || cmd.quizId <= 0) {
+    // quizId 검증
+    if (!quizId || !Number.isFinite(quizId) || quizId <= 0) {
       throw new BadRequestException('VALIDATION_ERROR: invalid quizId');
     }
 
@@ -57,7 +56,7 @@ export class AnswerQuizService implements AnswerQuizUseCase {
     // 1) 제출 대상 조회 (본인 배정 + publishDate = today)
     const target = await this.queryRepo.findAnswerTarget({
       childProfileId,
-      quizId: cmd.quizId,
+      quizId,
       todayYmd,
     });
     if (!target) {
@@ -73,14 +72,14 @@ export class AnswerQuizService implements AnswerQuizUseCase {
       throw new ForbiddenException('QUIZ_DATE_EXPIRED');
     }
 
-    // 3) 채점 (trim된 답안 사용)
-    const isCorrect = this.checkAnswer(trimmedAnswer, target.answer, !!cmd.normalize);
+    // 3) 채점 (완전 일치)
+    const isCorrect = this.checkAnswer(trimmedAnswer, target.answer, false);
 
     // 4) 저장 (정답이면서 아직 미해결인 경우에만)
     if (isCorrect && !target.isSolved) {
       await this.commandRepo.markSolved({
         childProfileId,
-        quizId: cmd.quizId,
+        quizId,
       });
     }
 
@@ -88,7 +87,7 @@ export class AnswerQuizService implements AnswerQuizUseCase {
     // - 정답: isSolved=true, reward 반환
     // - 오답: isSolved=false, reward 없음
     const response: AnswerQuizResponseData = {
-      quizId: cmd.quizId,
+      quizId,
       isSolved: isCorrect,
     };
 

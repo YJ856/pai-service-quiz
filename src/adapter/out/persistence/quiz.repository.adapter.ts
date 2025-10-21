@@ -7,7 +7,6 @@ import type {
   MarkSolvedParams,
 } from '../../../application/port/out/quiz.repository.port';
 import { ymdToUtcDate, utcDateToYmd, todayYmd } from '../../../utils/date.util';
-import { toIntId } from '../../../utils/id.util';
 
 @Injectable()
 export class QuizRepositoryAdapter implements QuizCommandPort {
@@ -136,14 +135,13 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
    */
   async markSolved(params: MarkSolvedParams): Promise<void> {
     const { childProfileId, quizId } = params;
-    const cid = toIntId(childProfileId);
 
     await this.prisma.assignment.upsert({
       where: {
-        quizId_childProfileId: { quizId, childProfileId: cid },
+        quizId_childProfileId: { quizId, childProfileId },
       },
       update: { isSolved: true },
-      create: { quizId, childProfileId: cid, isSolved: true },
+      create: { quizId, childProfileId, isSolved: true },
     });
   }
 }

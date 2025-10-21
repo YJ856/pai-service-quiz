@@ -2,9 +2,9 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { ChildrenTodayResponseData } from 'pai-shared-types';
 
 import type {
-  ListChildrenTodayQuery,
   ListChildrenTodayUseCase,
 } from '../port/in/list-children-today.usecase';
+import type { ChildrenTodayCommand } from '../command/children-today.command';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type {
@@ -18,7 +18,6 @@ import type {
 
 // Utils
 import { getTodayYmdKST } from '../../utils/date.util';
-import { clampLimit } from '../../utils/pagination.util';
 import { decodeIdCursor, encodeIdCursor } from '../../utils/cursor.util';
 import {
   getParentProfilesSafe,
@@ -40,10 +39,10 @@ export class ListChildrenTodayService implements ListChildrenTodayUseCase {
    * - 기준 날짜: Asia/Seoul(UTC+9)
    * - 커서: Base64("quizId")
    */
-  async execute(params: ListChildrenTodayQuery): Promise<ChildrenTodayResponseData> {
-    const { childProfileId } = params;
-    const limit = clampLimit(params.limit);
-    const afterQuizId = decodeIdCursor(params.cursor);
+  async execute(cmd: ChildrenTodayCommand): Promise<ChildrenTodayResponseData> {
+    const { childProfileId } = cmd;
+    const limit = cmd.limit;
+    const afterQuizId = decodeIdCursor(cmd.cursor ?? null);
     const todayYmd = getTodayYmdKST();
 
     // 1) DB에서 자녀에게 배정된 TODAY 목록 조회

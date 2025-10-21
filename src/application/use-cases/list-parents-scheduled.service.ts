@@ -2,9 +2,9 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { ParentsScheduledResponseData, ParentsScheduledItemDto } from 'pai-shared-types';
 
 import type {
-  ListParentsScheduledQuery,
   ListParentsScheduledUseCase,
 } from '../port/in/list-parents-scheduled.usecase';
+import type { ParentsScheduledCommand } from '../command/parents-scheduled.command';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type {
@@ -14,7 +14,6 @@ import type {
 import type { ProfileDirectoryPort, ParentProfileSummary } from '../port/out/profile-directory.port';
 
 // Utils
-import { clampLimit } from '../../utils/pagination.util';
 import { decodeCompositeCursor, encodeCompositeCursor } from '../../utils/cursor.util';
 import { getParentProfileSafe } from '../../utils/profile.util';
 import { todayYmd } from '../../utils/date.util';
@@ -34,10 +33,10 @@ export class ListParentsScheduledService implements ListParentsScheduledUseCase 
    * - 정렬: publishDate ASC, quizId ASC
    * - 커서: Base64("\"yyyy-MM-dd|quizId\"")
    */
-  async execute(params: ListParentsScheduledQuery): Promise<ParentsScheduledResponseData> {
-    const { parentProfileId } = params;
-    const limit = clampLimit(params.limit);
-    const after = decodeCompositeCursor(params.cursor);
+  async execute(cmd: ParentsScheduledCommand): Promise<ParentsScheduledResponseData> {
+    const { parentProfileId } = cmd;
+    const limit = cmd.limit;
+    const after = decodeCompositeCursor(cmd.cursor ?? null);
 
     // 1) DB 조회
     const findParams: FindParentsScheduledParams = {

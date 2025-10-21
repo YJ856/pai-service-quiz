@@ -1,11 +1,6 @@
 import type { ParentsCompletedResponseData } from 'pai-shared-types';
-
-export interface ListParentsCompletedQuery {
-  parentProfileId: string;
-  limit: number;
-  cursor: string | null;
-}
+import type { ParentsCompletedCommand } from '../../command/parents-completed.command';
 
 export interface ListParentsCompletedUseCase {
-  execute(params: ListParentsCompletedQuery): Promise<ParentsCompletedResponseData>;
+  execute(cmd: ParentsCompletedCommand): Promise<ParentsCompletedResponseData>;
 }

@@ -1,7 +1,7 @@
 export class AnswerQuizCommand {
     constructor(
-        public readonly quizId: string,
-        public readonly childProfileId: string,
+        public readonly quizId: number,
+        public readonly childProfileId: number,
         public readonly answer: string,
     ) {}
 }

@@ -42,13 +42,17 @@ import type { GetParentsQuizDetailUseCase } from '../../../../application/port/i
 import type { UpdateQuizUseCase } from '../../../../application/port/in/update-quiz.usecase';
 import type { DeleteQuizUseCase } from '../../../../application/port/in/delete-quiz.usecase';
 
-import { QuizMapper } from '../../../../mapper/quiz.mapper';
 import { NextPublishDateMapper } from '../../../../mapper/next-publish-date.mapper';
+import { CreateQuizMapper } from '../../../../mapper/create-quiz.mapper';
+import { UpdateQuizMapper } from '../../../../mapper/update-quiz.mapper';
+import { DeleteQuizMapper } from '../../../../mapper/delete-quiz.mapper';
+import { DetailQuizMapper } from '../../../../mapper/detail-quiz.mapper';
+import { ParentsTodayMapper } from '../../../../mapper/parents-today.mapper';
+import { ParentsScheduledMapper } from '../../../../mapper/parents-scheduled.mapper';
+import { ParentsCompletedMapper } from '../../../../mapper/parents-completed.mapper';
 
 import { ParentGuard } from '../auth/guards/auth.guard';
 import { Auth } from '../decorators/auth.decorator';
-
-import { clampLimit } from '../../../../utils/pagination.util';
 
 @Controller('api/quiz')
 @UseGuards(ParentGuard)
@@ -56,7 +60,7 @@ export class ParentsQuizController {
   constructor(
     @Inject(QUIZ_TOKENS.CreateQuizUseCase)
     private readonly createQuiz: CreateQuizUseCase,
-    private readonly quizMapper: QuizMapper,
+    private readonly createQuizMapper: CreateQuizMapper,
 
     @Inject(QUIZ_TOKENS.GetNextPublishDateUseCase)
     private readonly getNextPublishDate: GetNextPublishDateUseCase,
@@ -64,27 +68,33 @@ export class ParentsQuizController {
 
     @Inject(QUIZ_TOKENS.ListParentsTodayUseCase)
     private readonly listParentsToday: ListParentsTodayUseCase,
+    private readonly parentsTodayMapper: ParentsTodayMapper,
 
     @Inject(QUIZ_TOKENS.ListParentsCompletedUseCase)
     private readonly listParentsCompleted: ListParentsCompletedUseCase,
+    private readonly parentsCompletedMapper: ParentsCompletedMapper,
 
     @Inject(QUIZ_TOKENS.ListParentsScheduledUseCase)
     private readonly listParentsScheduled: ListParentsScheduledUseCase,
+    private readonly parentsScheduledMapper: ParentsScheduledMapper,
 
     @Inject(QUIZ_TOKENS.GetParentsQuizDetailUseCase)
     private readonly getParentsQuizDetail: GetParentsQuizDetailUseCase,
+    private readonly detailQuizMapper: DetailQuizMapper,
 
     @Inject(QUIZ_TOKENS.UpdateQuizUseCase)
     private readonly updateQuiz: UpdateQuizUseCase,
+    private readonly updateQuizMapper: UpdateQuizMapper,
 
     @Inject(QUIZ_TOKENS.DeleteQuizUseCase)
     private readonly deleteQuiz: DeleteQuizUseCase,
+    private readonly deleteQuizMapper: DeleteQuizMapper,
   ) {}
 
   @Get('next-publish-date')
   @HttpCode(HttpStatus.OK)
   async getNextPublishDateHandler(
-    @Auth('profileId') parentProfileId: string,
+    @Auth('profileId') parentProfileId: number,
   ): Promise<BaseResponse<NextPublishDateData>> {
     const ymd = await this.getNextPublishDate.execute(parentProfileId);
     const data = this.nextPublishDateMapper.toResponseData(ymd);
@@ -95,79 +105,55 @@ export class ParentsQuizController {
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body() body: CreateQuizRequestDto,
-    @Auth('profileId') parentProfileId: string,
+    @Auth('profileId') parentProfileId: number,
   ): Promise<BaseResponse<CreateQuizResponseData>> {
-    const cmd = this.quizMapper.toCreateCommand(body, parentProfileId);
+    const cmd = this.createQuizMapper.toCommand(parentProfileId, body);
     const saved = await this.createQuiz.execute(cmd);
-    const data = this.quizMapper.toCreateResponse(saved);
+    const data = this.createQuizMapper.toResponse(saved);
     return { success: true, message: '퀴즈 생성 성공', data };
   }
 
   @Get('parents/today')
   @HttpCode(HttpStatus.OK)
   async listParentsTodayHandler(
-    @Auth('profileId') parentProfileId: string,
+    @Auth('profileId') parentProfileId: number,
     @Query() query: ParentsTodayQueryDto,
   ): Promise<BaseResponse<ParentsTodayResponseData>> {
-    const limit = clampLimit(query.limit);
-    const cursor = query?.cursor && String(query.cursor).trim() !== ''
-      ? String(query.cursor).trim()
-      : null;
-
-    const data = await this.listParentsToday.execute({
-      parentProfileId,
-      limit,
-      cursor,
-    });
-
+    const cmd = this.parentsTodayMapper.toCommand(query, parentProfileId);
+    const result = await this.listParentsToday.execute(cmd);
+    const data = this.parentsTodayMapper.toResponse(result);
     return { success: true, message: '오늘의 퀴즈 조회 성공', data };
   }
 
   @Get('parents/completed')
   @HttpCode(HttpStatus.OK)
   async listParentsCompletedHandler(
-    @Auth('profileId') parentProfileId: string,
+    @Auth('profileId') parentProfileId: number,
     @Query() query: ParentsCompletedQueryDto,
   ): Promise<BaseResponse<ParentsCompletedResponseData>> {
-    const limit = clampLimit(query.limit as any);
-    const cursor = query?.cursor && String(query.cursor).trim() !== ''
-      ? String(query.cursor).trim()
-      : null;
-
-    const data = await this.listParentsCompleted.execute({
-      parentProfileId,
-      limit,
-      cursor,
-    });
-
+    const cmd = this.parentsCompletedMapper.toCommand(query, parentProfileId);
+    const result = await this.listParentsCompleted.execute(cmd);
+    const data = this.parentsCompletedMapper.toResponse(result);
     return { success: true, message: '완료된 퀴즈 조회 성공', data };
   }
 
   @Get('parents/scheduled')
   @HttpCode(HttpStatus.OK)
   async listParentsScheduledHandler(
-    @Auth('profileId') parentProfileId: string,
+    @Auth('profileId') parentProfileId: number,
     @Query() query: ParentsScheduledQueryDto,
   ): Promise<BaseResponse<ParentsScheduledResponseData>> {
-    const limit = clampLimit(query.limit as any);
-    const cursor = query?.cursor && String(query.cursor).trim() !== ''
-      ? String(query.cursor).trim()
-      : null;
-
-    const data = await this.listParentsScheduled.execute({
-      parentProfileId,
-      limit,
-      cursor,
-    });
-
+    const cmd = this.parentsScheduledMapper.toCommand(query, parentProfileId);
+    const result = await this.listParentsScheduled.execute(cmd);
+    const data = this.parentsScheduledMapper.toResponse(result);
     return { success: true, message: '예정된 퀴즈 조회 성공', data };
   }
 
   @Get(':quizId')
   @HttpCode(HttpStatus.OK)
   async getParentsQuizDetailHandler(
-    @Param('quizId') quizIdParam: string,
-    @Auth('profileId') parentProfileId: string,
+    @Param('quizId') quizIdParam: number,
+    @Auth('profileId') parentProfileId: number,
   ): Promise<BaseResponse<ParentsQuizDetailResponseData>> {
     const quizId = Number(quizIdParam);
     if (!Number.isFinite(quizId) || quizId <= 0) {
@@ -185,8 +171,8 @@ export class ParentsQuizController {
   @Patch(':quizId')
   @HttpCode(HttpStatus.OK)
   async updateQuizHandler(
-    @Param('quizId') quizIdParam: string,
-    @Auth('profileId') parentProfileId: string,
+    @Param('quizId') quizIdParam: number,
+    @Auth('profileId') parentProfileId: number,
     @Body() body: UpdateQuizRequestDto,
   ): Promise<BaseResponse<UpdateQuizResponseData>> {
     const quizId = Number(quizIdParam);
@@ -194,27 +180,26 @@ export class ParentsQuizController {
       throw new BadRequestException('VALIDATION_ERROR');
     }
 
-    const cmd = this.quizMapper.toUpdateCommand(body ?? {}, quizId, parentProfileId);
+    const cmd = this.updateQuizMapper.toCommand(quizId, parentProfileId, body ?? {});
     const updatedQuiz = await this.updateQuiz.execute(cmd);
-    const data = this.quizMapper.toUpdateResponse(updatedQuiz);
-
+    const data = this.updateQuizMapper.toResponse(updatedQuiz);
     return { success: true, message: '수정이 완료되었습니다!', data };
   }
 
   @Delete(':quizId')
   @HttpCode(HttpStatus.OK)
   async deleteQuizHandler(
-    @Param('quizId') quizIdParam: string,
-    @Auth('profileId') parentProfileId: string,
+    @Param('quizId') quizIdParam: number,
+    @Auth('profileId') parentProfileId: number,
   ): Promise<BaseResponse<DeleteQuizResponseData>> {
     const quizId = Number(quizIdParam);
     if (!Number.isFinite(quizId) || quizId <= 0) {
       throw new BadRequestException('VALIDATION_ERROR');
     }
 
-    const cmd = this.quizMapper.toDeleteCommand(quizId, parentProfileId);
+    const cmd = this.deleteQuizMapper.toCommand(quizId, parentProfileId);
     await this.deleteQuiz.execute(cmd);
-    const data = this.quizMapper.toDeleteResponse(quizId);
+    const data = this.deleteQuizMapper.toResponse(quizId);
 
     return { success: true, message: '삭제가 완료되었습니다!', data };
   }

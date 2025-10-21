@@ -2,9 +2,9 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { ChildrenCompletedResponseData } from 'pai-shared-types';
 
 import type {
-  ListChildrenCompletedQuery,
   ListChildrenCompletedUseCase,
 } from '../port/in/list-children-completed.usecase';
+import type { ChildrenCompletedCommand } from '../command/children-completed.command';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type {
@@ -18,7 +18,6 @@ import type {
 } from '../port/out/profile-directory.port';
 
 // Utils
-import { clampLimit } from '../../utils/pagination.util';
 import { decodeCompositeCursor, encodeCompositeCursor } from '../../utils/cursor.util';
 import {
   getParentProfilesSafe,
@@ -41,12 +40,12 @@ export class ListChildrenCompletedService implements ListChildrenCompletedUseCas
     private readonly profiles: ProfileDirectoryPort,
   ) {}
 
-  async execute(params: ListChildrenCompletedQuery): Promise<ChildrenCompletedResponseData> {
-    const limit = clampLimit(params.limit);
-    const after = decodeCompositeCursor(params.cursor);
+  async execute(cmd: ChildrenCompletedCommand): Promise<ChildrenCompletedResponseData> {
+    const limit = cmd.limit;
+    const after = decodeCompositeCursor(cmd.cursor ?? null);
 
     const query: FindChildrenCompletedParams = {
-      childProfileId: params.childProfileId,
+      childProfileId: cmd.childProfileId,
       limit,
       ...(after ? { after } : {}),
     };

@@ -1,11 +1,6 @@
 import type { ChildrenTodayResponseData } from 'pai-shared-types';
-
-export interface ListChildrenTodayQuery {
-  childProfileId: number;
-  limit: number;
-  cursor: string | null;
-}
+import type { ChildrenTodayCommand } from '../../command/children-today.command';
 
 export interface ListChildrenTodayUseCase {
-  execute(params: ListChildrenTodayQuery): Promise<ChildrenTodayResponseData>;
+  execute(cmd: ChildrenTodayCommand): Promise<ChildrenTodayResponseData>;
 }

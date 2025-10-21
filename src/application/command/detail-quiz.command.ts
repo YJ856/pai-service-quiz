@@ -1,6 +1,6 @@
 export class DetailQuizCommand {
     constructor(
-        public readonly quizId: string,
-        public readonly parentProfileId: string,
+        public readonly quizId: number,
+        public readonly parentProfileId: number,
     ) {}
 }

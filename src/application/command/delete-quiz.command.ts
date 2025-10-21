@@ -1,6 +1,6 @@
 export class DeleteQuizCommand {
   constructor (
-    public readonly parentProfileId: string,
-    public readonly quizId: string,
+    public readonly parentProfileId: number,
+    public readonly quizId: number,
   ) {}
 }

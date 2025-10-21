@@ -18,20 +18,18 @@ import type {
 } from '../../../application/port/out/quiz.query.port';
 import type { MarkSolvedParams } from '../../../application/port/out/quiz.repository.port';
 import { toYmdFromDate, ymdToUtcDate, utcDayRangeForYmd, todayYmd } from '../../../utils/date.util';
-import { toIntId } from '../../../utils/id.util';
 
 @Injectable()
 export class QuizQueryAdapter implements QuizQueryPort {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findLastScheduledDateYmd(parentProfileId: string): Promise<string | null> {
-    const pid = toIntId(parentProfileId);
+  async findLastScheduledDateYmd(parentProfileId: number): Promise<string | null> {
     const today = todayYmd();
 
     // SCHEDULED = publishDate > today(KST)
     const row = await this.prisma.quiz.findFirst({
       where: {
-        parentProfileId: pid,
+        parentProfileId,
         publishDate: { gt: ymdToUtcDate(today) }  // publishDate > today
       },
       orderBy: { publishDate: 'desc' },
@@ -43,12 +41,11 @@ export class QuizQueryAdapter implements QuizQueryPort {
     return toYmdFromDate(row.publishDate);
   }
 
-  async existsAnyOnDate(parentProfileId: string, ymd: string): Promise<boolean> {
-    const pid = toIntId(parentProfileId);
+  async existsAnyOnDate(parentProfileId: number, ymd: string): Promise<boolean> {
     const { gte, lt } = utcDayRangeForYmd(ymd);
     const count = await this.prisma.quiz.count({
       where: {
-        parentProfileId: pid,                  // ✅ 필드명
+        parentProfileId,                       // ✅ 필드명
         publishDate: { gte, lt },              // ✅ 날짜 범위
       },
     });
@@ -57,13 +54,12 @@ export class QuizQueryAdapter implements QuizQueryPort {
 
   async findParentsToday(params: FindParentsTodayParams): Promise<FindParentsTodayResult> {
     const { parentProfileId, todayYmd, limit, afterQuizId } = params;
-    const pid = toIntId(parentProfileId);
     const { gte, lt } = utcDayRangeForYmd(todayYmd);
 
     // TODAY = publishDate = today(KST)
     const rows = await this.prisma.quiz.findMany({
       where: {
-        parentProfileId: pid,
+        parentProfileId,
         publishDate: { gte, lt },      // publishDate = today (UTC 범위로 변환)
         ...(afterQuizId ? { id: { gt: afterQuizId } } : {}),
       },
@@ -91,17 +87,17 @@ export class QuizQueryAdapter implements QuizQueryPort {
     const items = page.map((q) => ({
       quizId: q.id,
       question: q.question,
-      hint: q.hint ?? undefined,
+      hint: q.hint ?? null,
       answer: q.answer,
-      reward: q.reward ?? undefined,
+      reward: q.reward ?? null,
       authorParentProfileId: q.parentProfileId,
-      authorParentName: '부모',            
+      authorParentName: '부모',
       authorParentAvatarMediaId: null,
 
       children: (q.assignments ?? []).map((a) => ({
         childProfileId: a.childProfileId,
-        childName: '',                     
-        childAvatarMediaId: null,          
+        childName: '',
+        childAvatarMediaId: null,
         isSolved: !!a.isSolved,
       })),
     }));
@@ -111,7 +107,6 @@ export class QuizQueryAdapter implements QuizQueryPort {
 
   async findParentsCompleted(params: FindParentsCompletedParams): Promise<FindParentsCompletedResult> {
     const { parentProfileId, limit, after } = params;
-    const pid = toIntId(parentProfileId);
     const today = todayYmd();
 
     // 커서 조건 (정렬: publishDate DESC, id DESC)
@@ -133,7 +128,7 @@ export class QuizQueryAdapter implements QuizQueryPort {
     // COMPLETED = publishDate < today(KST)
     const rows = await this.prisma.quiz.findMany({
       where: {
-        parentProfileId: pid,
+        parentProfileId,
         publishDate: { lt: ymdToUtcDate(today) },  // publishDate < today
         ...cursorWhere,
       },
@@ -168,7 +163,7 @@ export class QuizQueryAdapter implements QuizQueryPort {
       publishDate: toYmdFromDate(q.publishDate), // 'yyyy-MM-dd'
       question: q.question,
       answer: q.answer,
-      reward: q.reward ?? undefined,
+      reward: q.reward ?? null,
 
       authorParentProfileId: q.parentProfileId,
       authorParentName: '부모',                // ← 외부 user 서비스에서 보강 (서비스에서 merge)
@@ -188,7 +183,6 @@ export class QuizQueryAdapter implements QuizQueryPort {
 
   async findParentsScheduled(params: FindParentsScheduledParams): Promise<FindParentsScheduledResult> {
     const { parentProfileId, limit, after } = params;
-    const pid = toIntId(parentProfileId);
     const today = todayYmd();
 
     // 커서 조건 (정렬: publishDate ASC, id ASC)
@@ -210,7 +204,7 @@ export class QuizQueryAdapter implements QuizQueryPort {
     // SCHEDULED = publishDate > today(KST)
     const rows = await this.prisma.quiz.findMany({
       where: {
-        parentProfileId: pid,
+        parentProfileId,
         publishDate: { gt: ymdToUtcDate(today) },  // publishDate > today
         ...cursorWhere,
       },
@@ -238,8 +232,8 @@ export class QuizQueryAdapter implements QuizQueryPort {
       publishDate: toYmdFromDate(q.publishDate), // 'yyyy-MM-dd'
       question: q.question,
       answer: q.answer,
-      hint: q.hint ?? undefined,
-      reward: q.reward ?? undefined,
+      hint: q.hint ?? null,
+      reward: q.reward ?? null,
 
       authorParentProfileId: q.parentProfileId,
       authorParentName: '부모',                // 서비스에서 실제 프로필 정보로 보강
@@ -286,7 +280,6 @@ export class QuizQueryAdapter implements QuizQueryPort {
    */
   async findChildrenToday(params: FindChildrenTodayParams): Promise<FindChildrenTodayResult> {
     const { childProfileId, todayYmd, limit, afterQuizId } = params;
-    const cid = toIntId(childProfileId);
     const { gte, lt } = utcDayRangeForYmd(todayYmd);
 
     // TODAY = publishDate = today(KST)
@@ -294,7 +287,7 @@ export class QuizQueryAdapter implements QuizQueryPort {
       where: {
         publishDate: { gte, lt },  // publishDate = today
         assignments: {
-          some: { childProfileId: cid },
+          some: { childProfileId },
         },
         ...(afterQuizId ? { id: { gt: afterQuizId } } : {}),
       },
@@ -307,7 +300,7 @@ export class QuizQueryAdapter implements QuizQueryPort {
         reward: true,
         parentProfileId: true,          // authorParentProfileId 로 매핑
         assignments: {
-          where: { childProfileId: cid },
+          where: { childProfileId },
           select: { isSolved: true },
         },
       },
@@ -320,9 +313,9 @@ export class QuizQueryAdapter implements QuizQueryPort {
     const items = page.map((q) => ({
       quizId: q.id,
       question: q.question,
-      hint: q.hint ?? undefined,
+      hint: q.hint ?? null,
       // 보상 노출 정책은 UseCase에서 isSolved 기준으로 필터링 예정이므로 원본 유지
-      reward: q.reward ?? undefined,
+      reward: q.reward ?? null,
 
       authorParentProfileId: q.parentProfileId,
       authorParentName: '부모',            // 서비스에서 실제 프로필 정보 보강 가능
@@ -342,7 +335,6 @@ export class QuizQueryAdapter implements QuizQueryPort {
    */
   async findChildrenCompleted(params: FindChildrenCompletedParams): Promise<FindChildrenCompletedResult> {
     const { childProfileId, limit, after } = params;
-    const cid = toIntId(childProfileId);
     const today = todayYmd();
 
     // 커서 조건 (부모용 completed와 동일한 규칙)
@@ -367,7 +359,7 @@ export class QuizQueryAdapter implements QuizQueryPort {
         publishDate: { lt: ymdToUtcDate(today) },  // publishDate < today
         assignments: {
           some: {
-            childProfileId: cid,
+            childProfileId,
             isSolved: true, // ✅ 본인이 푼 것만
           },
         },
@@ -396,7 +388,7 @@ export class QuizQueryAdapter implements QuizQueryPort {
       publishDate: toYmdFromDate(q.publishDate), // 'yyyy-MM-dd' (KST 기준 문자열로 변환 유틸 재사용)
       question: q.question,
       answer: q.answer,
-      reward: q.reward ?? undefined,
+      reward: q.reward ?? null,
 
       authorParentProfileId: q.parentProfileId,
       authorParentName: '부모',             // 필요 시 서비스 레이어에서 실제 이름으로 보강
@@ -408,7 +400,6 @@ export class QuizQueryAdapter implements QuizQueryPort {
 
   async findAnswerTarget(params: FindAnswerTargetParams): Promise<AnswerTargetRow | null> {
     const { childProfileId, quizId, todayYmd } = params;
-    const cid = toIntId(childProfileId);
     const { gte, lt } = utcDayRangeForYmd(todayYmd);
 
     // TODAY = publishDate = today(KST)
@@ -417,7 +408,7 @@ export class QuizQueryAdapter implements QuizQueryPort {
         id: quizId,
         publishDate: { gte, lt }, // publishDate = today
         assignments: {
-          some: { childProfileId: cid }, // 본인에게 배정된 퀴즈만
+          some: { childProfileId }, // 본인에게 배정된 퀴즈만
         },
       },
       select: {
@@ -428,7 +419,7 @@ export class QuizQueryAdapter implements QuizQueryPort {
         parentProfileId: true,
         // 자녀 자신의 완료 여부만 조회
         assignments: {
-          where: { childProfileId: cid },
+          where: { childProfileId },
           select: { isSolved: true },
           take: 1,
         },
@@ -451,16 +442,15 @@ export class QuizQueryAdapter implements QuizQueryPort {
 
   async markSolved(params: MarkSolvedParams): Promise<void> {
     const { childProfileId, quizId } = params;
-    const cid = toIntId(childProfileId);
 
     // Prisma 모델명: Assignment (delegate: prisma.assignment)
     await this.prisma.assignment.upsert({
       where: {
         // @@unique([quizId, childProfileId]) 를 활용한 복합 고유 upsert
-        quizId_childProfileId: { quizId, childProfileId: cid },
+        quizId_childProfileId: { quizId, childProfileId },
       },
       update: { isSolved: true },
-      create: { quizId, childProfileId: cid, isSolved: true },
+      create: { quizId, childProfileId, isSolved: true },
     });
   }
 

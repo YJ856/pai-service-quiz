@@ -1,6 +1,6 @@
 export class CreateQuizCommand {
   constructor(
-    public readonly parentProfileId: string,
+    public readonly parentProfileId: number,
     public readonly question: string,
     public readonly answer: string,
     public readonly hint: string | null,

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
 import type { 
     UpdateQuizPathParam as SharedPath, 
     UpdateQuizRequestDto as SharedBody 
@@ -6,8 +6,8 @@ import type {
 import { TrimString, TrimToNull, TrimToUndefined } from "./common/transforms";
 
 export class UpdateQuizPathParam implements SharedPath {
-    @IsString() @IsNotEmpty() @TrimString()
-    quizId!: string;
+    @IsInt() @IsNotEmpty()
+    quizId!: number;
 }
 
 export class UpdateQuizRequestDto implements SharedBody {

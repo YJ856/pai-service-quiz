@@ -9,6 +9,7 @@ import {
   UseGuards,
   Query,
   Param,
+  BadRequestException,
 } from '@nestjs/common';
 
 import type {
@@ -27,7 +28,9 @@ import type { ListChildrenTodayUseCase } from '../../../../application/port/in/l
 import type { ListChildrenCompletedUseCase } from '../../../../application/port/in/list-children-completed.usecase';
 import type { AnswerQuizUseCase } from '../../../../application/port/in/answer-quiz.usecase';
 
-import { QuizMapper } from '../../../../mapper/quiz.mapper';
+import { ChildrenTodayMapper } from '../../../../mapper/children-today.mapper';
+import { ChildrenCompletedMapper } from '../../../../mapper/children-completed.mapper';
+import { AnswerQuizMapper } from '../../../../mapper/answer-quiz.mapper';
 
 import { ChildGuard } from '../auth/guards/auth.guard';
 import { Auth } from '../decorators/auth.decorator';
@@ -38,67 +41,60 @@ export class ChildrenQuizController {
   constructor(
     @Inject(QUIZ_TOKENS.ListChildrenTodayUseCase)
     private readonly listChildrenTodayUseCase: ListChildrenTodayUseCase,
+    private readonly childrenTodayMapper: ChildrenTodayMapper,
 
     @Inject(QUIZ_TOKENS.ListChildrenCompletedUseCase)
     private readonly listChildrenCompletedUseCase: ListChildrenCompletedUseCase,
+    private readonly childrenCompletedMapper: ChildrenCompletedMapper,
 
     @Inject(QUIZ_TOKENS.AnswerQuizUseCase)
     private readonly answerQuizUseCase: AnswerQuizUseCase,
-
-    private readonly quizMapper: QuizMapper,
+    private readonly answerQuizMapper: AnswerQuizMapper,
   ) {}
 
   @Get('today')
   @HttpCode(HttpStatus.OK)
   async listChildrenToday(
     @Auth('profileId') childProfileId: number,
-    @Query() query: ChildrenTodayQueryDto, // 바인딩된 쿼리 객체를 타입 지정
+    @Query() query: ChildrenTodayQueryDto,
   ): Promise<BaseResponse<ChildrenTodayResponseData>> {
-    
-    const raw = query?.cursor; // unknown | string | undefined
-    const s = raw == null ? '' : String(raw).trim();
-    const cursor = s === '' ? null : s;
-
-    const data = await this.listChildrenTodayUseCase.execute({
-      childProfileId,
-      limit,
-      cursor,
-    });
-
+    const cmd = this.childrenTodayMapper.toCommand(query, childProfileId);
+    const result = await this.listChildrenTodayUseCase.execute(cmd);
+    const data = this.childrenTodayMapper.toResponse(result);
     return { success: true, message: '자녀용 오늘의 퀴즈 조회 성공', data };
   }
 
   @Get('completed')
   @HttpCode(HttpStatus.OK)
   async listChildrenCompleted(
-    @Auth('profileId') childProfileId: string,
+    @Auth('profileId') childProfileId: number,
     @Query() query: ChildrenCompletedQueryDto,
   ): Promise<BaseResponse<ChildrenCompletedResponseData>> {
-    const limit = clampLimit(query.limit);
-    const cursor = query?.cursor && String(query.cursor).trim() !== ''
-      ? String(query.cursor).trim()
-      : null;
-
-    const data = await this.listChildrenCompletedUseCase.execute({
-      childProfileId,
-      limit,
-      cursor,
-    });
-
+    const cmd = this.childrenCompletedMapper.toCommand(query, childProfileId);
+    const result = await this.listChildrenCompletedUseCase.execute(cmd);
+    const data = this.childrenCompletedMapper.toResponse(result);
     return { success: true, message: '자녀용 완료된 퀴즈 조회 성공', data };
   }
 
   @Post(':quizId/answer')
   @HttpCode(HttpStatus.OK)
   async answerQuiz(
-    @Auth('profileId') childProfileId: string,
+    @Auth('profileId') childProfileId: number,
     @Param('quizId') quizIdParam: string,
     @Body() body: AnswerQuizRequestDto,
   ): Promise<BaseResponse<AnswerQuizResponseData>> {
     const quizId = Number(quizIdParam);
-    const cmd = this.quizMapper.toAnswerCommand(body, quizId, childProfileId);
-    const data = await this.answerQuizUseCase.execute(cmd);
+    if (!Number.isFinite(quizId) || quizId <= 0) {
+      throw new BadRequestException('VALIDATION_ERROR');
+    }
 
+    const cmd = this.answerQuizMapper.toCommand(
+      { quizId },
+      body,
+      childProfileId,
+    );
+    const result = await this.answerQuizUseCase.execute(cmd);
+    const data = this.answerQuizMapper.toResponse(result);
     const message = data.isSolved ? '정답입니다.' : '오답입니다.';
 
     return { success: true, message, data };

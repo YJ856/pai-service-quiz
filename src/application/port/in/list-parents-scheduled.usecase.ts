@@ -1,11 +1,6 @@
 import type { ParentsScheduledResponseData } from 'pai-shared-types';
-
-export interface ListParentsScheduledQuery {
-  parentProfileId: string;
-  limit: number;
-  cursor: string | null;
-}
+import type { ParentsScheduledCommand } from '../../command/parents-scheduled.command';
 
 export interface ListParentsScheduledUseCase {
-  execute(params: ListParentsScheduledQuery): Promise<ParentsScheduledResponseData>;
+  execute(cmd: ParentsScheduledCommand): Promise<ParentsScheduledResponseData>;
 }

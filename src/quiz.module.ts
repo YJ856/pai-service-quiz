@@ -31,9 +31,18 @@ import { AnswerQuizService } from './application/use-cases/answer-quiz.service';
 // Infra (Prisma)
 import { PrismaService } from './adapter/out/persistence/prisma/prisma.service';
 
-// Mapper
-import { QuizMapper } from './mapper/quiz.mapper';
+// Mappers
 import { NextPublishDateMapper } from './mapper/next-publish-date.mapper';
+import { CreateQuizMapper } from './mapper/create-quiz.mapper';
+import { UpdateQuizMapper } from './mapper/update-quiz.mapper';
+import { DeleteQuizMapper } from './mapper/delete-quiz.mapper';
+import { DetailQuizMapper } from './mapper/detail-quiz.mapper';
+import { ParentsTodayMapper } from './mapper/parents-today.mapper';
+import { ParentsScheduledMapper } from './mapper/parents-scheduled.mapper';
+import { ParentsCompletedMapper } from './mapper/parents-completed.mapper';
+import { ChildrenTodayMapper } from './mapper/children-today.mapper';
+import { ChildrenCompletedMapper } from './mapper/children-completed.mapper';
+import { AnswerQuizMapper } from './mapper/answer-quiz.mapper';
 
 // Guard
 import { ParentGuard } from './adapter/in/http/auth/guards/auth.guard';
@@ -45,8 +54,17 @@ import { ChildGuard } from './adapter/in/http/auth/guards/auth.guard';
   controllers: [ParentsQuizController, ChildrenQuizController],
   providers: [
     PrismaService,
-    QuizMapper,
     NextPublishDateMapper,
+    CreateQuizMapper,
+    UpdateQuizMapper,
+    DeleteQuizMapper,
+    DetailQuizMapper,
+    ParentsTodayMapper,
+    ParentsScheduledMapper,
+    ParentsCompletedMapper,
+    ChildrenTodayMapper,
+    ChildrenCompletedMapper,
+    AnswerQuizMapper,
     ParentGuard,
     ChildGuard,
 

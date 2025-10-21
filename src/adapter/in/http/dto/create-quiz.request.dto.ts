@@ -15,8 +15,8 @@ export class CreateQuizRequestDto implements SharedCreateQuizRequestDto {
     @IsOptional() @IsString() @TrimToNull()
     reward?: string | null;
 
-    @IsOptional() @IsString() @TrimToNull()
-    publishDate!: string | null;
+    @TrimToNull() @IsOptional() @IsString()
+    publishDate: string | null = null;
 }
 
 // !: 이 값은 런타임에 반드시 채워질 거라고 보증할게 라는 뜻, 타입스크립트의 컴파일 에러를 잠재우는 표식

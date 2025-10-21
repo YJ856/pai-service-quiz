@@ -1,11 +1,6 @@
 import type { ParentsTodayResponseData } from "pai-shared-types";
-
-export interface ListParentsTodayQuery {
-    parentProfileId: string;
-    limit: number;
-    cursor: string | null;
-}
+import type { ParentsTodayCommand } from "../../command/parents-today.command";
 
 export interface ListParentsTodayUseCase {
-    execute(params: ListParentsTodayQuery): Promise<ParentsTodayResponseData>;
+    execute(cmd: ParentsTodayCommand): Promise<ParentsTodayResponseData>;
 }

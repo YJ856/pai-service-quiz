@@ -5,9 +5,9 @@ import type {
 } from 'pai-shared-types';
 
 import type {
-  ListParentsCompletedQuery,
   ListParentsCompletedUseCase,
 } from '../port/in/list-parents-completed.usecase';
+import type { ParentsCompletedCommand } from '../command/parents-completed.command';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type {
@@ -22,7 +22,6 @@ import type {
 } from '../port/out/profile-directory.port';
 
 // Utils
-import { clampLimit } from '../../utils/pagination.util';
 import { decodeCompositeCursor, encodeCompositeCursor } from '../../utils/cursor.util';
 import {
   getParentProfileSafe,
@@ -45,10 +44,10 @@ export class ListParentsCompletedService implements ListParentsCompletedUseCase 
    * - 정렬: publishDate DESC, quizId DESC
    * - 커서: Base64("\"yyyy-MM-dd|quizId\"")
    */
-  async execute(params: ListParentsCompletedQuery): Promise<ParentsCompletedResponseData> {
-    const { parentProfileId } = params;
-    const limit = clampLimit(params.limit);
-    const after = decodeCompositeCursor(params.cursor);
+  async execute(cmd: ParentsCompletedCommand): Promise<ParentsCompletedResponseData> {
+    const { parentProfileId } = cmd;
+    const limit = cmd.limit;
+    const after = decodeCompositeCursor(cmd.cursor ?? null);
 
     // 1) DB 조회
     const findParams: FindParentsCompletedParams = {
@@ -85,7 +84,7 @@ export class ListParentsCompletedService implements ListParentsCompletedUseCase 
 
   /** DB rows + 외부 프로필을 합쳐 최종 DTO로 */
   private enrichWithProfiles(
-    rows: ParentsCompletedItemDto[],
+    rows: any[],
     parent: ParentProfileSummary | null,
     childMap: Record<number, ChildProfileSummary>,
   ): ParentsCompletedItemDto[] {

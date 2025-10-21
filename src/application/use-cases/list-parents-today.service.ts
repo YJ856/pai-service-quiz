@@ -5,9 +5,9 @@ import type {
 } from 'pai-shared-types';
 
 import type {
-  ListParentsTodayQuery,
   ListParentsTodayUseCase,
 } from '../port/in/list-parents-today.usecase';
+import type { ParentsTodayCommand } from '../command/parents-today.command';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type { QuizQueryPort } from '../port/out/quiz.query.port';
@@ -19,7 +19,6 @@ import type {
 
 // Utils
 import { getTodayYmdKST } from '../../utils/date.util';
-import { clampLimit } from '../../utils/pagination.util';
 import { decodeIdCursor, encodeIdCursor } from '../../utils/cursor.util';
 import {
   getParentProfileSafe,
@@ -43,10 +42,10 @@ export class ListParentsTodayService implements ListParentsTodayUseCase {
    * - 기준 날짜: Asia/Seoul(UTC+9)
    * - 커서: Base64("quizId")
    */
-  async execute(params: ListParentsTodayQuery): Promise<ParentsTodayResponseData> {
-    const { parentProfileId } = params;
-    const limit = clampLimit(params.limit);
-    const afterQuizId = decodeIdCursor(params.cursor);
+  async execute(cmd: ParentsTodayCommand): Promise<ParentsTodayResponseData> {
+    const { parentProfileId } = cmd;
+    const limit = cmd.limit;
+    const afterQuizId = decodeIdCursor(cmd.cursor ?? null);
     const todayYmd = getTodayYmdKST();
 
     // 1) DB에서 기본 목록

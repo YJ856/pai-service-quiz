@@ -16,7 +16,7 @@ import type {
 
 // 오늘의 퀴즈
 export interface FindParentsTodayParams {
-  parentProfileId: string;
+  parentProfileId: number;
   todayYmd: string;
   limit: number;
   afterQuizId?: number;
@@ -29,7 +29,7 @@ export interface FindParentsTodayResult {
 
 // 완료된 퀴즈
 export interface FindParentsCompletedParams {
-  parentProfileId: string;
+  parentProfileId: number;
   limit: number;
   after?: {
     publishDateYmd: string;
@@ -44,7 +44,7 @@ export interface FindParentsCompletedResult {
 
 // 예정된 퀴즈
 export interface FindParentsScheduledParams {
-  parentProfileId: string;
+  parentProfileId: number;
   limit: number;
   after?: {
     publishDateYmd: string;
@@ -63,7 +63,7 @@ export interface FindParentsScheduledResult {
 
 // 오늘의 퀴즈(자녀용)
 export interface FindChildrenTodayParams {
-  childProfileId: string;
+  childProfileId: number;
   todayYmd: string;
   limit: number;
   afterQuizId?: number;
@@ -76,7 +76,7 @@ export interface FindChildrenTodayResult {
 
 // 완료된 퀴즈(자녀용)
 export interface FindChildrenCompletedParams {
-  childProfileId: string;
+  childProfileId: number;
   limit: number;
   after?: {
     publishDateYmd: string;
@@ -109,7 +109,7 @@ export type QuizDetailRow = {
 // ============================================================
 
 export interface FindAnswerTargetParams {
-  childProfileId: string;
+  childProfileId: number;
   quizId: number;
   todayYmd: string;
 }
@@ -132,8 +132,8 @@ export interface AnswerTargetRow {
 
 export interface QuizQueryPort {
   // 기본 유틸리티
-  findLastScheduledDateYmd(parentProfileId: string): Promise<string | null>;
-  existsAnyOnDate(parentProfileId: string, ymd: string): Promise<boolean>;
+  findLastScheduledDateYmd(parentProfileId: number): Promise<string | null>;
+  existsAnyOnDate(parentProfileId: number, ymd: string): Promise<boolean>;
 
   // 부모용 목록 조회
   findParentsToday(params: FindParentsTodayParams): Promise<FindParentsTodayResult>;

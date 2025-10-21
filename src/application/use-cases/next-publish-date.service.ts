@@ -18,7 +18,7 @@ export class GetNextPublishDateService implements GetNextPublishDateUseCase {
    *    - 오늘 이미 있으면: 내일
    * 모두 KST 기준 'yyyy-MM-dd'
    */
-  async execute(parentProfileId: string): Promise<string> {
+  async execute(parentProfileId: number): Promise<string> {
     const last = await this.quizQuery.findLastScheduledDateYmd(parentProfileId);
     if (last) return plusDays(last, 1);
 
