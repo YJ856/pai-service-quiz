@@ -1,13 +1,13 @@
 export interface ParentsScheduledItemDto {
-  quizId: number;
+  quizId: bigint;
   publishDate: string;
   question: string;
   answer: string;
   hint: string | null;
   reward: string | null;
-  authorParentProfileId: number;
+  authorParentProfileId: bigint;
   authorParentName: string;
-  authorParentAvatarMediaId: number | null;
+  authorParentAvatarMediaId: bigint | null;
   isEditable: boolean;
 }
 

@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   ForbiddenException,
   Inject,
@@ -41,7 +40,7 @@ export class GetParentsQuizDetailService implements GetParentsQuizDetailUseCase 
    */
   async execute(cmd: DetailQuizCommand): Promise<ParentsQuizDetailResponseResult> {
     const quizId = cmd.quizId;
-    const requesterPid = this.toInt(cmd.parentProfileId);
+    const requesterPid = cmd.parentProfileId; // 이미 bigint
 
     // 1) 단건 조회
     const row = await this.repo.findDetailById(quizId);
@@ -72,13 +71,5 @@ export class GetParentsQuizDetailService implements GetParentsQuizDetailUseCase 
 
     // 4) Mapper를 통해 Result DTO 변환
     return this.detailQuizMapper.toResponseResult(quiz);
-  }
-
-  // ============== Helpers ==============
-
-  private toInt(input: string | number): number {
-    const n = typeof input === 'string' ? Number(input) : input;
-    if (!Number.isFinite(n)) throw new BadRequestException('VALIDATION_ERROR');
-    return n;
   }
 }

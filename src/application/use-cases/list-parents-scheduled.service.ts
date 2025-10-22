@@ -50,7 +50,7 @@ export class ListParentsScheduledService implements ListParentsScheduledUseCase 
 
     // 3) nextCursor (ASC 정렬이므로 페이지의 마지막 아이템 기준)
     const tail = merged.length ? merged[merged.length - 1] : null;
-    const nextCursor = hasNext && tail ? encodeCompositeCursor(tail.publishDate, tail.quizId) : null;
+    const nextCursor = hasNext && tail ? encodeCompositeCursor(tail.publishDate, Number(tail.quizId)) : null;
 
     return {
       items: merged,
@@ -80,7 +80,7 @@ export class ListParentsScheduledService implements ListParentsScheduledUseCase 
       return {
         ...q,
         authorParentName: parent?.name ?? q.authorParentName ?? '부모',
-        authorParentAvatarMediaId: parent?.avatarMediaId ?? q.authorParentAvatarMediaId ?? null,
+        authorParentAvatarMediaId: (parent?.avatarMediaId ? BigInt(parent.avatarMediaId) : null) ?? q.authorParentAvatarMediaId ?? null,
         isEditable: editable,
       };
     });

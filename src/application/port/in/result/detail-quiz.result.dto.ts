@@ -1,5 +1,5 @@
 export interface ParentsQuizDetailResponseResult {
-  quizId: number;
+  quizId: bigint;
   question: string;
   answer: string;
   hint: string | null;

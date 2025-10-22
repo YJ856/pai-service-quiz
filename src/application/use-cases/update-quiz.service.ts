@@ -43,7 +43,7 @@ export class UpdateQuizService implements UpdateQuizUseCase {
    */
   async execute(cmd: UpdateQuizCommand): Promise<UpdateQuizResponseResult> {
     const quizId = cmd.quizId;
-    const requesterPid = this.toInt(cmd.parentProfileId);
+    const requesterPid = cmd.parentProfileId; // 이미 bigint
 
     // 0) 수정 대상 필드가 하나도 없으면 오류
     if (!this.hasAnyPatch(cmd)) {
@@ -98,7 +98,7 @@ export class UpdateQuizService implements UpdateQuizUseCase {
     // 5) DB에서 최종 조건(작성자+SCHEDULED)까지 보장하며 수정 시도
     const updated = await this.updateRepo.updateIfScheduledAndAuthor({
       quizId,
-      ParentProfileId: requesterPid,
+      parentProfileId: requesterPid, // 수정: ParentProfileId -> parentProfileId
       patch: repoPatch,
     });
 
@@ -123,13 +123,6 @@ export class UpdateQuizService implements UpdateQuizUseCase {
 
     // 7) Result DTO로 변환
     return this.updateQuizMapper.toResponseResult(quiz);
-  }
-
-  // ===== helpers =====
-  private toInt(n: number | string): number {
-    const v = typeof n === 'string' ? Number(n) : n;
-    if (!Number.isFinite(v) || v <= 0) throw new BadRequestException('VALIDATION_ERROR');
-    return v;
   }
 
   private hasAnyPatch(cmd: UpdateQuizCommand): boolean {

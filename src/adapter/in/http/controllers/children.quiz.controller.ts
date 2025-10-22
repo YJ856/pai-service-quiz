@@ -9,7 +9,6 @@ import {
   UseGuards,
   Query,
   Param,
-  BadRequestException,
 } from '@nestjs/common';
 
 import type {
@@ -80,14 +79,9 @@ export class ChildrenQuizController {
   @HttpCode(HttpStatus.OK)
   async answerQuiz(
     @Auth('profileId') childProfileId: number,
-    @Param('quizId') quizIdParam: string,
+    @Param('quizId') quizId: string,
     @Body() body: AnswerQuizRequestDto,
   ): Promise<BaseResponse<AnswerQuizResponseData>> {
-    const quizId = Number(quizIdParam);
-    if (!Number.isFinite(quizId) || quizId <= 0) {
-      throw new BadRequestException('VALIDATION_ERROR');
-    }
-
     const cmd = this.answerQuizMapper.toCommand(
       { quizId },
       body,

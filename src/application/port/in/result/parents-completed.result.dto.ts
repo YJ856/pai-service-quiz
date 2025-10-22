@@ -1,20 +1,20 @@
 export interface ParentsCompletedChildResultDto {
-  childProfileId: number;
+  childProfileId: bigint;
   childName: string;
-  childAvatarMediaId: string | null;
+  childAvatarMediaId: bigint | null;
   isSolved: boolean;
   rewardGranted: boolean;
 }
 
 export interface ParentsCompletedItemDto {
-  quizId: number;
+  quizId: bigint;
   publishDate: string;
   question: string;
   answer: string;
   reward: string | null;
-  authorParentProfileId: number;
+  authorParentProfileId: bigint;
   authorParentName: string;
-  authorParentAvatarMediaId: number | null;
+  authorParentAvatarMediaId: bigint | null;
   children: ParentsCompletedChildResultDto[];
 }
 

@@ -40,8 +40,8 @@ export class AnswerQuizService implements AnswerQuizUseCase {
   async execute(cmd: AnswerQuizCommand): Promise<AnswerQuizResponseResult> {
     const { childProfileId, quizId } = cmd;
 
-    // quizId 검증
-    if (!quizId || !Number.isFinite(quizId) || quizId <= 0) {
+    // quizId 검증 (bigint는 항상 유효한 숫자이므로 null 체크만)
+    if (!quizId || quizId <= 0n) {
       throw new BadRequestException('VALIDATION_ERROR: invalid quizId');
     }
 

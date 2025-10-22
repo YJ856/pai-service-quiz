@@ -8,21 +8,26 @@ import type {
 } from '../../../application/port/out/profile-directory.port';
 
 /**
- * 외부 User API의 응답 모양(가정)
- * - 실제 응답 스키마가 다르면 이 타입을 바꾸고, 아래 매핑 부분만 수정하면 됨.
+ * 외부 User API의 응답 모양 (pai-shared-types 기반)
+ * - BaseResponse<GetProfilesResponseData> 형태
  */
-type ParentApiResponse = {
-  id: number;
-  name?: string;
-  avatarMediaId?: number | null;
+type ProfileDto = {
+  profileId: number;
+  profileType: 'PARENT' | 'CHILD';
+  name: string;
+  birthDate: string;
+  gender: string;
+  avatarMediaId?: string;
+  voiceMediaId?: number;
+  createdAt: string;
 };
 
-type ChildBatchApiResponse = {
-  items: Array<{
-    id: number;
-    name?: string;
-    avatarMediaId?: number | null;
-  }>;
+type UserApiResponse = {
+  success: boolean;
+  message: string;
+  data: {
+    profiles: ProfileDto[];
+  };
 };
 
 /**
@@ -31,9 +36,9 @@ type ChildBatchApiResponse = {
  * - 부모/자녀의 "표시용 최소 정보"를 외부 User 서비스에서 가져온다.
  *
  * 환경변수(.env)
- * - USER_SERVICE_BASE_URL: 유저 서비스 베이스 URL (예: https://user.service.internal)
- * - USER_API_PARENT_PATH:   (선택) 부모 단건 경로. 기본 '/api/profiles/parents/:id'
- * - USER_API_CHILD_BATCH_PATH: (선택) 자녀 배치 경로. 기본 '/api/profiles/children/batch'
+ * - USER_SERVICE_BASE_URL: 유저 서비스 베이스 URL (예: http://localhost:3001)
+ * - USER_API_PARENT_PATH:   (선택) 부모 프로필 경로. 기본 '/api/profiles/parent'
+ * - USER_API_CHILD_PATH: (선택) 자녀 프로필 경로. 기본 '/api/profiles/child'
  */
 @Injectable()
 export class ProfileDirectoryHttpAdapter implements ProfileDirectoryPort {
@@ -43,34 +48,42 @@ export class ProfileDirectoryHttpAdapter implements ProfileDirectoryPort {
   private readonly baseUrl = process.env.USER_SERVICE_BASE_URL ?? '';
 
   // 엔드포인트 경로(옵션)
-  private readonly parentPath = process.env.USER_API_PARENT_PATH ?? '/api/profiles/parents/:id';
-  private readonly childBatchPath = process.env.USER_API_CHILD_BATCH_PATH ?? '/api/profiles/children/batch';
+  private readonly parentPath = process.env.USER_API_PARENT_PATH ?? '/api/profiles/parent';
+  private readonly childPath = process.env.USER_API_CHILD_PATH ?? '/api/profiles/child';
 
   constructor(private readonly http: HttpService) {}
 
-  /** 
+  /**
    * 부모 프로필 단건 조회
-   * - 성공: { id, name, avatarMediaId } 로 표준화해 반환
+   * - GET /api/profiles/parent (Body에 profileType: 'PARENT' 전달)
+   * - 성공: { id, name, avatarMediaId } 로 표준화해 반환 (모두 bigint)
    * - 실패: null (유스케이스에서 안전 폴백)
    */
-  async getParentProfile(parentProfileId: number): Promise<ParentProfileSummary | null> {
+  async getParentProfile(parentProfileId: bigint): Promise<ParentProfileSummary | null> {
     if (!this.baseUrl) {
       this.logger.warn('USER_SERVICE_BASE_URL is not set');
       return null;
     }
-    const url = this.join(this.baseUrl, this.parentPath.replace(':id', String(parentProfileId)));
+    const url = this.join(this.baseUrl, this.parentPath);
 
     try {
+      // GET 요청이지만 Body를 전달 (user-service API 스펙에 맞춤)
       const resp = await firstValueFrom(
-        this.http.get<ParentApiResponse>(url, { timeout: 3000 }),
+        this.http.get<UserApiResponse>(url, {
+          data: { profileType: 'PARENT' },
+          timeout: 3000,
+        }),
       );
-      const p = resp?.data;
-      if (!p || typeof p.id !== 'number') return null;
+
+      const profiles = resp?.data?.data?.profiles ?? [];
+      const profile = profiles.find(p => BigInt(p.profileId) === parentProfileId);
+
+      if (!profile) return null;
 
       return {
-        id: p.id,
-        name: String(p.name ?? ''),
-        avatarMediaId: p.avatarMediaId ?? null,
+        id: BigInt(profile.profileId),
+        name: profile.name,
+        avatarMediaId: profile.avatarMediaId ? BigInt(profile.avatarMediaId) : null,
       };
     } catch (err) {
       this.logger.warn(`getParentProfile(${parentProfileId}) failed: ${String(err)}`);
@@ -78,29 +91,38 @@ export class ProfileDirectoryHttpAdapter implements ProfileDirectoryPort {
     }
   }
 
-  /** 
+  /**
    * 자녀 프로필 배치 조회
-   * - 성공: { [childId]: { id, name, avatarMediaId } } 형태의 맵으로 반환
+   * - GET /api/profiles/child (Body에 profileType: 'CHILD' 전달)
+   * - 성공: { [childId]: { id, name, avatarMediaId } } 형태의 맵으로 반환 (모두 bigint)
    * - 실패: 빈 객체 {} (유스케이스에서 안전 폴백)
    */
-  async getChildProfiles(childProfileIds: number[]): Promise<Record<number, ChildProfileSummary>> {
-    const result: Record<number, ChildProfileSummary> = {};
+  async getChildProfiles(childProfileIds: bigint[]): Promise<Record<string, ChildProfileSummary>> {
+    const result: Record<string, ChildProfileSummary> = {};
     if (!this.baseUrl || childProfileIds.length === 0) return result;
 
-    const url = this.join(this.baseUrl, this.childBatchPath);
+    const url = this.join(this.baseUrl, this.childPath);
 
     try {
+      // GET 요청이지만 Body를 전달 (user-service API 스펙에 맞춤)
       const resp = await firstValueFrom(
-        this.http.post<ChildBatchApiResponse>(url, { ids: childProfileIds }, { timeout: 3000 }),
+        this.http.get<UserApiResponse>(url, {
+          data: { profileType: 'CHILD' },
+          timeout: 3000,
+        }),
       );
 
-      const items = resp?.data?.items ?? [];
-      for (const it of items) {
-        if (typeof it?.id === 'number') {
-          result[it.id] = {
-            id: it.id,
-            name: String(it.name ?? ''),
-            avatarMediaId: it.avatarMediaId ?? null,
+      const profiles = resp?.data?.data?.profiles ?? [];
+
+      // childProfileIds에 해당하는 프로필만 필터링하여 맵으로 변환
+      const idSet = new Set(childProfileIds.map(id => id.toString()));
+      for (const profile of profiles) {
+        const profileIdStr = profile.profileId.toString();
+        if (idSet.has(profileIdStr)) {
+          result[profileIdStr] = {
+            id: BigInt(profile.profileId),
+            name: profile.name,
+            avatarMediaId: profile.avatarMediaId ? BigInt(profile.avatarMediaId) : null,
           };
         }
       }

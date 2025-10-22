@@ -5,22 +5,22 @@ import { DeleteQuizCommand } from "src/application/command/delete-quiz.command";
 
 @Injectable()
 export class DeleteQuizMapper {
-  toCommand(quizId: number, parentProfileId: number): DeleteQuizCommand {
+  toCommand(quizId: string, parentProfileId: number): DeleteQuizCommand {
     return new DeleteQuizCommand(
-      parentProfileId,
-      quizId,
+      BigInt(parentProfileId), // number -> bigint 변환
+      BigInt(quizId), // string -> bigint 변환
     );
   }
 
   // Controller용 - Result를 shared-types로 변환
   toResponse(result: DeleteQuizResponseResult): DeleteQuizResponseData {
     return {
-      quizId: result.quizId,
+      quizId: result.quizId.toString(), // bigint -> string 변환
     };
   }
 
   // Service용 - Result DTO 반환
-  toResponseResult(quizId: number): DeleteQuizResponseResult {
+  toResponseResult(quizId: bigint): DeleteQuizResponseResult {
     return {
       quizId,
     };

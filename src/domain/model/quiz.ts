@@ -1,6 +1,9 @@
-import { deriveStatus, type QuizStatus } from '../policy/quiz.policy';
-import { todayYmd } from '../../utils/date.util';
-
+/**
+ * Quiz 도메인 엔티티 (순수 데이터 구조)
+ *
+ * 엔티티는 비즈니스 로직을 포함하지 않고, 단순히 데이터 구조만 표현
+ * 검증 로직은 서비스 레이어에서, 상태/정책 로직은 quiz.policy.ts에서 처리
+ */
 export class Quiz {
     constructor(
         public question: string,
@@ -11,41 +14,4 @@ export class Quiz {
         public reward?: string | null,
         public id?: bigint, // 저장 전엔 없음, 저장 후 채워짐
     ) {}
-
-
-    static create(args: {
-        question: string;
-        answer: string;
-        publishDate: string;
-        authorParentProfileId: bigint;
-        hint?: string | null;
-        reward?: string | null;
-    }): Quiz {
-        const question = (args.question ?? '').trim();
-        const answer = (args.answer ?? '').trim();
-
-        if (!question) throw new Error('VALIDATION_ERROR: question required');
-        if (!answer) throw new Error('VALIDATION_ERROR: answer required');
-        if (!isValidYmd(args.publishDate)) {
-            throw new Error('VALIDATION_ERROR: publishDate must be yyyy-MM-dd');
-        }
-
-        return new Quiz(
-            question,
-            answer,
-            args.publishDate,
-            args.authorParentProfileId,
-            args.hint ?? null,
-            args.reward ?? null,
-        );
-    }
-}
-
-/** 내부 헬퍼: yyyy-MM-dd 유효성 */
-function isValidYmd(ymd: string): boolean {
-    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd);
-    if (!m) return false;
-    const y = +m[1], mo = +m[2], d = +m[3];
-    const dt = new Date(Date.UTC(y, mo - 1, d));
-    return dt.getUTCFullYear() === y && dt.getUTCMonth() === mo - 1 && dt.getUTCDate() === d;
 }

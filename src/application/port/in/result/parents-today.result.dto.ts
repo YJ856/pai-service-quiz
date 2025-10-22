@@ -1,19 +1,19 @@
 export interface ParentsTodayChildStatusDto {
-  childProfileId: number;
+  childProfileId: bigint;
   childName: string;
-  childAvatarMediaId: number | null;
+  childAvatarMediaId: bigint | null;
   isSolved: boolean;
 }
 
 export interface ParentsTodayItemDto {
-  quizId: number;
+  quizId: bigint;
   question: string;
   answer: string;
   hint: string | null;
   reward: string | null;
-  authorParentProfileId: number;
+  authorParentProfileId: bigint;
   authorParentName: string;
-  authorParentAvatarMediaId: number | null;
+  authorParentAvatarMediaId: bigint | null;
   children: ParentsTodayChildStatusDto[];
 }
 

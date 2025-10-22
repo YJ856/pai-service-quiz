@@ -63,7 +63,7 @@ export class ListParentsTodayService implements ListParentsTodayUseCase {
     const merged = this.enrichWithProfiles(items, parent, childMap);
 
     const nextCursor = hasNext
-      ? encodeIdCursor(items[items.length - 1].quizId)
+      ? encodeIdCursor(Number(merged[merged.length - 1].quizId))
       : null;
 
     return {
@@ -86,14 +86,14 @@ export class ListParentsTodayService implements ListParentsTodayUseCase {
       authorParentProfileId: q.authorParentProfileId,
       authorParentName: parent?.name ?? q.authorParentName ?? '부모',
       authorParentAvatarMediaId:
-        parent?.avatarMediaId ?? q.authorParentAvatarMediaId ?? null,
+        (parent?.avatarMediaId ? BigInt(parent.avatarMediaId) : null) ?? q.authorParentAvatarMediaId ?? null,
       children: q.children.map((c) => {
-        const info = childMap[c.childProfileId];
+        const info = childMap[Number(c.childProfileId)];
         return {
           ...c,
           childName: info?.name ?? c.childName ?? '',
           childAvatarMediaId:
-            (info?.avatarMediaId ?? c.childAvatarMediaId ?? null),
+            (info?.avatarMediaId ? BigInt(info.avatarMediaId) : null) ?? c.childAvatarMediaId ?? null,
         };
       }),
     }));

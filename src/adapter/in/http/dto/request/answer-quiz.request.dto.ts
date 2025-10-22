@@ -1,13 +1,13 @@
-import { IsString, IsNotEmpty, IsInt } from 'class-validator';
-import { TrimToUndefined } from '../common/transforms';
+import { IsString, IsNotEmpty } from 'class-validator';
+import { TrimToUndefined, TrimString} from '../common/transforms';
 import { 
   AnswerQuizPathParam as SharedPath,
   AnswerQuizRequestDto as SharedBody
  } from 'pai-shared-types';
 
 export class AnswerQuizPathParam implements SharedPath {
-  @IsNotEmpty() @IsInt() 
-  quizId!: number;
+  @IsNotEmpty() @IsString()
+  quizId!: string;
 }
 
 export class AnswerQuizRequestDto implements SharedBody {

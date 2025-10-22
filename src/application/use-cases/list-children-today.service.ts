@@ -1,5 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { ChildrenTodayResponseResult } from 'src/application/port/in/result/children-today.result.dto';
+import type {
+  ChildrenTodayResponseResult,
+  ChildrenTodayItemDto,
+} from 'src/application/port/in/result/children-today.result.dto';
 
 import type { ListChildrenTodayUseCase } from '../port/in/list-children-today.usecase';
 import type { ChildrenTodayCommand } from '../command/children-today.command';
@@ -60,8 +63,8 @@ export class ListChildrenTodayService implements ListChildrenTodayUseCase {
 
     // 4) nextCursor 계산 (마지막 아이템의 quizId 기준)
     const nextCursor =
-      hasNext && items.length > 0
-        ? encodeIdCursor(items[items.length - 1].quizId)
+      hasNext && enrichedItems.length > 0
+        ? encodeIdCursor(Number(enrichedItems[enrichedItems.length - 1].quizId))
         : null;
 
     // 5) 응답 구성
@@ -76,18 +79,16 @@ export class ListChildrenTodayService implements ListChildrenTodayUseCase {
 
   /** 프로필 정보 보강 */
   private enrichWithProfiles(
-    items: any[],
+    items: ChildrenTodayItemDto[],
     parentMap: Record<number, ParentProfileSummary>,
-  ): any[] {
+  ): ChildrenTodayItemDto[] {
     return items.map((q) => {
       const parent = parentMap[q.authorParentProfileId];
       return {
         quizId: q.quizId,
-        status: 'TODAY' as const, // publishDate = today 이므로 항상 TODAY
         question: q.question,
-        hint: q.hint ?? undefined,
-        // 정책: 미해결이면 reward 미포함(또는 null). 현재는 미포함 쪽으로 매핑.
-        reward: q.isSolved ? q.reward ?? undefined : undefined,
+        hint: q.hint,
+        reward: q.reward,
         authorParentProfileId: q.authorParentProfileId,
         authorParentName: parent?.name ?? q.authorParentName ?? '부모',
         authorParentAvatarMediaId: parent?.avatarMediaId ?? q.authorParentAvatarMediaId ?? null,

@@ -1,5 +1,5 @@
 export interface ChildrenTodayItemDto {
-  quizId: number;
+  quizId: bigint;
   question: string;
   hint: string | null;
   reward: string | null;

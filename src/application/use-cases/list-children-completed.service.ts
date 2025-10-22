@@ -1,5 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { ChildrenCompletedResponseResult } from 'src/application/port/in/result/children-completed.result.dto';
+import type {
+  ChildrenCompletedResponseResult,
+  ChildrenCompletedItemDto,
+} from 'src/application/port/in/result/children-completed.result.dto';
 
 import type { ListChildrenCompletedUseCase } from '../port/in/list-children-completed.usecase';
 import type { ChildrenCompletedCommand } from '../command/children-completed.command';
@@ -62,7 +65,7 @@ export class ListChildrenCompletedService implements ListChildrenCompletedUseCas
     const last = enrichedItems[enrichedItems.length - 1];
     const nextCursor =
       hasNext && last
-        ? encodeCompositeCursor(last.publishDate, last.quizId)
+        ? encodeCompositeCursor(last.publishDate, Number(last.quizId))
         : null;
 
     return {
@@ -76,18 +79,17 @@ export class ListChildrenCompletedService implements ListChildrenCompletedUseCas
 
   /** 프로필 정보 보강 */
   private enrichWithProfiles(
-    items: any[],
+    items: ChildrenCompletedItemDto[],
     parentMap: Record<number, ParentProfileSummary>,
-  ): any[] {
+  ): ChildrenCompletedItemDto[] {
     return items.map((q) => {
       const parent = parentMap[q.authorParentProfileId];
       return {
         quizId: q.quizId,
-        status: 'COMPLETED' as const, // publishDate < today 이므로 항상 COMPLETED
         publishDate: q.publishDate,
         question: q.question,
         answer: q.answer,
-        reward: q.reward ?? undefined,
+        reward: q.reward,
         authorParentProfileId: q.authorParentProfileId,
         authorParentName: parent?.name ?? q.authorParentName ?? '부모',
         authorParentAvatarMediaId: parent?.avatarMediaId ?? q.authorParentAvatarMediaId ?? null,

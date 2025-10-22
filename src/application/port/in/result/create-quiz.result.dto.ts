@@ -1,5 +1,5 @@
 export interface CreateQuizResponseResult {
-  quizId: number;
+  quizId: bigint;
   question: string;
   answer: string;
   hint: string | null;

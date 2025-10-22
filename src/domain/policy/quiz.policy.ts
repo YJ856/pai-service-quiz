@@ -40,8 +40,8 @@ export function deriveStatus(publishDate: string, todayKst: string): QuizStatus 
  */
 export function canEdit(
   publishDate: string,
-  authorParentProfileId: number | string,
-  requesterId: number | string,
+  authorParentProfileId: number | string | bigint,
+  requesterId: number | string | bigint,
   todayKst: string,
 ): boolean {
   // 작성자가 아니면 불가
@@ -69,8 +69,8 @@ export function canEdit(
  */
 export function canDelete(
   publishDate: string,
-  authorParentProfileId: number | string,
-  requesterId: number | string,
+  authorParentProfileId: number | string | bigint,
+  requesterId: number | string | bigint,
   todayKst: string,
 ): boolean {
   // 수정/삭제 정책은 동일
@@ -88,8 +88,8 @@ export function canDelete(
  */
 export function isEditable(
   publishDate: string,
-  authorParentProfileId: number | string,
-  viewerId: number | string,
+  authorParentProfileId: number | string | bigint,
+  viewerId: number | string | bigint,
   todayKst: string,
 ): boolean {
   return canEdit(publishDate, authorParentProfileId, viewerId, todayKst);

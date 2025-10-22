@@ -1,5 +1,5 @@
 export interface ChildrenCompletedItemDto {
-  quizId: number;
+  quizId: bigint;
   publishDate: string; // yyyy-MM-dd (Asia/Seoul 기준)
   question: string;
   answer: string; 

@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { AnswerQuizPathParam, AnswerQuizRequestDto } from "src/adapter/in/http/dto/request/answer-quiz.request.dto";
-import { AnswerQuizResponseData } from "pai-shared-types";
+import type { AnswerQuizResponseData } from "pai-shared-types";
+import type { AnswerQuizResponseResult } from "src/application/port/in/result/answer-quiz.result.dto";
 import { AnswerQuizCommand } from "src/application/command/answer-quiz.command";
 
 @Injectable()
@@ -10,29 +11,38 @@ export class AnswerQuizMapper {
     body: AnswerQuizRequestDto,
     childProfileId: number,
   ): AnswerQuizCommand {
-    // 로컬 DTO에서 이미 trim/검증 끝났다면 굳이 String/trim은 재적용 안 해도 OK
     return new AnswerQuizCommand(
-      param.quizId,
-      childProfileId,
+      BigInt(param.quizId), // -> bigint 변환
+      BigInt(childProfileId), // -> bigint 변환
       body.answer,
     );
   }
 
-  toResponse(result: {
-    quizId: number;
-    isSolved: boolean;
-    reward?: string | null;
-  }): AnswerQuizResponseData {
+  // Controller용 - Result를 shared-types로 변환
+  toResponse(result: AnswerQuizResponseResult): AnswerQuizResponseData {
     const base: AnswerQuizResponseData = {
-      quizId: result.quizId,
+      quizId: result.quizId.toString(), // -> string 변환
       isSolved: result.isSolved,
     };
 
     // 정답 맞췄을 때만 reward 공개
-    if (result.isSolved) {
-      const reward = (result.reward ?? '').toString().trim();
+    if (result.isSolved && result.reward) {
+      const reward = result.reward.trim();
       if (reward) return {...base, reward};
     }
     return base;
+  }
+
+  // Service용 - Result DTO 반환
+  toResponseResult(data: {
+    quizId: bigint;
+    isSolved: boolean;
+    reward?: string | null;
+  }): AnswerQuizResponseResult {
+    return {
+      quizId: data.quizId,
+      isSolved: data.isSolved,
+      reward: data.reward ?? undefined,
+    };
   }
 }

@@ -11,7 +11,6 @@ import {
   Param,
   Patch,
   Delete,
-  BadRequestException,
 } from '@nestjs/common';
 
 import type {
@@ -108,7 +107,8 @@ export class ParentsQuizController {
     @Auth('profileId') parentProfileId: number,
   ): Promise<BaseResponse<CreateQuizResponseData>> {
     const cmd = this.createQuizMapper.toCommand(parentProfileId, body);
-    const data = await this.createQuiz.execute(cmd);
+    const result = await this.createQuiz.execute(cmd);
+    const data = this.createQuizMapper.toResponse(result);
     return { success: true, message: '퀴즈 생성 성공', data };
   }
 
@@ -151,18 +151,12 @@ export class ParentsQuizController {
   @Get(':quizId')
   @HttpCode(HttpStatus.OK)
   async getParentsQuizDetailHandler(
-    @Param('quizId') quizIdParam: number,
+    @Param('quizId') quizId: string,
     @Auth('profileId') parentProfileId: number,
   ): Promise<BaseResponse<ParentsQuizDetailResponseData>> {
-    const quizId = Number(quizIdParam);
-    if (!Number.isFinite(quizId) || quizId <= 0) {
-      throw new BadRequestException('VALIDATION_ERROR');
-    }
-
-    const data = await this.getParentsQuizDetail.execute({
-      quizId,
-      parentProfileId,
-    });
+    const cmd = this.detailQuizMapper.toCommand(quizId, parentProfileId);
+    const result = await this.getParentsQuizDetail.execute(cmd);
+    const data = this.detailQuizMapper.toResponse(result);
 
     return { success: true, message: '퀴즈 상세 조회 성공', data };
   }
@@ -170,31 +164,22 @@ export class ParentsQuizController {
   @Patch(':quizId')
   @HttpCode(HttpStatus.OK)
   async updateQuizHandler(
-    @Param('quizId') quizIdParam: number,
+    @Param('quizId') quizId: string,
     @Auth('profileId') parentProfileId: number,
     @Body() body: UpdateQuizRequestDto,
   ): Promise<BaseResponse<UpdateQuizResponseData>> {
-    const quizId = Number(quizIdParam);
-    if (!Number.isFinite(quizId) || quizId <= 0) {
-      throw new BadRequestException('VALIDATION_ERROR');
-    }
-
     const cmd = this.updateQuizMapper.toCommand(quizId, parentProfileId, body ?? {});
-    const data = await this.updateQuiz.execute(cmd);
+    const result = await this.updateQuiz.execute(cmd);
+    const data = this.updateQuizMapper.toResponse(result);
     return { success: true, message: '수정이 완료되었습니다!', data };
   }
 
   @Delete(':quizId')
   @HttpCode(HttpStatus.OK)
   async deleteQuizHandler(
-    @Param('quizId') quizIdParam: number,
+    @Param('quizId') quizId: string,
     @Auth('profileId') parentProfileId: number,
   ): Promise<BaseResponse<DeleteQuizResponseData>> {
-    const quizId = Number(quizIdParam);
-    if (!Number.isFinite(quizId) || quizId <= 0) {
-      throw new BadRequestException('VALIDATION_ERROR');
-    }
-
     const cmd = this.deleteQuizMapper.toCommand(quizId, parentProfileId);
     const result = await this.deleteQuiz.execute(cmd);
     const data = this.deleteQuizMapper.toResponse(result);

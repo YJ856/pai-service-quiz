@@ -65,7 +65,7 @@ export class ListParentsCompletedService implements ListParentsCompletedUseCase 
     const tail = merged.length ? merged[merged.length - 1] : null;
     const nextCursor =
       hasNext && tail
-        ? encodeCompositeCursor(tail.publishDate, tail.quizId)
+        ? encodeCompositeCursor(tail.publishDate, Number(tail.quizId))
         : null;
 
     return {
@@ -79,7 +79,7 @@ export class ListParentsCompletedService implements ListParentsCompletedUseCase 
 
   /** DB rows + 외부 프로필을 합쳐 최종 DTO로 */
   private enrichWithProfiles(
-    rows: any[],
+    rows: ParentsCompletedItemDto[],
     parent: ParentProfileSummary | null,
     childMap: Record<number, ChildProfileSummary>,
   ): ParentsCompletedItemDto[] {
@@ -87,13 +87,13 @@ export class ListParentsCompletedService implements ListParentsCompletedUseCase 
       ...q,
       authorParentName: parent?.name ?? q.authorParentName ?? '부모',
       authorParentAvatarMediaId:
-        parent?.avatarMediaId ?? q.authorParentAvatarMediaId ?? null,
+        (parent?.avatarMediaId ? BigInt(parent.avatarMediaId) : null) ?? q.authorParentAvatarMediaId ?? null,
       children: q.children.map((c) => {
-        const info = childMap[c.childProfileId];
+        const info = childMap[Number(c.childProfileId)];
         return {
           ...c,
           childName: info?.name ?? c.childName ?? '',
-          childAvatarMediaId: info?.avatarMediaId ?? c.childAvatarMediaId ?? null,
+          childAvatarMediaId: (info?.avatarMediaId ? BigInt(info.avatarMediaId) : null) ?? c.childAvatarMediaId ?? null,
         };
       }),
     }));

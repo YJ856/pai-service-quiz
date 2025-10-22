@@ -13,7 +13,7 @@ const hasKey = <T extends object>(o: T, k: keyof any) =>
 
 @Injectable()
 export class UpdateQuizMapper {
-  toCommand(quizId: number, parentProfileId: number, dto: UpdateQuizRequestDto): UpdateQuizCommand {
+  toCommand(quizId: string, parentProfileId: number, dto: UpdateQuizRequestDto): UpdateQuizCommand {
     const question    = hasKey(dto, 'question') ? dto.question : undefined;
     const answer      = hasKey(dto, 'answer')   ? dto.answer   : undefined;
     const hint        = hasKey(dto, 'hint')     ? (dto.hint ?? null) : undefined;
@@ -21,8 +21,8 @@ export class UpdateQuizMapper {
     const publishDate = hasKey(dto, 'publishDate') ? (dto.publishDate ?? null) : undefined;
 
     return new UpdateQuizCommand(
-      quizId,
-      parentProfileId,
+      BigInt(quizId), // string -> bigint 변환
+      BigInt(parentProfileId), // number -> bigint 변환
       question,
       answer,
       hint,
@@ -31,23 +31,16 @@ export class UpdateQuizMapper {
     );
   }
 
-  // Controller용 - shared-types 사용
-  toResponse(quiz: Quiz): UpdateQuizResponseData {
-    const today = todayYmd();
-
+  // Controller용 - Result를 shared-types로 변환
+  toResponse(result: UpdateQuizResponseResult): UpdateQuizResponseData {
     return {
-      quizId: quiz.id!,
-      question: quiz.question,
-      answer: quiz.answer,
-      hint: quiz.hint ?? null,
-      reward: quiz.reward ?? null,
-      publishDate: quiz.publishDate,
-      isEditable: isEditable(
-        quiz.publishDate,
-        quiz.authorParentProfileId,
-        quiz.authorParentProfileId,  // 자기 퀴즈이므로 작성자 = 조회자
-        today
-      ),
+      quizId: result.quizId.toString(), // bigint -> string 변환
+      question: result.question,
+      answer: result.answer,
+      hint: result.hint,
+      reward: result.reward,
+      publishDate: result.publishDate,
+      isEditable: result.isEditable,
     };
   }
 

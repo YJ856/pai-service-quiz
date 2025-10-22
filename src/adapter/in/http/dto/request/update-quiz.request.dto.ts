@@ -6,8 +6,8 @@ import type {
 import { TrimString, TrimToNull, TrimToUndefined } from "../common/transforms";
 
 export class UpdateQuizPathParam implements SharedPath {
-    @IsInt() @IsNotEmpty()
-    quizId!: number;
+    @IsString() @IsNotEmpty()
+    quizId!: string;
 }
 
 export class UpdateQuizRequestDto implements SharedBody {
