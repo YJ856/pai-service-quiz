@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { ParentsCompletedResponseResult, ParentsCompletedItemDto, } from 'src/adapter/in/http/dto/result/parents-completed.result.dto';
+import type { ParentsCompletedResponseResult, ParentsCompletedItemDto, } from 'src/application/port/in/result/parents-completed.result.dto';
 
 import type { ListParentsCompletedUseCase,} from '../port/in/list-parents-completed.usecase';
 import type { ParentsCompletedCommand } from '../command/parents-completed.command';

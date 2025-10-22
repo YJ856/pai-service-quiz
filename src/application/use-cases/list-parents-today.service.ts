@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { ParentsTodayResponseResult, ParentsTodayItemDto, } from 'src/adapter/in/http/dto/result/parents-today.result.dto';
+import type { ParentsTodayResponseResult, ParentsTodayItemDto, } from 'src/application/port/in/result/parents-today.result.dto';
 
 import type {
   ListParentsTodayUseCase,

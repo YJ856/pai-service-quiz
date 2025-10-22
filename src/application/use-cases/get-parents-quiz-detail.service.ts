@@ -7,7 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import type { ParentsQuizDetailResponseResult } from 'src/adapter/in/http/dto/result/detail-quiz.result.dto';
+import type { ParentsQuizDetailResponseResult } from 'src/application/port/in/result/detail-quiz.result.dto';
 
 import type { GetParentsQuizDetailUseCase } from '../port/in/get-parents-quiz-detail.usecase';
 import { DetailQuizCommand } from '../command/detail-quiz.command';

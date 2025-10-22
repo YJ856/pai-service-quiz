@@ -9,7 +9,7 @@
 
 // 여기서는 type만 필요
 import type { CreateQuizCommand } from '../../command/create-quiz.command';
-import type { CreateQuizResponseResult } from '../../../adapter/in/http/dto/result/create-quiz.result.dto';
+import type { CreateQuizResponseResult } from './result/create-quiz.result.dto';
 
 /**
  * 부모가 퀴즈를 생성하는 유즈케이스의 "계약"

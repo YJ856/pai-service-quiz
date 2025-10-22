@@ -16,7 +16,7 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
   async save(q: Quiz): Promise<Quiz> {
     const created = await this.prisma.quiz.create({
       data: {
-        parentProfileId: Number(q.authorParentProfileId),
+        parentProfileId: BigInt(q.authorParentProfileId),
         question: q.question,
         answer: q.answer,
         reward: q.reward ?? null,
@@ -38,12 +38,12 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
   }
 
   /** 가족의 마지막 예약일(yyyy-MM-dd) */
-  async findLastScheduledDateByFamily(parentProfileId: number | string): Promise<string | null> {
+  async findLastScheduledDateByFamily(parentProfileId: bigint): Promise<string | null> {
     const today = todayYmd();
     // SCHEDULED = publishDate > today(KST)
     const row = await this.prisma.quiz.findFirst({
       where: {
-        parentProfileId: Number(parentProfileId),
+        parentProfileId: parentProfileId,
         publishDate: { gt: ymdToUtcDate(today) }  // publishDate > today
       },
       orderBy: { publishDate: 'desc' },
@@ -53,7 +53,7 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
   }
 
   /** (선택) 상세 조회 */
-  async findById(id: number): Promise<Quiz | null> {
+  async findById(id: bigint): Promise<Quiz | null> {
     const r = await this.prisma.quiz.findUnique({ where: { id } });
     if (!r) return null;
     return new Quiz(
@@ -74,11 +74,11 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
    * - return: 실제 갱신된 행 수(0 | 1)
    */
   async updateIfScheduledAndAuthor(params: {
-    quizId: number;
-    ParentProfileId: number;
+    quizId: bigint;
+    parentProfileId: bigint;
     patch: QuizUpdateRepoPatch;
   }): Promise<number> {
-    const { quizId, ParentProfileId, patch } = params;
+    const { quizId, parentProfileId, patch } = params;
     const today = todayYmd();
 
     // Prisma updateMany의 data: undefined는 "변경 없음", null은 "null로 세팅"
@@ -96,7 +96,7 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
     const result = await this.prisma.quiz.updateMany({
       where: {
         id: quizId,
-        parentProfileId: ParentProfileId,
+        parentProfileId: parentProfileId,
         publishDate: { gt: ymdToUtcDate(today) }  // publishDate > today
       },
       data,

@@ -20,7 +20,7 @@ import type {
   QuizCommandPort,
   QuizUpdateRepoPatch,
 } from '../port/out/quiz.repository.port';
-import type { UpdateQuizResponseResult } from '../../adapter/in/http/dto/result/update-quiz.result.dto';
+import type { UpdateQuizResponseResult } from '../port/in/result/update-quiz.result.dto';
 
 @Injectable()
 export class UpdateQuizService implements UpdateQuizUseCase {

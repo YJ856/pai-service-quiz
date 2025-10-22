@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { ParentsQuizDetailResponseData } from "pai-shared-types";
-import { ParentsQuizDetailResponseResult } from "src/adapter/in/http/dto/result/detail-quiz.result.dto";
+import { ParentsQuizDetailResponseResult } from "src/application/port/in/result/detail-quiz.result.dto";
 import { DetailQuizCommand } from "src/application/command/detail-quiz.command";
 import { Quiz } from "src/domain/model/quiz";
 import { isEditable } from "src/domain/policy/quiz.policy";

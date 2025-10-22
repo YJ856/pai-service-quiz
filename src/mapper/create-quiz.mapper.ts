@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { CreateQuizRequestDto } from "src/adapter/in/http/dto/request/create-quiz.request.dto";
 import { CreateQuizResponseData } from "pai-shared-types";
-import { CreateQuizResponseResult } from "src/adapter/in/http/dto/result/create-quiz.result.dto";
+import { CreateQuizResponseResult } from "src/application/port/in/result/create-quiz.result.dto";
 import { CreateQuizCommand } from "src/application/command/create-quiz.command";
 import { Quiz } from "src/domain/model/quiz";
 import { isEditable } from "src/domain/policy/quiz.policy";
@@ -9,7 +9,7 @@ import { todayYmd } from "src/utils/date.util";
 
 @Injectable()
 export class CreateQuizMapper {
-  toCommand(parentProfileId: number, dto: CreateQuizRequestDto): CreateQuizCommand {
+  toCommand(parentProfileId: bigint, dto: CreateQuizRequestDto): CreateQuizCommand {
     return new CreateQuizCommand(
       parentProfileId,
       dto.question,
@@ -21,7 +21,7 @@ export class CreateQuizMapper {
   }
 
   // Controller용 - shared-types 사용
-  toResponse(quiz: Quiz): CreateQuizResponseData {
+  toResponse(quiz: Quiz,): CreateQuizResponseData {
     const today = todayYmd();
 
     return {

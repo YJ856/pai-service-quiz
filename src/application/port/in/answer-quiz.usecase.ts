@@ -1,4 +1,4 @@
-import type { AnswerQuizResponseData } from 'pai-shared-types';
+import type { AnswerQuizResponseResult } from "./result/answer-quiz.result.dto";
 import type { AnswerQuizCommand } from '../../command/answer-quiz.command';
 
 /**
@@ -8,5 +8,5 @@ import type { AnswerQuizCommand } from '../../command/answer-quiz.command';
  * - answer는 request body에서 수신
  */
 export interface AnswerQuizUseCase {
-  execute(cmd: AnswerQuizCommand): Promise<AnswerQuizResponseData>;
+  execute(cmd: AnswerQuizCommand): Promise<AnswerQuizResponseResult>;
 }

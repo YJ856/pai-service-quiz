@@ -1,4 +1,4 @@
-import type { UpdateQuizResponseResult } from '../../../adapter/in/http/dto/result/update-quiz.result.dto';
+import type { UpdateQuizResponseResult } from './result/update-quiz.result.dto';
 import type { UpdateQuizCommand } from '../../command/update-quiz.command';
 
 /**

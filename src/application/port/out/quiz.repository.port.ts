@@ -25,8 +25,8 @@ export type QuizUpdateRepoPatch = {
 // ============================================================
 
 export interface MarkSolvedParams {
-  childProfileId: number;
-  quizId: number;
+  childProfileId: bigint;
+  quizId: bigint;
 }
 
 // ============================================================
@@ -38,20 +38,20 @@ export interface QuizCommandPort {
   save(quiz: Quiz): Promise<Quiz>;
 
   // 조회 (쓰기 작업 전 필요한 경우)
-  findById(id: number): Promise<Quiz | null>;
-  findLastScheduledDateByFamily(parentProfileId: number | string): Promise<string | null>;
+  findById(id: bigint): Promise<Quiz | null>;
+  findLastScheduledDateByFamily(parentProfileId: bigint): Promise<string | null>;
 
   // 수정
   updateIfScheduledAndAuthor(params: {
-    quizId: number;
-    ParentProfileId: number;
+    quizId: bigint;
+    parentProfileId: bigint;
     patch: QuizUpdateRepoPatch;
   }): Promise<number>;
 
   // 삭제
   deleteIfScheduledAndAuthor(params: {
-    quizId: number;
-    parentProfileId: number;
+    quizId: bigint;
+    parentProfileId: bigint;
   }): Promise<number>;
 
   // 정답 처리

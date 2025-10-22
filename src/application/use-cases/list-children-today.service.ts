@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { ChildrenTodayResponseResult } from 'src/adapter/in/http/dto/result/children-today.result.dto';
+import type { ChildrenTodayResponseResult } from 'src/application/port/in/result/children-today.result.dto';
 
 import type { ListChildrenTodayUseCase } from '../port/in/list-children-today.usecase';
 import type { ChildrenTodayCommand } from '../command/children-today.command';

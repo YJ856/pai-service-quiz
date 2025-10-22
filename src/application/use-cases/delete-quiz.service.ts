@@ -14,6 +14,8 @@ import type { DeleteQuizCommand } from '../command/delete-quiz.command';
 import type { DeleteQuizUseCase } from '../port/in/delete-quiz.usecase';
 import type { QuizQueryPort } from '../port/out/quiz.query.port';
 import type { QuizCommandPort } from '../port/out/quiz.repository.port';
+import type { DeleteQuizResponseResult } from '../port/in/result/delete-quiz.result.dto';
+import { DeleteQuizMapper } from '../../mapper/delete-quiz.mapper';
 
 @Injectable()
 export class DeleteQuizService implements DeleteQuizUseCase {
@@ -22,6 +24,7 @@ export class DeleteQuizService implements DeleteQuizUseCase {
     private readonly detailRepo: QuizQueryPort,
     @Inject(QUIZ_TOKENS.QuizCommandPort)
     private readonly deleteRepo: QuizCommandPort,
+    private readonly deleteQuizMapper: DeleteQuizMapper,
   ) {}
 
   /**
@@ -29,7 +32,7 @@ export class DeleteQuizService implements DeleteQuizUseCase {
    * - 작성자 본인만
    * - 상태가 SCHEDULED인 경우에만
    */
-  async execute(cmd: DeleteQuizCommand): Promise<void> {
+  async execute(cmd: DeleteQuizCommand): Promise<DeleteQuizResponseResult> {
     const { quizId, parentProfileId } = cmd;
 
     // 1) 대상 조회
@@ -58,5 +61,8 @@ export class DeleteQuizService implements DeleteQuizUseCase {
       // 경합 등으로 상태 변경/부재 시
       throw new ConflictException('NOT_SCHEDULED');
     }
+
+    // 5) Result DTO로 변환
+    return this.deleteQuizMapper.toResponseResult(quizId);
   }
 }

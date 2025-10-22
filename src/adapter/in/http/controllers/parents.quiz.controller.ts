@@ -108,8 +108,7 @@ export class ParentsQuizController {
     @Auth('profileId') parentProfileId: number,
   ): Promise<BaseResponse<CreateQuizResponseData>> {
     const cmd = this.createQuizMapper.toCommand(parentProfileId, body);
-    const saved = await this.createQuiz.execute(cmd);
-    const data = this.createQuizMapper.toResponse(saved);
+    const data = await this.createQuiz.execute(cmd);
     return { success: true, message: '퀴즈 생성 성공', data };
   }
 
@@ -181,8 +180,7 @@ export class ParentsQuizController {
     }
 
     const cmd = this.updateQuizMapper.toCommand(quizId, parentProfileId, body ?? {});
-    const updatedQuiz = await this.updateQuiz.execute(cmd);
-    const data = this.updateQuizMapper.toResponse(updatedQuiz);
+    const data = await this.updateQuiz.execute(cmd);
     return { success: true, message: '수정이 완료되었습니다!', data };
   }
 
@@ -198,8 +196,8 @@ export class ParentsQuizController {
     }
 
     const cmd = this.deleteQuizMapper.toCommand(quizId, parentProfileId);
-    await this.deleteQuiz.execute(cmd);
-    const data = this.deleteQuizMapper.toResponse(quizId);
+    const result = await this.deleteQuiz.execute(cmd);
+    const data = this.deleteQuizMapper.toResponse(result);
 
     return { success: true, message: '삭제가 완료되었습니다!', data };
   }

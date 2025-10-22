@@ -6,24 +6,18 @@ export class Quiz {
         public question: string,
         public answer: string,
         public publishDate: string, // yyyy-MM-dd(문자열)
-        public authorParentProfileId: number | string,
+        public authorParentProfileId: bigint,
         public hint?: string | null,
         public reward?: string | null,
-        public id?: number, // 저장 전엔 없음, 저장 후 채워짐
+        public id?: bigint, // 저장 전엔 없음, 저장 후 채워짐
     ) {}
 
-    /**
-     * publishDate 기반으로 퀴즈 상태를 계산 (도메인 정책 사용)
-     */
-    getStatus(): QuizStatus {
-        return deriveStatus(this.publishDate, todayYmd());
-    }
 
     static create(args: {
         question: string;
         answer: string;
         publishDate: string;
-        authorParentProfileId: number | string;
+        authorParentProfileId: bigint;
         hint?: string | null;
         reward?: string | null;
     }): Quiz {

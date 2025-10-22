@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { ParentsScheduledResponseResult, ParentsScheduledItemDto } from 'src/adapter/in/http/dto/result/parents-scheduled.result.dto';
+import type { ParentsScheduledResponseResult, ParentsScheduledItemDto } from 'src/application/port/in/result/parents-scheduled.result.dto';
 
 import type { ListParentsScheduledUseCase,} from '../port/in/list-parents-scheduled.usecase';
 import type { ParentsScheduledCommand } from '../command/parents-scheduled.command';
