@@ -1,12 +1,12 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString, IsNumberString } from "class-validator";
 import type { 
     UpdateQuizPathParam as SharedPath, 
     UpdateQuizRequestDto as SharedBody 
 } from "pai-shared-types";
-import { TrimString, TrimToNull, TrimToUndefined } from "../common/transforms";
+import { TrimString, TrimToNull } from "../common/transforms";
 
 export class UpdateQuizPathParam implements SharedPath {
-    @IsString() @IsNotEmpty()
+    @TrimString() @IsString() @IsNotEmpty() @IsNumberString({ no_symbols: true })
     quizId!: string;
 }
 
@@ -23,8 +23,8 @@ export class UpdateQuizRequestDto implements SharedBody {
     @IsString() @IsOptional() @TrimToNull()
     reward?: string | null;
 
-    @IsString() @IsOptional() @TrimToNull()
-    publishDate!: string | null;
+    @IsString() @IsOptional() @TrimString() @IsNotEmpty()
+    publishDate?: string;
 }
 
 /**
