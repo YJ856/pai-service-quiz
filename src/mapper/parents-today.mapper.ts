@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { ParentsTodayQueryDto } from "src/adapter/in/http/dto/request/parents-today.query.dto";
+import { ParentsTodayQueryDto } from "src/adapter/in/http/dto/request/parents-today-quiz-request.dto";
 import type { ParentsTodayResponseData } from "pai-shared-types";
 import type { ParentsTodayResponseResult } from "src/application/port/in/result/parents-today.result.dto";
 import { ParentsTodayCommand } from "src/application/command/parents-today.command";

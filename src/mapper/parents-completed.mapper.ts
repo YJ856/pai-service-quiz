@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { ParentsCompletedQueryDto } from "src/adapter/in/http/dto/request/parents-completed.query.dto";
+import { ParentsCompletedQueryDto } from "src/adapter/in/http/dto/request/parents-completed-quiz-request.dto";
 import type { ParentsCompletedResponseData } from "pai-shared-types";
 import type { ParentsCompletedResponseResult } from "src/application/port/in/result/parents-completed.result.dto";
 import { ParentsCompletedCommand } from "src/application/command/parents-completed.command";
