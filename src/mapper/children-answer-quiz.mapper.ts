@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
-import { AnswerQuizPathParam, AnswerQuizRequestDto } from "src/adapter/in/http/dto/request/answer-quiz.request.dto";
+import { AnswerQuizPathParam, AnswerQuizRequestDto } from "src/adapter/in/http/dto/request/children-answer-quiz-request.dto";
 import type { AnswerQuizResponseData } from "pai-shared-types";
 import type { AnswerQuizResponseResult } from "src/application/port/in/result/answer-quiz.result.dto";
-import { AnswerQuizCommand } from "src/application/command/answer-quiz.command";
+import { ChildrenAnswerQuizCommand } from "src/application/command/children-answer-quiz.command";
 
 @Injectable()
 export class AnswerQuizMapper {
@@ -10,10 +10,10 @@ export class AnswerQuizMapper {
     param: AnswerQuizPathParam,
     body: AnswerQuizRequestDto,
     childProfileId: number,
-  ): AnswerQuizCommand {
-    return new AnswerQuizCommand(
+  ): ChildrenAnswerQuizCommand {
+    return new ChildrenAnswerQuizCommand(
       BigInt(param.quizId), // -> bigint 변환
-      BigInt(childProfileId), // -> bigint 변환
+      childProfileId, 
       body.answer,
     );
   }

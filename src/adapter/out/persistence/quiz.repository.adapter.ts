@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from './prisma/prisma.service';
 import { Quiz } from '../../../domain/model/quiz';
+import { QuizMapper } from './mapper/quiz.mapper';
+import { PrismaClient } from '@prisma/client';
 import type {
   QuizCommandPort,
   QuizUpdateRepoPatch,
@@ -36,6 +38,7 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
       created.id, // 마지막에 id
     );
   }
+
 
   /** 가족의 마지막 예약일(yyyy-MM-dd) */
   async findLastScheduledDateByFamily(parentProfileId: bigint): Promise<string | null> {

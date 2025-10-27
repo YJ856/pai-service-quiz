@@ -8,7 +8,7 @@
  */
 
 // 여기서는 type만 필요
-import type { CreateQuizCommand } from '../../command/create-quiz.command';
+import type { CreateQuizCommand } from '../../command/parents-create-quiz.command';
 import type { CreateQuizResponseResult } from './result/create-quiz.result.dto';
 
 /**

@@ -4,7 +4,7 @@ import type { ParentsTodayResponseResult, ParentsTodayItemDto, } from 'src/appli
 import type {
   ListParentsTodayUseCase,
 } from '../port/in/list-parents-today.usecase';
-import type { ParentsTodayCommand } from '../command/parents-today.command';
+import type { ParentsTodayCommand } from '../command/parents-today-quiz.command';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type { QuizQueryPort } from '../port/out/quiz.query.port';

@@ -1,5 +1,5 @@
 import type { ParentsQuizDetailResponseResult } from './result/detail-quiz.result.dto';
-import type { DetailQuizCommand } from '../../command/detail-quiz.command';
+import type { DetailQuizCommand } from '../../command/parents-detail-quiz.command';
 
 /**
  * 부모용 퀴즈 상세 조회 UseCase

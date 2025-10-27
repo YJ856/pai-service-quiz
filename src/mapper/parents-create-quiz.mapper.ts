@@ -2,16 +2,15 @@ import { Injectable } from "@nestjs/common";
 import { CreateQuizRequestDto } from "src/adapter/in/http/dto/request/parents-create-quiz-request.dto";
 import { CreateQuizResponseData } from "pai-shared-types";
 import { CreateQuizResponseResult } from "src/application/port/in/result/create-quiz.result.dto";
-import { CreateQuizCommand } from "src/application/command/create-quiz.command";
+import { ParentsCreateQuizCommand } from "src/application/command/parents-create-quiz.command";
 import { Quiz } from "src/domain/model/quiz";
-import { isEditable } from "src/domain/policy/quiz.policy";
 import { todayYmd } from "src/utils/date.util";
 
 @Injectable()
 export class CreateQuizMapper {
-  toCommand(parentProfileId: number, dto: CreateQuizRequestDto): CreateQuizCommand {
-    return new CreateQuizCommand(
-      BigInt(parentProfileId), // number -> bigint 변환
+  toCommand(parentProfileId: number, dto: CreateQuizRequestDto): ParentsCreateQuizCommand {
+    return new ParentsCreateQuizCommand(
+      parentProfileId, // number -> bigint 변환
       dto.question,
       dto.answer,
       dto.hint ?? null,

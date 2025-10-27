@@ -1,7 +1,7 @@
-export class UpdateQuizCommand {
+export class ParentsUpdateQuizCommand {
   constructor(
     public readonly quizId: bigint,
-    public readonly parentProfileId: bigint,
+    public readonly parentProfileId: number,
     // 보내면 바뀜, 안 보내면 그대로 (null은 허용하지 않음)
     public readonly question?: string,
     public readonly answer?: string,

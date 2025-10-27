@@ -11,9 +11,9 @@ import { QUIZ_TOKENS } from '../../quiz.token';
 import { isValidYmd, ymdToUtcDate, toYmdFromDate, todayYmd } from '../../utils/date.util';
 import { canEdit } from '../../domain/policy/quiz.policy';
 import { Quiz } from '../../domain/model/quiz';
-import { UpdateQuizMapper } from '../../mapper/update-quiz.mapper';
+import { UpdateQuizMapper } from '../../mapper/parents-update-quiz.mapper';
 
-import type { UpdateQuizCommand } from '../command/update-quiz.command';
+import type { UpdateQuizCommand } from '../command/parents-update-quiz.command';
 import type { UpdateQuizUseCase } from '../port/in/update-quiz.usecase';
 import type { QuizQueryPort } from '../port/out/quiz.query.port';
 import type {

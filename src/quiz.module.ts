@@ -33,16 +33,16 @@ import { PrismaService } from './adapter/out/persistence/prisma/prisma.service';
 
 // Mappers
 import { NextPublishDateMapper } from './mapper/next-publish-date.mapper';
-import { CreateQuizMapper } from './mapper/create-quiz.mapper';
-import { UpdateQuizMapper } from './mapper/update-quiz.mapper';
-import { DeleteQuizMapper } from './mapper/delete-quiz.mapper';
-import { DetailQuizMapper } from './mapper/detail-quiz.mapper';
-import { ParentsTodayMapper } from './mapper/parents-today.mapper';
-import { ParentsScheduledMapper } from './mapper/parents-scheduled.mapper';
-import { ParentsCompletedMapper } from './mapper/parents-completed.mapper';
-import { ChildrenTodayMapper } from './mapper/children-today.mapper';
-import { ChildrenCompletedMapper } from './mapper/children-completed.mapper';
-import { AnswerQuizMapper } from './mapper/answer-quiz.mapper';
+import { CreateQuizMapper } from './mapper/parents-create-quiz.mapper';
+import { UpdateQuizMapper } from './mapper/parents-update-quiz.mapper';
+import { DeleteQuizMapper } from './mapper/parents-delete-quiz.mapper';
+import { DetailQuizMapper } from './mapper/parents-detail-quiz.mapper';
+import { ParentsTodayMapper } from './mapper/parents-today-quiz.mapper';
+import { ParentsScheduledMapper } from './mapper/parents-scheduled-quiz.mapper';
+import { ParentsCompletedMapper } from './mapper/parents-completed-quiz.mapper';
+import { ChildrenTodayMapper } from './mapper/children-today-quiz.mapper';
+import { ChildrenCompletedMapper } from './mapper/children-completed-quiz.mapper';
+import { AnswerQuizMapper } from './mapper/children-answer-quiz.mapper';
 
 // Guard
 import { ParentGuard } from './adapter/in/http/auth/guards/auth.guard';

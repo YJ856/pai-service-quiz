@@ -5,7 +5,7 @@ import type {
 } from 'src/application/port/in/result/children-completed.result.dto';
 
 import type { ListChildrenCompletedUseCase } from '../port/in/list-children-completed.usecase';
-import type { ChildrenCompletedCommand } from '../command/children-completed.command';
+import type { ChildrenCompletedCommand } from '../command/children-completed-quiz.command';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type {

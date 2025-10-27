@@ -5,7 +5,7 @@ import type {
 } from 'src/application/port/in/result/children-today.result.dto';
 
 import type { ListChildrenTodayUseCase } from '../port/in/list-children-today.usecase';
-import type { ChildrenTodayCommand } from '../command/children-today.command';
+import type { ChildrenTodayCommand } from '../command/children-today-quiz.command';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type {

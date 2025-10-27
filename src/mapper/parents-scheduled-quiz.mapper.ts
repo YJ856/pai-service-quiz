@@ -2,13 +2,13 @@ import { Injectable } from "@nestjs/common";
 import { ParentsScheduledQueryDto } from "src/adapter/in/http/dto/request/parents-scheduled-quiz-request.dto";
 import type { ParentsScheduledResponseData } from "pai-shared-types";
 import type { ParentsScheduledResponseResult } from "src/application/port/in/result/parents-scheduled.result.dto";
-import { ParentsScheduledCommand } from "src/application/command/parents-scheduled.command";
+import { ParentsScheduledQuizCommand } from "src/application/command/parents-scheduled-quiz.command";
 
 @Injectable()
 export class ParentsScheduledMapper {
-  toCommand(query: ParentsScheduledQueryDto, parentProfileId: number): ParentsScheduledCommand {
-    return new ParentsScheduledCommand(
-      BigInt(parentProfileId), // number -> bigint 변환
+  toCommand(query: ParentsScheduledQueryDto, parentProfileId: number): ParentsScheduledQuizCommand {
+    return new ParentsScheduledQuizCommand(
+      parentProfileId, // number -> bigint 변환
       query.limit ?? 20,
       query.cursor,
     );

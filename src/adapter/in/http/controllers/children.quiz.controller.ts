@@ -27,9 +27,9 @@ import type { ListChildrenTodayUseCase } from '../../../../application/port/in/l
 import type { ListChildrenCompletedUseCase } from '../../../../application/port/in/list-children-completed.usecase';
 import type { AnswerQuizUseCase } from '../../../../application/port/in/answer-quiz.usecase';
 
-import { ChildrenTodayMapper } from '../../../../mapper/children-today.mapper';
-import { ChildrenCompletedMapper } from '../../../../mapper/children-completed.mapper';
-import { AnswerQuizMapper } from '../../../../mapper/answer-quiz.mapper';
+import { ChildrenTodayMapper } from '../../../../mapper/children-today-quiz.mapper';
+import { ChildrenCompletedMapper } from '../../../../mapper/children-completed-quiz.mapper';
+import { AnswerQuizMapper } from '../../../../mapper/children-answer-quiz.mapper';
 
 import { ChildGuard } from '../auth/guards/auth.guard';
 import { Auth } from '../decorators/auth.decorator';

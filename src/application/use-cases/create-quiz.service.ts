@@ -3,7 +3,7 @@ import { Inject, Injectable, BadRequestException } from '@nestjs/common';
 
 // Port-In(인터페이스)는 타입 전용 import
 import type { CreateQuizUseCase } from '../port/in/create-quiz.usecase';
-import type { CreateQuizCommand } from '../command/create-quiz.command';
+import type { CreateQuizCommand } from '../command/parents-create-quiz.command';
 import type { QuizCommandPort } from '../port/out/quiz.repository.port';
 import type { QuizQueryPort } from '../port/out/quiz.query.port';
 import type { CreateQuizResponseResult } from '../port/in/result/create-quiz.result.dto';
@@ -11,7 +11,7 @@ import type { CreateQuizResponseResult } from '../port/in/result/create-quiz.res
 import { Quiz } from '../../domain/model/quiz';
 import { QUIZ_TOKENS } from '../../quiz.token';
 import { todayYmd, plusOneYmd, isValidYmd } from '../../utils/date.util';
-import { CreateQuizMapper } from '../../mapper/create-quiz.mapper';
+import { CreateQuizMapper } from '../../mapper/parents-create-quiz.mapper';
 
 @Injectable()
 export class CreateQuizService implements CreateQuizUseCase {

@@ -1,6 +1,6 @@
-export class ParentsScheduledCommand {
+export class ChildrenCompletedQuizCommand {
     constructor(
-        public readonly parentProfileId: bigint,
+        public readonly childProfileId: number,
         public readonly limit: number,
         public readonly cursor?: string,
     ) {}

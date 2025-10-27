@@ -1,5 +1,5 @@
 import type { UpdateQuizResponseResult } from './result/update-quiz.result.dto';
-import type { UpdateQuizCommand } from '../../command/update-quiz.command';
+import type { UpdateQuizCommand } from '../../command/parents-update-quiz.command';
 
 /**
  * 부모용 퀴즈 수정 UseCase

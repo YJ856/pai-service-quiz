@@ -1,17 +1,16 @@
 import { Injectable } from "@nestjs/common";
 import { ParentsQuizDetailResponseData } from "pai-shared-types";
 import { ParentsQuizDetailResponseResult } from "src/application/port/in/result/detail-quiz.result.dto";
-import { DetailQuizCommand } from "src/application/command/detail-quiz.command";
+import { ParentsDetailQuizCommand } from "src/application/command/parents-detail-quiz.command";
 import { Quiz } from "src/domain/model/quiz";
-import { isEditable } from "src/domain/policy/quiz.policy";
 import { todayYmd } from "src/utils/date.util";
 
 @Injectable()
 export class DetailQuizMapper {
-  toCommand(quizId: string, parentProfileId: number): DetailQuizCommand {
-    return new DetailQuizCommand(
+  toCommand(quizId: string, parentProfileId: number): ParentsDetailQuizCommand {
+    return new ParentsDetailQuizCommand(
       BigInt(quizId), // string -> bigint 변환
-      BigInt(parentProfileId), // number -> bigint 변환
+      parentProfileId, 
     );
   }
 

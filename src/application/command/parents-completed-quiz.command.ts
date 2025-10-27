@@ -1,6 +1,6 @@
-export class ParentsCompletedCommand {
+export class ParentsCompletedQuizCommand {
     constructor(
-        public readonly parentProfileId: bigint,
+        public readonly parentProfileId: number,
         public readonly limit: number,
         public readonly cursor?: string,
     ) {}

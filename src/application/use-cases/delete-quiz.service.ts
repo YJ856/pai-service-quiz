@@ -10,12 +10,12 @@ import { QUIZ_TOKENS } from '../../quiz.token';
 import { toYmdFromDate, todayYmd } from '../../utils/date.util';
 import { canDelete } from '../../domain/policy/quiz.policy';
 
-import type { DeleteQuizCommand } from '../command/delete-quiz.command';
+import type { DeleteQuizCommand } from '../command/parents-delete-quiz.command';
 import type { DeleteQuizUseCase } from '../port/in/delete-quiz.usecase';
 import type { QuizQueryPort } from '../port/out/quiz.query.port';
 import type { QuizCommandPort } from '../port/out/quiz.repository.port';
 import type { DeleteQuizResponseResult } from '../port/in/result/delete-quiz.result.dto';
-import { DeleteQuizMapper } from '../../mapper/delete-quiz.mapper';
+import { DeleteQuizMapper } from '../../mapper/parents-delete-quiz.mapper';
 
 @Injectable()
 export class DeleteQuizService implements DeleteQuizUseCase {

@@ -2,9 +2,8 @@ import { Injectable } from "@nestjs/common";
 import { UpdateQuizRequestDto } from "src/adapter/in/http/dto/request/parents-update-quiz-request.dto";
 import { UpdateQuizResponseData } from "pai-shared-types";
 import { UpdateQuizResponseResult } from "src/application/port/in/result/update-quiz.result.dto";
-import { UpdateQuizCommand } from "src/application/command/update-quiz.command";
+import { ParentsUpdateQuizCommand } from "src/application/command/parents-update-quiz.command";
 import { Quiz } from "src/domain/model/quiz";
-import { isEditable } from "src/domain/policy/quiz.policy";
 import { todayYmd } from "src/utils/date.util";
 
 
@@ -13,16 +12,16 @@ const hasKey = <T extends object>(o: T, k: keyof any) =>
 
 @Injectable()
 export class UpdateQuizMapper {
-  toCommand(quizId: string, parentProfileId: number, dto: UpdateQuizRequestDto): UpdateQuizCommand {
+  toCommand(quizId: string, parentProfileId: number, dto: UpdateQuizRequestDto): ParentsUpdateQuizCommand {
     const question    = hasKey(dto, 'question') ? dto.question : undefined;
     const answer      = hasKey(dto, 'answer')   ? dto.answer   : undefined;
     const hint        = hasKey(dto, 'hint')     ? (dto.hint ?? null) : undefined;
     const reward      = hasKey(dto, 'reward')   ? (dto.reward ?? null) : undefined;
     const publishDate = hasKey(dto, 'publishDate') ? (dto.publishDate ?? null) : undefined;
 
-    return new UpdateQuizCommand(
+    return new ParentsUpdateQuizCommand(
       BigInt(quizId), // string -> bigint 변환
-      BigInt(parentProfileId), // number -> bigint 변환
+      parentProfileId,
       question,
       answer,
       hint,

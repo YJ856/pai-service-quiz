@@ -8,7 +8,7 @@ import {
 import type { AnswerQuizResponseResult } from 'src/application/port/in/result/answer-quiz.result.dto';
 
 import type { AnswerQuizUseCase } from '../port/in/answer-quiz.usecase';
-import { AnswerQuizCommand } from '../command/answer-quiz.command';
+import { AnswerQuizCommand } from '../command/children-answer-quiz.command';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type {

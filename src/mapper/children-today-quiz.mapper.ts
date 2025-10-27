@@ -2,13 +2,13 @@ import { Injectable } from "@nestjs/common";
 import { ChildrenTodayQueryDto } from "src/adapter/in/http/dto/request/children-today-quiz-request.dto";
 import type { ChildrenTodayResponseData } from "pai-shared-types";
 import type { ChildrenTodayResponseResult } from "src/application/port/in/result/children-today.result.dto";
-import { ChildrenTodayCommand } from "src/application/command/children-today.command";
+import { ChildrenTodayQuizCommand } from "src/application/command/children-today-quiz.command";
 
 @Injectable()
 export class ChildrenTodayMapper {
-  toCommand(query: ChildrenTodayQueryDto, childProfileId: number): ChildrenTodayCommand {
-    return new ChildrenTodayCommand(
-      BigInt(childProfileId),
+  toCommand(query: ChildrenTodayQueryDto, childProfileId: number): ChildrenTodayQuizCommand {
+    return new ChildrenTodayQuizCommand(
+      childProfileId,
       query.limit ?? 20,
       query.cursor
     );

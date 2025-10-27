@@ -1,5 +1,5 @@
 import type { AnswerQuizResponseResult } from "./result/answer-quiz.result.dto";
-import type { AnswerQuizCommand } from '../../command/answer-quiz.command';
+import type { AnswerQuizCommand } from '../../command/children-answer-quiz.command';
 
 /**
  * 아이 정답 제출 유스케이스 계약
