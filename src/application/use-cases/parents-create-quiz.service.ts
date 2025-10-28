@@ -2,15 +2,16 @@
 import { Inject, Injectable, BadRequestException } from '@nestjs/common';
 
 // Port-In(인터페이스)는 타입 전용 import
-import type { CreateQuizUseCase } from '../port/in/create-quiz.usecase';
-import type { CreateQuizCommand } from '../command/parents-create-quiz.command';
+import type { CreateQuizUseCase } from '../port/in/parents-create-quiz.usecase';
+import type { ParentsCreateQuizCommand } from '../command/parents-create-quiz.command';
 import type { QuizCommandPort } from '../port/out/quiz.repository.port';
 import type { QuizQueryPort } from '../port/out/quiz.query.port';
 import type { CreateQuizResponseResult } from '../port/in/result/parents-create-quiz-result.dto';
 // 도메인/토큰/런타임 클래스는 일반 import
 import { Quiz } from '../../domain/model/quiz';
+import { PublishDate } from '../../domain/value-object/publish-date';
 import { QUIZ_TOKENS } from '../../quiz.token';
-import { todayYmd, plusOneYmd, isValidYmd } from '../../utils/date.util';
+import { todayYmdKST, plusOneYmd, isValidYmd } from '../../utils/date.util';
 import { CreateQuizMapper } from '../../adapter/in/http/mapper/parents-create-quiz.mapper';
 
 @Injectable()
@@ -23,20 +24,20 @@ export class CreateQuizService implements CreateQuizUseCase {
     private readonly createQuizMapper: CreateQuizMapper,
   ) {}
 
-  async execute(cmd: CreateQuizCommand): Promise<CreateQuizResponseResult> {
+  async execute(command: ParentsCreateQuizCommand): Promise<CreateQuizResponseResult> {
     // 0) 필수 헤더(부모 프로필) 확인 — Guard/@Auth에서 주입되지만 방어적으로 확인
-    if (cmd.parentProfileId == null) {
+    if (command.parentProfileId == null) {
       throw new BadRequestException('VALIDATION_ERROR: parentProfileId required');
     }
-    const parentProfileId = cmd.parentProfileId;
+    const parentProfileId = command.parentProfileId;
 
     // 1) publishDate 결정(yyyy-MM-dd)
     const publishDate =
-      cmd.publishDate ?? (await this.nextDefaultDateForFamily(parentProfileId));
+      command.publishDate ?? (await this.nextDefaultDateForFamily(parentProfileId));
 
     // 2) 입력 검증
-    const question = (cmd.question ?? '').trim();
-    const answer = (cmd.answer ?? '').trim();
+    const question = (command.question ?? '').trim();
+    const answer = (command.answer ?? '').trim();
 
     if (!question) throw new BadRequestException('VALIDATION_ERROR: question required');
     if (!answer) throw new BadRequestException('VALIDATION_ERROR: answer required');
@@ -45,20 +46,20 @@ export class CreateQuizService implements CreateQuizUseCase {
     }
 
     // 3) 도메인 객체 생성
-    const domain = new Quiz(
+    const domain = Quiz.create({
+      parentProfileId,
       question,
       answer,
-      publishDate,
-      parentProfileId,
-      cmd.hint ?? null,
-      cmd.reward ?? null,
-    );
+      publishDate: PublishDate.ofISO(publishDate),
+      hint: command.hint ?? null,
+      reward: command.reward ?? null,
+    });
 
     // 4) 저장
     const saved = await this.repo.save(domain);
 
     // 5) Result DTO로 변환
-    return this.createQuizMapper.toResponseResult(saved);
+    return this.createQuizMapper.toResponseResult(saved, parentProfileId);
   }
 
   /**
@@ -70,14 +71,14 @@ export class CreateQuizService implements CreateQuizUseCase {
    *    - 오늘 이미 있으면: 내일
    */
   private async nextDefaultDateForFamily(
-    parentProfileId: bigint,
+    parentProfileId: number,
   ): Promise<string> {
     const pid = parentProfileId;
 
     const last = await this.quizQuery.findLastScheduledDateYmd(pid);
     if (last) return plusOneYmd(last);
 
-    const today = todayYmd();
+    const today = todayYmdKST();
     const hasToday = await this.quizQuery.existsAnyOnDate(pid, today);
     return hasToday ? plusOneYmd(today) : today;
   }

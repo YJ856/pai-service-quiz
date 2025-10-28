@@ -5,93 +5,47 @@ import type { ParentsScheduledItemDto } from '../in/result/parents-scheduled-qui
 import type { ChildrenTodayItemDto } from '../in/result/children-today-quiz-result.dto';
 import type { ChildrenCompletedItemDto } from '../in/result/children-completed-quiz-result.dto';
 
-// ============================================================
-// 기본 유틸리티 조회
-// ============================================================
 
-// ============================================================
-// 부모용 목록 조회
-// ============================================================
+// 공통 타입 ===============================================
+export interface PageResult<T> {
+  items: T[];
+  hasNext: boolean;
+}
 
-// 오늘의 퀴즈
-export interface FindParentsTodayParams {
-  parentProfileId: bigint;
-  todayYmd: string;
-  limit: number;
+// 커서 유형(두 가지)
+export interface CursorById {
   afterQuizId?: bigint;
 }
-
-export interface FindParentsTodayResult {
-  items: ParentsTodayItemDto[];
-  hasNext: boolean;
+export interface CursorByDateId {
+  after?: { publishDateYmd: string; quizId: bigint };
 }
 
-// 완료된 퀴즈
-export interface FindParentsCompletedParams {
-  parentProfileId: bigint;
-  limit: number;
-  after?: {
-    publishDateYmd: string;
-    quizId: bigint;
-  };
-}
 
-export interface FindParentsCompletedResult {
-  items: ParentsCompletedItemDto[];
-  hasNext: boolean;
-}
+// 부모용 조회 ===============================================
 
-// 예정된 퀴즈
-export interface FindParentsScheduledParams {
-  parentProfileId: bigint;
-  limit: number;
-  after?: {
-    publishDateYmd: string;
-    quizId: bigint;
-  };
-}
-
-export interface FindParentsScheduledResult {
-  items: ParentsScheduledItemDto[];
-  hasNext: boolean;
-}
-
-// ============================================================
-// 자녀용 목록 조회
-// ============================================================
-
-// 오늘의 퀴즈(자녀용)
-export interface FindChildrenTodayParams {
-  childProfileId: bigint;
+// 오늘의 퀴즈(부모용)
+export interface FindParentsTodayParams extends CursorById {
+  parentProfileId: number;
   todayYmd: string;
   limit: number;
-  afterQuizId?: bigint;
 }
+export type FindParentsTodayResult = PageResult<ParentsTodayItemDto>
 
-export interface FindChildrenTodayResult {
-  items: ChildrenTodayItemDto[];
-  hasNext: boolean;
-}
-
-// 완료된 퀴즈(자녀용)
-export interface FindChildrenCompletedParams {
-  childProfileId: bigint;
+// 완료된 퀴즈(부모용)
+export interface FindParentsCompletedParams extends CursorByDateId {
+  parentProfileId: number;
   limit: number;
-  after?: {
-    publishDateYmd: string;
-    quizId: bigint;
-  };
 }
+export type FindParentsCompletedResult = PageResult<ParentsCompletedItemDto>
 
-export interface FindChildrenCompletedResult {
-  items: ChildrenCompletedItemDto[];
-  hasNext: boolean;
+// 예정된 퀴즈(부모용)
+export interface FindParentsScheduledParams extends CursorByDateId {
+  parentProfileId: number;
+  limit: number;
 }
+export type FindParentsScheduledResult = PageResult<ParentsScheduledItemDto>
 
-// ============================================================
 // 상세 조회
-// ============================================================
-
 export type QuizDetailRow = {
   id: bigint;
   question: string;
@@ -99,16 +53,32 @@ export type QuizDetailRow = {
   hint: string | null;
   reward: string | null;
   publishDate: Date;
-  parentProfileId: bigint;
-  // status는 제거 - publishDate 기반으로 계산
+  parentProfileId: number;
 };
 
-// ============================================================
-// 정답 제출 대상 조회
-// ============================================================
+
+// 자녀용 조회 ===============================================
+
+// 오늘의 퀴즈(자녀용)
+export interface FindChildrenTodayParams extends CursorById {
+  childProfileId: number;
+  todayYmd: string;
+  limit: number;
+}
+export type FindChildrenTodayResult = PageResult<ChildrenTodayItemDto>
+
+// 완료된 퀴즈(자녀용)
+export interface FindChildrenCompletedParams extends CursorByDateId {
+  childProfileId: number;
+  limit: number;
+}
+export type FindChildrenCompletedResult = PageResult<ChildrenCompletedItemDto>
+
+
+// 정답 제출 대상 조회 =============================================
 
 export interface FindAnswerTargetParams {
-  childProfileId: bigint;
+  childProfileId: number;
   quizId: bigint;
   todayYmd: string;
 }
@@ -119,32 +89,28 @@ export interface AnswerTargetRow {
   answer: string;
   reward?: string | null;
   isSolved: boolean;
-  authorParentProfileId: bigint;
+  authorParentProfileId: number;
   authorParentName?: string | null;
   authorParentAvatarMediaId?: bigint | null;
-  // status는 제거 - publishDate 기반으로 계산
 }
 
-// ============================================================
-// 통합 읽기 포트
-// ============================================================
+
+// 통합 읽기 포트 ================================================
 
 export interface QuizQueryPort {
   // 기본 유틸리티
-  findLastScheduledDateYmd(parentProfileId: bigint): Promise<string | null>;
-  existsAnyOnDate(parentProfileId: bigint, ymd: string): Promise<boolean>;
+  findLastScheduledDateYmd(parentProfileId: number): Promise<string | null>;
+  existsAnyOnDate(parentProfileId: number, ymd: string): Promise<boolean>;
 
-  // 부모용 목록 조회
+  // 부모용 
   findParentsToday(params: FindParentsTodayParams): Promise<FindParentsTodayResult>;
   findParentsCompleted(params: FindParentsCompletedParams): Promise<FindParentsCompletedResult>;
   findParentsScheduled(params: FindParentsScheduledParams): Promise<FindParentsScheduledResult>;
+  findDetailById(quizId: bigint): Promise<QuizDetailRow | null>;
 
-  // 자녀용 목록 조회
+  // 자녀용
   findChildrenToday(params: FindChildrenTodayParams): Promise<FindChildrenTodayResult>;
   findChildrenCompleted(params: FindChildrenCompletedParams): Promise<FindChildrenCompletedResult>;
-
-  // 상세 조회
-  findDetailById(quizId: bigint): Promise<QuizDetailRow | null>;
 
   // 정답 제출 대상 조회
   findAnswerTarget(params: FindAnswerTargetParams): Promise<AnswerTargetRow | null>;

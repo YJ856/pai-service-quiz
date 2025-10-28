@@ -3,8 +3,8 @@ import type { ParentsTodayResponseResult, ParentsTodayItemDto, } from 'src/appli
 
 import type {
   ListParentsTodayUseCase,
-} from '../port/in/list-parents-today.usecase';
-import type { ParentsTodayCommand } from '../command/parents-today-quiz.command';
+} from '../port/in/parents-today-quiz.usecase';
+import type { ParentsTodayQuizCommand } from '../command/parents-today-quiz.command';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type { QuizQueryPort } from '../port/out/quiz.query.port';
@@ -15,7 +15,7 @@ import type {
 } from '../port/out/profile-directory.port';
 
 // Utils
-import { getTodayYmdKST } from '../../utils/date.util';
+import { todayYmdKST } from '../../utils/date.util';
 import { decodeIdCursor, encodeIdCursor } from '../../utils/cursor.util';
 import {
   getParentProfileSafe,
@@ -39,11 +39,11 @@ export class ListParentsTodayService implements ListParentsTodayUseCase {
    * - 기준 날짜: Asia/Seoul(UTC+9)
    * - 커서: Base64("quizId")
    */
-  async execute(cmd: ParentsTodayCommand): Promise<ParentsTodayResponseResult> {
+  async execute(cmd: ParentsTodayQuizCommand): Promise<ParentsTodayResponseResult> {
     const { parentProfileId } = cmd;
     const limit = cmd.limit;
     const afterQuizId = decodeIdCursor(cmd.cursor ?? null);
-    const todayYmd = getTodayYmdKST();
+    const todayYmd = todayYmdKST();
 
     // 1) DB에서 기본 목록
     const { items, hasNext } = await this.repo.findParentsToday({
@@ -55,7 +55,7 @@ export class ListParentsTodayService implements ListParentsTodayUseCase {
 
     // 2) 프로필 정보 배치 조회
     const [parent, childMap] = await Promise.all([
-      getParentProfileSafe(this.profiles, Number(parentProfileId)),
+      getParentProfileSafe(this.profiles, parentProfileId),
       getChildProfilesSafe(this.profiles, collectChildProfileIds(items)),
     ]);
 
@@ -63,7 +63,7 @@ export class ListParentsTodayService implements ListParentsTodayUseCase {
     const merged = this.enrichWithProfiles(items, parent, childMap);
 
     const nextCursor = hasNext
-      ? encodeIdCursor(Number(merged[merged.length - 1].quizId))
+      ? encodeIdCursor(merged[merged.length - 1].quizId)
       : null;
 
     return {

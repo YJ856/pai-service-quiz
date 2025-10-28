@@ -1,12 +1,12 @@
 import { Injectable } from "@nestjs/common";
-import { ChildrenTodayQueryDto } from "src/adapter/in/http/dto/request/children-today-quiz-request.dto";
+import { ChildrenTodayQueryParam } from "src/adapter/in/http/dto/request/children-today-quiz-request.dto";
 import type { ChildrenTodayResponseData } from "pai-shared-types";
 import type { ChildrenTodayResponseResult } from "src/application/port/in/result/children-today-quiz-result.dto";
 import { ChildrenTodayQuizCommand } from "src/application/command/children-today-quiz.command";
 
 @Injectable()
 export class ChildrenTodayMapper {
-  toCommand(query: ChildrenTodayQueryDto, childProfileId: number): ChildrenTodayQuizCommand {
+  toCommand(query: ChildrenTodayQueryParam, childProfileId: number): ChildrenTodayQuizCommand {
     return new ChildrenTodayQuizCommand(
       childProfileId,
       query.limit ?? 20,
@@ -21,7 +21,7 @@ export class ChildrenTodayMapper {
         question: item.question,
         hint: item.hint,
         reward: item.reward,
-        authorParentProfileId: item.authorParentProfileId.toString(), // number -> string
+        authorParentProfileId: item.authorParentProfileId,
         authorParentName: item.authorParentName,
         authorParentAvatarMediaId: item.authorParentAvatarMediaId?.toString() ?? null, // number | null -> string | null
         isSolved: item.isSolved,

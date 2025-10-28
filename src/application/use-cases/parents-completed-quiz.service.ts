@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { ParentsCompletedResponseResult, ParentsCompletedItemDto, } from 'src/application/port/in/result/parents-completed-quiz-result.dto';
 
-import type { ListParentsCompletedUseCase,} from '../port/in/list-parents-completed.usecase';
-import type { ParentsCompletedCommand } from '../command/parents-completed-quiz.command';
+import type { ListParentsCompletedUseCase,} from '../port/in/parents-completed-quiz.usecase';
+import type { ParentsCompletedQuizCommand } from '../command/parents-completed-quiz.command';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type {
@@ -39,7 +39,7 @@ export class ListParentsCompletedService implements ListParentsCompletedUseCase 
    * - 정렬: publishDate DESC, quizId DESC
    * - 커서: Base64("\"yyyy-MM-dd|quizId\"")
    */
-  async execute(cmd: ParentsCompletedCommand): Promise<ParentsCompletedResponseResult> {
+  async execute(cmd: ParentsCompletedQuizCommand): Promise<ParentsCompletedResponseResult> {
     const { parentProfileId } = cmd;
     const limit = cmd.limit;
     const after = decodeCompositeCursor(cmd.cursor ?? null);
@@ -54,7 +54,7 @@ export class ListParentsCompletedService implements ListParentsCompletedUseCase 
 
     // 2) 프로필 정보 배치 조회
     const [parent, childMap] = await Promise.all([
-      getParentProfileSafe(this.profiles, Number(parentProfileId)),
+      getParentProfileSafe(this.profiles, parentProfileId),
       getChildProfilesSafe(this.profiles, collectChildProfileIds(items)),
     ]);
 
@@ -65,7 +65,7 @@ export class ListParentsCompletedService implements ListParentsCompletedUseCase 
     const tail = merged.length ? merged[merged.length - 1] : null;
     const nextCursor =
       hasNext && tail
-        ? encodeCompositeCursor(tail.publishDate, Number(tail.quizId))
+        ? encodeCompositeCursor(tail.publishDate, tail.quizId)
         : null;
 
     return {

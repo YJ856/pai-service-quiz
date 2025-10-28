@@ -24,7 +24,7 @@ export class ChildrenCompletedMapper {
         question: item.question,
         answer: item.answer,
         reward: item.reward,
-        authorParentProfileId: item.authorParentProfileId.toString(), // number -> string
+        authorParentProfileId: item.authorParentProfileId,
         authorParentName: item.authorParentName,
         authorParentAvatarMediaId: item.authorParentAvatarMediaId?.toString() ?? null, // number | null -> string | null
       })),

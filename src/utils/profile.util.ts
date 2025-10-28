@@ -14,11 +14,11 @@ import type {
  */
 export async function getParentProfileSafe(
   profiles: ProfileDirectoryPort,
-  id: bigint
+  id: bigint | number
 ): Promise<ParentProfileSummary | null> {
   try {
-    if (typeof id !== 'bigint') return null;
-    return await profiles.getParentProfile(id);
+    const bigintId = typeof id === 'bigint' ? id : BigInt(id);
+    return await profiles.getParentProfile(bigintId);
   } catch {
     return null;
   }
@@ -29,10 +29,11 @@ export async function getParentProfileSafe(
  */
 export async function getChildProfilesSafe(
   profiles: ProfileDirectoryPort,
-  ids: bigint[]
+  ids: bigint[] | number[]
 ): Promise<Record<string, ChildProfileSummary>> {
   try {
-    return await profiles.getChildProfiles(ids);
+    const bigintIds = ids.map((id: bigint | number) => typeof id === 'bigint' ? id : BigInt(id));
+    return await profiles.getChildProfiles(bigintIds);
   } catch {
     return {};
   }
@@ -43,15 +44,16 @@ export async function getChildProfilesSafe(
  */
 export async function getParentProfilesSafe(
   profiles: ProfileDirectoryPort,
-  ids: bigint[]
+  ids: bigint[] | number[]
 ): Promise<Record<string, ParentProfileSummary>> {
   try {
     if (ids.length === 0) return {};
     const results = await Promise.all(
-      ids.map(async (id) => {
+      ids.map(async (id: bigint | number) => {
         try {
-          const profile = await profiles.getParentProfile(id);
-          return profile ? ([id.toString(), profile] as const) : null;
+          const bigintId = typeof id === 'bigint' ? id : BigInt(id);
+          const profile = await profiles.getParentProfile(bigintId);
+          return profile ? ([bigintId.toString(), profile] as const) : null;
         } catch {
           return null;
         }
@@ -68,8 +70,8 @@ export async function getParentProfilesSafe(
 /**
  * 아이템에서 자녀 프로필 ID 수집
  */
-export function collectChildProfileIds(items: Array<{ children: Array<{ childProfileId: bigint }> }>): bigint[] {
-  const set = new Set<bigint>();
+export function collectChildProfileIds(items: Array<{ children: Array<{ childProfileId: number }> }>): number[] {
+  const set = new Set<number>();
   for (const item of items) {
     for (const child of item.children) {
       set.add(child.childProfileId);
@@ -81,8 +83,8 @@ export function collectChildProfileIds(items: Array<{ children: Array<{ childPro
 /**
  * 아이템에서 부모 프로필 ID 수집
  */
-export function collectParentProfileIds(items: Array<{ authorParentProfileId: bigint }>): bigint[] {
-  const set = new Set<bigint>();
+export function collectParentProfileIds(items: Array<{ authorParentProfileId: number }>): number[] {
+  const set = new Set<number>();
   for (const item of items) {
     set.add(item.authorParentProfileId);
   }

@@ -4,17 +4,22 @@
 
 /**
  * 단순 ID 커서 디코딩
- * Base64("quizId") → number | null
- * 예: "MTIz" → 123
+ * Base64("quizId") → bigint | null
+ * 예: "MTIz" → 123n
  */
-export function decodeIdCursor(cursor: string | null): number | null {
+export function decodeIdCursor(cursor: string | null): bigint | null {
   if (!cursor) return null;
   try {
     const decoded = Buffer.from(cursor, 'base64').toString('utf8');
     const raw = safeJsonParse(decoded);
     const s = typeof raw === 'string' ? raw : decoded;
-    const id = Number(String(s).trim());
-    return Number.isFinite(id) && id > 0 ? id : null;
+    const idStr = String(s).trim();
+
+    // 숫자 형식인지 검증
+    if (!/^\d+$/.test(idStr)) return null;
+
+    const id = BigInt(idStr);
+    return id > 0n ? id : null;
   } catch {
     return null;
   }
@@ -22,10 +27,10 @@ export function decodeIdCursor(cursor: string | null): number | null {
 
 /**
  * 단순 ID 커서 인코딩
- * number → Base64("quizId")
- * 예: 123 → "MTIz"
+ * number | bigint → Base64("quizId")
+ * 예: 123n → "MTIz"
  */
-export function encodeIdCursor(id: number): string {
+export function encodeIdCursor(id: number | bigint): string {
   const payload = JSON.stringify(String(id));
   return Buffer.from(payload, 'utf8').toString('base64');
 }
@@ -33,22 +38,24 @@ export function encodeIdCursor(id: number): string {
 /**
  * 복합 커서 디코딩 (날짜 + ID)
  * Base64("yyyy-MM-dd|quizId") → { publishDateYmd, quizId } | null
- * 예: "MjAyNS0xMC0xNnwxMjM=" → { publishDateYmd: "2025-10-16", quizId: 123 }
+ * 예: "MjAyNS0xMC0xNnwxMjM=" → { publishDateYmd: "2025-10-16", quizId: 123n }
  */
 export function decodeCompositeCursor(
   cursor: string | null
-): { publishDateYmd: string; quizId: number } | null {
+): { publishDateYmd: string; quizId: bigint } | null {
   if (!cursor) return null;
   try {
     const decoded = Buffer.from(cursor, 'base64').toString('utf8');
     const raw = safeJsonParse(decoded);
     const s = typeof raw === 'string' ? raw : decoded;
     const [ymd, idStr] = String(s).split('|');
-    const quizId = Number(idStr);
 
     // 날짜 형식 검증
     if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return null;
-    if (!Number.isFinite(quizId) || quizId <= 0) return null;
+    if (!idStr || !/^\d+$/.test(idStr)) return null;
+
+    const quizId = BigInt(idStr);
+    if (quizId <= 0n) return null;
 
     return { publishDateYmd: ymd, quizId };
   } catch {
@@ -59,10 +66,10 @@ export function decodeCompositeCursor(
 /**
  * 복합 커서 인코딩 (날짜 + ID)
  * { publishDateYmd, quizId } → Base64("yyyy-MM-dd|quizId")
- * 예: { publishDateYmd: "2025-10-16", quizId: 123 } → "MjAyNS0xMC0xNnwxMjM="
+ * 예: { publishDateYmd: "2025-10-16", quizId: 123n } → "MjAyNS0xMC0xNnwxMjM="
  */
-export function encodeCompositeCursor(publishDateYmd: string, quizId: number): string {
-  const payload = JSON.stringify(`${publishDateYmd}|${quizId}`);
+export function encodeCompositeCursor(publishDateYmd: string, quizId: bigint | number): string {
+  const payload = JSON.stringify(`${publishDateYmd}|${quizId.toString()}`);
   return Buffer.from(payload, 'utf8').toString('base64');
 }
 

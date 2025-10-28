@@ -7,11 +7,27 @@ import {
 } from '@nestjs/common';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
-import { toYmdFromDate, todayYmd } from '../../utils/date.util';
-import { canDelete } from '../../domain/policy/quiz.policy';
+import { toYmdFromDate, todayYmdKST } from '../../utils/date.util';
 
-import type { DeleteQuizCommand } from '../command/parents-delete-quiz.command';
-import type { DeleteQuizUseCase } from '../port/in/delete-quiz.usecase';
+const canDelete = (
+  publishDateYmd: string,
+  authorParentProfileId: number,
+  requesterParentProfileId: number,
+  today: string
+): boolean => {
+  // 작성자만 삭제 가능
+  if (authorParentProfileId !== requesterParentProfileId) {
+    return false;
+  }
+  // publishDate가 오늘 이후인 경우만 삭제 가능 (SCHEDULED 상태)
+  if (publishDateYmd > today) {
+    return true;
+  }
+  return false;
+};
+
+import type { ParentsDeleteQuizCommand } from '../command/parents-delete-quiz.command';
+import type { DeleteQuizUseCase } from '../port/in/parents-delete-quiz.usecase';
 import type { QuizQueryPort } from '../port/out/quiz.query.port';
 import type { QuizCommandPort } from '../port/out/quiz.repository.port';
 import type { DeleteQuizResponseResult } from '../port/in/result/parents-delete-quiz-result.dto';
@@ -32,7 +48,7 @@ export class DeleteQuizService implements DeleteQuizUseCase {
    * - 작성자 본인만
    * - 상태가 SCHEDULED인 경우에만
    */
-  async execute(cmd: DeleteQuizCommand): Promise<DeleteQuizResponseResult> {
+  async execute(cmd: ParentsDeleteQuizCommand): Promise<DeleteQuizResponseResult> {
     const { quizId, parentProfileId } = cmd;
 
     // 1) 대상 조회
@@ -40,7 +56,7 @@ export class DeleteQuizService implements DeleteQuizUseCase {
     if (!quiz) throw new NotFoundException('QUIZ_NOT_FOUND');
 
     // 2) 권한 & 상태 체크 (도메인 정책 활용)
-    const today = todayYmd();
+    const today = todayYmdKST();
     const publishDateYmd = toYmdFromDate(quiz.publishDate);
 
     if (!canDelete(publishDateYmd, quiz.parentProfileId, parentProfileId, today)) {

@@ -8,13 +8,29 @@ import {
 } from '@nestjs/common';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
-import { isValidYmd, ymdToUtcDate, toYmdFromDate, todayYmd } from '../../utils/date.util';
-import { canEdit } from '../../domain/policy/quiz.policy';
+import { isValidYmd, ymdToUtcDate, toYmdFromDate, todayYmdKST } from '../../utils/date.util';
 import { Quiz } from '../../domain/model/quiz';
 import { UpdateQuizMapper } from '../../adapter/in/http/mapper/parents-update-quiz.mapper';
 
-import type { UpdateQuizCommand } from '../command/parents-update-quiz.command';
-import type { UpdateQuizUseCase } from '../port/in/update-quiz.usecase';
+const canEdit = (
+  publishDateYmd: string,
+  authorParentProfileId: number,
+  requesterParentProfileId: number,
+  today: string
+): boolean => {
+  // 작성자만 수정 가능
+  if (authorParentProfileId !== requesterParentProfileId) {
+    return false;
+  }
+  // publishDate가 오늘 이후인 경우만 수정 가능 (SCHEDULED 상태)
+  if (publishDateYmd > today) {
+    return true;
+  }
+  return false;
+};
+
+import type { ParentsUpdateQuizCommand } from '../command/parents-update-quiz.command';
+import type { UpdateQuizUseCase } from '../port/in/parents-update-quiz.usecase';
 import type { QuizQueryPort } from '../port/out/quiz.query.port';
 import type {
   QuizCommandPort,
@@ -41,7 +57,7 @@ export class UpdateQuizService implements UpdateQuizUseCase {
    * - 전달된 필드만 부분 수정 (hint/reward === null 이면 제거)
    * - 수정된 퀴즈 Result DTO 반환
    */
-  async execute(cmd: UpdateQuizCommand): Promise<UpdateQuizResponseResult> {
+  async execute(cmd: ParentsUpdateQuizCommand): Promise<UpdateQuizResponseResult> {
     const quizId = cmd.quizId;
     const requesterPid = cmd.parentProfileId; // 이미 bigint
 
@@ -55,7 +71,7 @@ export class UpdateQuizService implements UpdateQuizUseCase {
     if (!row) throw new NotFoundException('QUIZ_NOT_FOUND');
 
     // 2) 권한 & 상태 체크 (도메인 정책 활용)
-    const today = todayYmd();
+    const today = todayYmdKST();
     const publishDateYmd = toYmdFromDate(row.publishDate);
 
     if (!canEdit(publishDateYmd, row.parentProfileId, requesterPid, today)) {
@@ -107,25 +123,25 @@ export class UpdateQuizService implements UpdateQuizUseCase {
       throw new ConflictException('NOT_SCHEDULED');
     }
 
-    // 6) 수정된 퀴즈를 다시 조회하여 Quiz 도메인 객체 생성
+    // 6) 수정된 퀴즈를 다시 조회하여 Quiz 도메인 객체 복원
     const updatedRow = await this.detailRepo.findDetailById(quizId);
     if (!updatedRow) throw new NotFoundException('QUIZ_NOT_FOUND');
 
-    const quiz = new Quiz(
-      updatedRow.question,
-      updatedRow.answer,
-      toYmdFromDate(updatedRow.publishDate),
-      updatedRow.parentProfileId,
-      updatedRow.hint,
-      updatedRow.reward,
-      updatedRow.id
-    );
+    const quiz = Quiz.rehydrate({
+      id: updatedRow.id,
+      parentProfileId: updatedRow.parentProfileId,
+      question: updatedRow.question,
+      answer: updatedRow.answer,
+      publishDate: toYmdFromDate(updatedRow.publishDate),
+      hint: updatedRow.hint,
+      reward: updatedRow.reward,
+    });
 
     // 7) Result DTO로 변환
-    return this.updateQuizMapper.toResponseResult(quiz);
+    return this.updateQuizMapper.toResponseResult(quiz, requesterPid);
   }
 
-  private hasAnyPatch(cmd: UpdateQuizCommand): boolean {
+  private hasAnyPatch(cmd: ParentsUpdateQuizCommand): boolean {
     return (
       cmd.question !== undefined ||
       cmd.answer !== undefined ||

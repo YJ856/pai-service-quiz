@@ -3,7 +3,24 @@ import { ParentsQuizDetailResponseData } from "pai-shared-types";
 import { ParentsQuizDetailResponseResult } from "src/application/port/in/result/parents-detail-quiz-result.dto";
 import { ParentsDetailQuizCommand } from "src/application/command/parents-detail-quiz.command";
 import { Quiz } from "src/domain/model/quiz";
-import { todayYmd } from "src/utils/date.util";
+import { todayYmdKST } from "src/utils/date.util";
+
+const isEditable = (
+  publishDate: string,
+  currentParentProfileId: number,
+  authorParentProfileId: number,
+  today: string
+): boolean => {
+  // 작성자만 수정 가능
+  if (currentParentProfileId !== authorParentProfileId) {
+    return false;
+  }
+  // publishDate가 오늘 이후인 경우에만 수정 가능
+  if (publishDate > today) {
+    return true;
+  }
+  return false;
+};
 
 @Injectable()
 export class DetailQuizMapper {
@@ -28,20 +45,21 @@ export class DetailQuizMapper {
   }
 
   // Service용 - Result DTO 사용
-  toResponseResult(quiz: Quiz): ParentsQuizDetailResponseResult {
-    const today = todayYmd();
+  toResponseResult(quiz: Quiz, currentParentProfileId: number): ParentsQuizDetailResponseResult {
+    const today = todayYmdKST();
+    const publishDate = quiz.getPublishDate();
 
     return {
-      quizId: quiz.id!,
-      question: quiz.question,
-      answer: quiz.answer,
-      hint: quiz.hint ?? null,
-      reward: quiz.reward ?? null,
-      publishDate: quiz.publishDate,
+      quizId: quiz.getId()!,
+      question: quiz.getQuestion(),
+      answer: quiz.getAnswer(),
+      hint: quiz.getHint(),
+      reward: quiz.getReward(),
+      publishDate: publishDate.ymd,
       isEditable: isEditable(
-        quiz.publishDate,
-        quiz.authorParentProfileId,
-        quiz.authorParentProfileId,
+        publishDate.ymd,
+        currentParentProfileId,
+        quiz.getParentProfileId(),
         today
       ),
     };

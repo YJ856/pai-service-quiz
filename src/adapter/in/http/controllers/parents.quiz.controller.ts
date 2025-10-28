@@ -14,32 +14,33 @@ import {
 } from '@nestjs/common';
 
 import type {
-  CreateQuizRequestDto,
-  CreateQuizResponseData,
   BaseResponse,
+  CreateQuizResponseData,
   NextPublishDateData,
-  ParentsTodayQueryDto,
   ParentsTodayResponseData,
-  ParentsCompletedQueryDto,
   ParentsCompletedResponseData,
-  ParentsScheduledQueryDto,
   ParentsScheduledResponseData,
   ParentsQuizDetailResponseData,
-  UpdateQuizRequestDto,
   UpdateQuizResponseData,
   DeleteQuizResponseData,
 } from 'pai-shared-types';
 
+import { CreateQuizRequestDto } from '../dto/request/parents-create-quiz-request.dto';
+import { ParentsTodayQueryParam } from '../dto/request/parents-today-quiz-request.dto';
+import { ParentsCompletedQueryParam } from '../dto/request/parents-completed-quiz-request.dto';
+import { ParentsScheduledQueryParam } from '../dto/request/parents-scheduled-quiz-request.dto';
+import { UpdateQuizRequestDto } from '../dto/request/parents-update-quiz-request.dto';
+
 import { QUIZ_TOKENS } from '../../../../quiz.token';
 
-import type { CreateQuizUseCase } from '../../../../application/port/in/create-quiz.usecase';
+import type { CreateQuizUseCase } from '../../../../application/port/in/parents-create-quiz.usecase';
 import type { GetNextPublishDateUseCase } from '../../../../application/port/in/next-publish-date.usecase';
-import type { ListParentsTodayUseCase } from '../../../../application/port/in/list-parents-today.usecase';
-import type { ListParentsCompletedUseCase } from '../../../../application/port/in/list-parents-completed.usecase';
-import type { ListParentsScheduledUseCase } from '../../../../application/port/in/list-parents-scheduled.usecase';
-import type { GetParentsQuizDetailUseCase } from '../../../../application/port/in/get-parents-quiz-detail.usecase';
-import type { UpdateQuizUseCase } from '../../../../application/port/in/update-quiz.usecase';
-import type { DeleteQuizUseCase } from '../../../../application/port/in/delete-quiz.usecase';
+import type { ListParentsTodayUseCase } from '../../../../application/port/in/parents-today-quiz.usecase';
+import type { ListParentsCompletedUseCase } from '../../../../application/port/in/parents-completed-quiz.usecase';
+import type { ListParentsScheduledUseCase } from '../../../../application/port/in/parents-scheduled-quiz.usecase';
+import type { GetParentsQuizDetailUseCase } from '../../../../application/port/in/parents-detail-quiz.usecase';
+import type { UpdateQuizUseCase } from '../../../../application/port/in/parents-update-quiz.usecase';
+import type { DeleteQuizUseCase } from '../../../../application/port/in/parents-delete-quiz.usecase';
 
 import { NextPublishDateMapper } from '../mapper/next-publish-date.mapper';
 import { CreateQuizMapper } from '../mapper/parents-create-quiz.mapper';
@@ -52,6 +53,8 @@ import { ParentsCompletedMapper } from '../mapper/parents-completed-quiz.mapper'
 
 import { ParentGuard } from '../auth/guards/auth.guard';
 import { Auth } from '../decorators/auth.decorator';
+
+
 
 @Controller('api/quiz')
 @UseGuards(ParentGuard)
@@ -116,7 +119,7 @@ export class ParentsQuizController {
   @HttpCode(HttpStatus.OK)
   async listParentsTodayHandler(
     @Auth('profileId') parentProfileId: number,
-    @Query() query: ParentsTodayQueryDto,
+    @Query() query: ParentsTodayQueryParam,
   ): Promise<BaseResponse<ParentsTodayResponseData>> {
     const cmd = this.parentsTodayMapper.toCommand(query, parentProfileId);
     const result = await this.listParentsToday.execute(cmd);
@@ -128,7 +131,7 @@ export class ParentsQuizController {
   @HttpCode(HttpStatus.OK)
   async listParentsCompletedHandler(
     @Auth('profileId') parentProfileId: number,
-    @Query() query: ParentsCompletedQueryDto,
+    @Query() query: ParentsCompletedQueryParam,
   ): Promise<BaseResponse<ParentsCompletedResponseData>> {
     const cmd = this.parentsCompletedMapper.toCommand(query, parentProfileId);
     const result = await this.listParentsCompleted.execute(cmd);
@@ -140,7 +143,7 @@ export class ParentsQuizController {
   @HttpCode(HttpStatus.OK)
   async listParentsScheduledHandler(
     @Auth('profileId') parentProfileId: number,
-    @Query() query: ParentsScheduledQueryDto,
+    @Query() query: ParentsScheduledQueryParam,
   ): Promise<BaseResponse<ParentsScheduledResponseData>> {
     const cmd = this.parentsScheduledMapper.toCommand(query, parentProfileId);
     const result = await this.listParentsScheduled.execute(cmd);

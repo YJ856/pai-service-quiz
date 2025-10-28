@@ -4,8 +4,8 @@ import type {
   ChildrenCompletedItemDto,
 } from 'src/application/port/in/result/children-completed-quiz-result.dto';
 
-import type { ListChildrenCompletedUseCase } from '../port/in/list-children-completed.usecase';
-import type { ChildrenCompletedCommand } from '../command/children-completed-quiz.command';
+import type { ListChildrenCompletedUseCase } from '../port/in/children-completed-quiz.usecase';
+import type { ChildrenCompletedQuizCommand } from '../command/children-completed-quiz.command';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type {
@@ -13,17 +13,14 @@ import type {
   FindChildrenCompletedParams,
 } from '../port/out/quiz.query.port';
 
-import type {
-  ProfileDirectoryPort,
-  ParentProfileSummary,
+import type { 
+  ProfileDirectoryPort, 
+  ParentProfileSummary, 
 } from '../port/out/profile-directory.port';
 
 // Utils
 import { decodeCompositeCursor, encodeCompositeCursor } from '../../utils/cursor.util';
-import {
-  getParentProfilesSafe,
-  collectParentProfileIds,
-} from '../../utils/profile.util';
+import { getParentProfilesSafe, collectParentProfileIds, } from '../../utils/profile.util';
 
 /**
  * 아이용 완료된 퀴즈 조회
@@ -41,31 +38,35 @@ export class ListChildrenCompletedService implements ListChildrenCompletedUseCas
     private readonly profiles: ProfileDirectoryPort,
   ) {}
 
-  async execute(cmd: ChildrenCompletedCommand): Promise<ChildrenCompletedResponseResult> {
-    const limit = cmd.limit;
-    const after = decodeCompositeCursor(cmd.cursor ?? null);
+  async execute(command: ChildrenCompletedQuizCommand): Promise<ChildrenCompletedResponseResult> {
+    const limit = command.limit;
+    
+    // 1) 커서 디코드 → 레포 after 형식으로 매핑
+    const rawAfter = command.cursor ? decodeCompositeCursor(command.cursor) : null;
+    // rawAfter 예상 형태: { publishDateYmd: string, quizId: bigint }
+    const after = rawAfter ?? undefined;
 
     const query: FindChildrenCompletedParams = {
-      childProfileId: cmd.childProfileId,
+      childProfileId: command.childProfileId,
       limit,
       ...(after ? { after } : {}),
     };
 
-    // 1) DB 조회
+    // 2) DB 조회
     const { items, hasNext } = await this.repo.findChildrenCompleted(query);
 
-    // 2) 부모 프로필 정보 배치 조회
+    // 3) 부모 프로필 정보 배치 조회
     const parentIds = collectParentProfileIds(items);
     const parentMap = await getParentProfilesSafe(this.profiles, parentIds);
 
-    // 3) 프로필 정보 보강
+    // 4) 프로필 정보 보강
     const enrichedItems = this.enrichWithProfiles(items, parentMap);
 
-    // 4) nextCursor 계산
+    // 5) nextCursor 계산
     const last = enrichedItems[enrichedItems.length - 1];
     const nextCursor =
       hasNext && last
-        ? encodeCompositeCursor(last.publishDate, Number(last.quizId))
+        ? encodeCompositeCursor(last.publishDate, last.quizId)
         : null;
 
     return {

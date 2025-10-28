@@ -8,5 +8,5 @@ import type { ChildrenAnswerQuizCommand } from '../../command/children-answer-qu
  * - answer는 request body에서 수신
  */
 export interface AnswerQuizUseCase {
-  execute(cmd: ChildrenAnswerQuizCommand): Promise<AnswerQuizResponseResult>;
+  execute(command: ChildrenAnswerQuizCommand): Promise<AnswerQuizResponseResult>;
 }

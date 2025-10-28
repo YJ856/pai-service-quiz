@@ -13,19 +13,20 @@ import {
 
 import type {
   BaseResponse,
-  ChildrenTodayQueryDto,
   ChildrenTodayResponseData,
-  ChildrenCompletedQueryDto,
   ChildrenCompletedResponseData,
-  AnswerQuizRequestDto,
   AnswerQuizResponseData,
 } from 'pai-shared-types';
 
+import { ChildrenTodayQueryParam } from '../dto/request/children-today-quiz-request.dto';
+import { ChildrenCompletedQueryParam } from '../dto/request/children-completed-quiz-request.dto';
+import { AnswerQuizPathParam, AnswerQuizRequestDto } from '../dto/request/children-answer-quiz-request.dto';
+
 import { QUIZ_TOKENS } from '../../../../quiz.token';
 
-import type { ListChildrenTodayUseCase } from '../../../../application/port/in/list-children-today.usecase';
-import type { ListChildrenCompletedUseCase } from '../../../../application/port/in/list-children-completed.usecase';
-import type { AnswerQuizUseCase } from '../../../../application/port/in/answer-quiz.usecase';
+import type { ListChildrenTodayUseCase } from '../../../../application/port/in/children-today-quiz.usecase';
+import type { ListChildrenCompletedUseCase } from '../../../../application/port/in/children-completed-quiz.usecase';
+import type { AnswerQuizUseCase } from '../../../../application/port/in/children-answer-quiz.usecase';
 
 import { ChildrenTodayMapper } from '../mapper/children-today-quiz.mapper';
 import { ChildrenCompletedMapper } from '../mapper/children-completed-quiz.mapper';
@@ -53,41 +54,41 @@ export class ChildrenQuizController {
 
   @Get('today')
   @HttpCode(HttpStatus.OK)
-  async listChildrenToday(
+  async childrenTodayQuiz(
     @Auth('profileId') childProfileId: number,
-    @Query() query: ChildrenTodayQueryDto,
+    @Query() query: ChildrenTodayQueryParam,
   ): Promise<BaseResponse<ChildrenTodayResponseData>> {
-    const cmd = this.childrenTodayMapper.toCommand(query, childProfileId);
-    const result = await this.listChildrenTodayUseCase.execute(cmd);
+    const command = this.childrenTodayMapper.toCommand(query, childProfileId);
+    const result = await this.listChildrenTodayUseCase.execute(command);
     const data = this.childrenTodayMapper.toResponse(result);
     return { success: true, message: '자녀용 오늘의 퀴즈 조회 성공', data };
   }
 
   @Get('completed')
   @HttpCode(HttpStatus.OK)
-  async listChildrenCompleted(
+  async childrenCompletedQuiz(
     @Auth('profileId') childProfileId: number,
-    @Query() query: ChildrenCompletedQueryDto,
+    @Query() query: ChildrenCompletedQueryParam,
   ): Promise<BaseResponse<ChildrenCompletedResponseData>> {
-    const cmd = this.childrenCompletedMapper.toCommand(query, childProfileId);
-    const result = await this.listChildrenCompletedUseCase.execute(cmd);
+    const command = this.childrenCompletedMapper.toCommand(query, childProfileId);
+    const result = await this.listChildrenCompletedUseCase.execute(command);
     const data = this.childrenCompletedMapper.toResponse(result);
     return { success: true, message: '자녀용 완료된 퀴즈 조회 성공', data };
   }
 
   @Post(':quizId/answer')
   @HttpCode(HttpStatus.OK)
-  async answerQuiz(
+  async childrenAnswerQuiz(
     @Auth('profileId') childProfileId: number,
-    @Param('quizId') quizId: string,
+    @Param() path: AnswerQuizPathParam,
     @Body() body: AnswerQuizRequestDto,
   ): Promise<BaseResponse<AnswerQuizResponseData>> {
-    const cmd = this.answerQuizMapper.toCommand(
-      { quizId },
+    const command = this.answerQuizMapper.toCommand(
+      { quizId: path.quizId },
       body,
       childProfileId,
     );
-    const result = await this.answerQuizUseCase.execute(cmd);
+    const result = await this.answerQuizUseCase.execute(command);
     const data = this.answerQuizMapper.toResponse(result);
     const message = data.isSolved ? '정답입니다.' : '오답입니다.';
 

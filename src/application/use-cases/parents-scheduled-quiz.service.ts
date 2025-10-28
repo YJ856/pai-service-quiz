@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { ParentsScheduledResponseResult, ParentsScheduledItemDto } from 'src/application/port/in/result/parents-scheduled-quiz-result.dto';
 
-import type { ListParentsScheduledUseCase,} from '../port/in/list-parents-scheduled.usecase';
-import type { ParentsScheduledCommand } from '../command/parents-scheduled-quiz.command';
+import type { ListParentsScheduledUseCase,} from '../port/in/parents-scheduled-quiz.usecase';
+import type { ParentsScheduledQuizCommand } from '../command/parents-scheduled-quiz.command';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type {
@@ -14,8 +14,24 @@ import type { ProfileDirectoryPort, ParentProfileSummary } from '../port/out/pro
 // Utils
 import { decodeCompositeCursor, encodeCompositeCursor } from '../../utils/cursor.util';
 import { getParentProfileSafe } from '../../utils/profile.util';
-import { todayYmd } from '../../utils/date.util';
-import { isEditable } from '../../domain/policy/quiz.policy';
+import { todayYmdKST } from '../../utils/date.util';
+
+const isEditable = (
+  publishDate: string,
+  authorParentProfileId: number,
+  requesterParentProfileId: number,
+  today: string
+): boolean => {
+  // 작성자만 수정 가능
+  if (authorParentProfileId !== requesterParentProfileId) {
+    return false;
+  }
+  // publishDate가 오늘 이후인 경우만 수정 가능 (SCHEDULED 상태)
+  if (publishDate > today) {
+    return true;
+  }
+  return false;
+};
 
 @Injectable()
 export class ListParentsScheduledService implements ListParentsScheduledUseCase {
@@ -31,7 +47,7 @@ export class ListParentsScheduledService implements ListParentsScheduledUseCase 
    * - 정렬: publishDate ASC, quizId ASC
    * - 커서: Base64("\"yyyy-MM-dd|quizId\"")
    */
-  async execute(cmd: ParentsScheduledCommand): Promise<ParentsScheduledResponseResult> {
+  async execute(cmd: ParentsScheduledQuizCommand): Promise<ParentsScheduledResponseResult> {
     const { parentProfileId } = cmd;
     const limit = cmd.limit;
     const after = decodeCompositeCursor(cmd.cursor ?? null);
@@ -45,12 +61,12 @@ export class ListParentsScheduledService implements ListParentsScheduledUseCase 
     const { items, hasNext } = await this.repo.findParentsScheduled(findParams);
 
     // 2) 부모 프로필(이름/아바타) 보강
-    const parent = await getParentProfileSafe(this.profiles, Number(parentProfileId));
-    const merged = this.enrichWithParent(items, parent, Number(parentProfileId));
+    const parent = await getParentProfileSafe(this.profiles, parentProfileId);
+    const merged = this.enrichWithParent(items, parent, parentProfileId);
 
     // 3) nextCursor (ASC 정렬이므로 페이지의 마지막 아이템 기준)
     const tail = merged.length ? merged[merged.length - 1] : null;
-    const nextCursor = hasNext && tail ? encodeCompositeCursor(tail.publishDate, Number(tail.quizId)) : null;
+    const nextCursor = hasNext && tail ? encodeCompositeCursor(tail.publishDate, tail.quizId) : null;
 
     return {
       items: merged,
@@ -66,7 +82,7 @@ export class ListParentsScheduledService implements ListParentsScheduledUseCase 
     parent: ParentProfileSummary | null,
     requesterParentId: number,
   ): ParentsScheduledItemDto[] {
-    const today = todayYmd();
+    const today = todayYmdKST();
 
     return rows.map((q) => {
       // 도메인 정책 사용: publishDate > today && 본인 작성

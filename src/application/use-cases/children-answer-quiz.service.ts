@@ -1,31 +1,27 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import type { AnswerQuizResponseResult } from 'src/application/port/in/result/parents-answer-quiz-result.dto';
 
-import type { AnswerQuizUseCase } from '../port/in/answer-quiz.usecase';
-import { AnswerQuizCommand } from '../command/children-answer-quiz.command';
+import type { AnswerQuizUseCase } from '../port/in/children-answer-quiz.usecase';
+import { ChildrenAnswerQuizCommand } from '../command/children-answer-quiz.command';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
-import type {
-  QuizQueryPort,
-} from '../port/out/quiz.query.port';
-import type {
-  QuizCommandPort,
-} from '../port/out/quiz.repository.port';
+import type { QuizQueryPort, } from '../port/out/quiz.query.port';
+import type { QuizCommandPort, } from '../port/out/quiz.repository.port';
 
 // Utils
-import { getTodayYmdKST } from '../../utils/date.util';
+import { todayYmdKST } from '../../utils/date.util';
 
 @Injectable()
 export class AnswerQuizService implements AnswerQuizUseCase {
   constructor(
     @Inject(QUIZ_TOKENS.QuizQueryPort)
     private readonly queryRepo: QuizQueryPort,
+
     @Inject(QUIZ_TOKENS.QuizCommandPort)
     private readonly commandRepo: QuizCommandPort,
   ) {}
@@ -37,23 +33,23 @@ export class AnswerQuizService implements AnswerQuizUseCase {
    * - 해당 날짜(Asia/Seoul)가 지나면 제출 불가
    * - 채점: 기본 완전 일치, normalize=true 시 간단 정규화 후 비교
    */
-  async execute(cmd: AnswerQuizCommand): Promise<AnswerQuizResponseResult> {
-    const { childProfileId, quizId } = cmd;
+  async execute(command: ChildrenAnswerQuizCommand): Promise<AnswerQuizResponseResult> {
+    const { childProfileId, quizId } = command;
 
-    // quizId 검증 (bigint는 항상 유효한 숫자이므로 null 체크만)
+    // quizId 검증 (null 체크)
     if (!quizId || quizId <= 0n) {
       throw new BadRequestException('VALIDATION_ERROR: invalid quizId');
     }
 
     // 답안 검증: 빈 문자열 불허
-    const trimmedAnswer = (cmd.answer ?? '').trim();
+    const trimmedAnswer = (command.answer ?? '').trim();
     if (!trimmedAnswer) {
       throw new BadRequestException('VALIDATION_ERROR: answer cannot be empty');
     }
 
-    const todayYmd = getTodayYmdKST();
+    const todayYmd = todayYmdKST();
 
-    // 1) 제출 대상 조회 (본인 배정 + publishDate = today)
+    // 제출 대상 조회 (본인 배정 + publishDate = today)
     const target = await this.queryRepo.findAnswerTarget({
       childProfileId,
       quizId,
@@ -64,18 +60,10 @@ export class AnswerQuizService implements AnswerQuizUseCase {
       throw new NotFoundException('QUIZ_NOT_ASSIGNED_OR_NOT_FOUND');
     }
 
-    // 2) 오늘만 풀 수 있음: publishDate == today (쿼리에서 이미 필터링됨)
-    // findAnswerTarget이 publishDate = today 조건으로 조회하므로
-    // target이 있다면 이미 오늘 퀴즈임이 보장됨
-    if (target.publishDateYmd !== todayYmd) {
-      // 요구사항: 해당 날짜가 지나면 더 이상 풀 수 없음
-      throw new ForbiddenException('QUIZ_DATE_EXPIRED');
-    }
-
-    // 3) 채점 (정규화 후 비교: 대소문자 무시, 공백/기호 제거)
+    // 채점 (정규화 후 비교: 대소문자 무시, 공백/기호 제거)
     const isCorrect = this.checkAnswer(trimmedAnswer, target.answer, true);
 
-    // 4) 저장 (정답이면서 아직 미해결인 경우에만)
+    // 저장 (정답이면서 아직 미해결인 경우에만)
     if (isCorrect && !target.isSolved) {
       await this.commandRepo.markSolved({
         childProfileId,
@@ -83,7 +71,7 @@ export class AnswerQuizService implements AnswerQuizUseCase {
       });
     }
 
-    // 5) 응답 - 단순화
+    // 응답 - 단순화
     // - 정답: isSolved=true, reward 반환
     // - 오답: isSolved=false, reward 없음
     const response: AnswerQuizResponseResult = {

@@ -1,12 +1,7 @@
 import type { Quiz } from '../../../domain/model/quiz';
 
-// ============================================================
-// 생성
-// ============================================================
 
-// ============================================================
-// 수정
-// ============================================================
+// 수정 ========================================================
 
 export type QuizUpdateRepoPatch = {
   question?: string;
@@ -16,22 +11,16 @@ export type QuizUpdateRepoPatch = {
   publishDate?: Date;
 };
 
-// ============================================================
-// 삭제
-// ============================================================
 
-// ============================================================
-// 정답 처리
-// ============================================================
+// 정답 처리 =====================================================
 
 export interface MarkSolvedParams {
-  childProfileId: bigint;
+  childProfileId: number;
   quizId: bigint;
 }
 
-// ============================================================
-// 통합 쓰기 포트
-// ============================================================
+
+// 통합 쓰기 포트 ================================================
 
 export interface QuizCommandPort {
   // 생성
@@ -39,19 +28,19 @@ export interface QuizCommandPort {
 
   // 조회 (쓰기 작업 전 필요한 경우)
   findById(id: bigint): Promise<Quiz | null>;
-  findLastScheduledDateByFamily(parentProfileId: bigint): Promise<string | null>;
+  findLastScheduledDateByFamily(parentProfileId: number): Promise<string | null>;
 
   // 수정
   updateIfScheduledAndAuthor(params: {
     quizId: bigint;
-    parentProfileId: bigint;
+    parentProfileId: number;
     patch: QuizUpdateRepoPatch;
   }): Promise<number>;
 
   // 삭제
   deleteIfScheduledAndAuthor(params: {
     quizId: bigint;
-    parentProfileId: bigint;
+    parentProfileId: number;
   }): Promise<number>;
 
   // 정답 처리
