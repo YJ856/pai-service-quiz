@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { ChildrenTodayQueryDto } from "src/adapter/in/http/dto/request/children-today-quiz-request.dto";
 import type { ChildrenTodayResponseData } from "pai-shared-types";
-import type { ChildrenTodayResponseResult } from "src/application/port/in/result/children-today.result.dto";
+import type { ChildrenTodayResponseResult } from "src/application/port/in/result/children-today-quiz-result.dto";
 import { ChildrenTodayQuizCommand } from "src/application/command/children-today-quiz.command";
 
 @Injectable()

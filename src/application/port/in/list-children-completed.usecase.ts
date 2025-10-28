@@ -1,6 +1,6 @@
-import type { ChildrenCompletedResponseResult } from "./result/children-completed.result.dto";
-import type { ChildrenCompletedCommand } from '../../command/children-completed-quiz.command';
+import type { ChildrenCompletedResponseResult } from "./result/children-completed-quiz-result.dto";
+import type { ChildrenCompletedQuizCommand } from '../../command/children-completed-quiz.command';
 
 export interface ListChildrenCompletedUseCase {
-  execute(cmd: ChildrenCompletedCommand): Promise<ChildrenCompletedResponseResult>;
+  execute(cmd: ChildrenCompletedQuizCommand): Promise<ChildrenCompletedResponseResult>;
 }

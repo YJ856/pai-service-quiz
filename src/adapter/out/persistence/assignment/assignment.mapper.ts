@@ -12,12 +12,12 @@ export const AssignmentMapper = {
         });
     },
 
-    toPersistenceData(e: Assignment) {
+    toPersistenceData(assignment: Assignment) {
         return {
-            quizId: e.quizId,
-            childProfileId: e.childProfileId,
-            isSolved: e.isSolved,
-            rewardGranted: e.rewardGranted,
+            quizId: assignment.getQuizId(),
+            childProfileId: assignment.getChildProfileId(),
+            isSolved: assignment.getIsSolved(),
+            rewardGranted: assignment.getRewardGranted(),
         };
     },
 };

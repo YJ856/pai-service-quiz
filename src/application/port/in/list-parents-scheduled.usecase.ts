@@ -1,6 +1,6 @@
-import type { ParentsScheduledResponseResult } from "./result/parents-scheduled.result.dto";
-import type { ParentsScheduledCommand } from '../../command/parents-scheduled-quiz.command';
+import type { ParentsScheduledResponseResult } from "./result/parents-scheduled-quiz-result.dto";
+import type { ParentsScheduledQuizCommand } from '../../command/parents-scheduled-quiz.command';
 
 export interface ListParentsScheduledUseCase {
-  execute(cmd: ParentsScheduledCommand): Promise<ParentsScheduledResponseResult>;
+  execute(cmd: ParentsScheduledQuizCommand): Promise<ParentsScheduledResponseResult>;
 }

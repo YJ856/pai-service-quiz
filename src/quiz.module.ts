@@ -9,7 +9,7 @@ import { ChildrenQuizController } from './adapter/in/http/controllers/children.q
 import { QUIZ_TOKENS } from './quiz.token';
 
 // Ports 구현체(Adapters)
-import { QuizRepositoryAdapter } from './adapter/out/persistence/quiz.repository.adapter';
+import { QuizRepositoryAdapter } from './adapter/out/persistence/quiz/quiz.repository.adapter';
 import { QuizQueryAdapter } from './adapter/out/persistence/quiz.query.adapter';
 import { ProfileDirectoryHttpAdapter } from './adapter/out/user/profile-directory.http.adapter';
 
@@ -32,17 +32,17 @@ import { AnswerQuizService } from './application/use-cases/answer-quiz.service';
 import { PrismaService } from './adapter/out/persistence/prisma/prisma.service';
 
 // Mappers
-import { NextPublishDateMapper } from './mapper/next-publish-date.mapper';
-import { CreateQuizMapper } from './mapper/parents-create-quiz.mapper';
-import { UpdateQuizMapper } from './mapper/parents-update-quiz.mapper';
-import { DeleteQuizMapper } from './mapper/parents-delete-quiz.mapper';
-import { DetailQuizMapper } from './mapper/parents-detail-quiz.mapper';
-import { ParentsTodayMapper } from './mapper/parents-today-quiz.mapper';
-import { ParentsScheduledMapper } from './mapper/parents-scheduled-quiz.mapper';
-import { ParentsCompletedMapper } from './mapper/parents-completed-quiz.mapper';
-import { ChildrenTodayMapper } from './mapper/children-today-quiz.mapper';
-import { ChildrenCompletedMapper } from './mapper/children-completed-quiz.mapper';
-import { AnswerQuizMapper } from './mapper/children-answer-quiz.mapper';
+import { NextPublishDateMapper } from './adapter/in/http/mapper/next-publish-date.mapper';
+import { CreateQuizMapper } from './adapter/in/http/mapper/parents-create-quiz.mapper';
+import { UpdateQuizMapper } from './adapter/in/http/mapper/parents-update-quiz.mapper';
+import { DeleteQuizMapper } from './adapter/in/http/mapper/parents-delete-quiz.mapper';
+import { DetailQuizMapper } from './adapter/in/http/mapper/parents-detail-quiz.mapper';
+import { ParentsTodayMapper } from './adapter/in/http/mapper/parents-today-quiz.mapper';
+import { ParentsScheduledMapper } from './adapter/in/http/mapper/parents-scheduled-quiz.mapper';
+import { ParentsCompletedMapper } from './adapter/in/http/mapper/parents-completed-quiz.mapper';
+import { ChildrenTodayMapper } from './adapter/in/http/mapper/children-today-quiz.mapper';
+import { ChildrenCompletedMapper } from './adapter/in/http/mapper/children-completed-quiz.mapper';
+import { AnswerQuizMapper } from './adapter/in/http/mapper/children-answer-quiz.mapper';
 
 // Guard
 import { ParentGuard } from './adapter/in/http/auth/guards/auth.guard';

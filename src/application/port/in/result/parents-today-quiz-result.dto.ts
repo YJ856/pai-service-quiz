@@ -1,5 +1,5 @@
 export interface ParentsTodayChildStatusDto {
-  childProfileId: bigint;
+  childProfileId: number;
   childName: string;
   childAvatarMediaId: bigint | null;
   isSolved: boolean;
@@ -11,7 +11,7 @@ export interface ParentsTodayItemDto {
   answer: string;
   hint: string | null;
   reward: string | null;
-  authorParentProfileId: bigint;
+  authorParentProfileId: number;
   authorParentName: string;
   authorParentAvatarMediaId: bigint | null;
   children: ParentsTodayChildStatusDto[];

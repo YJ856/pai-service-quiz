@@ -1,5 +1,5 @@
-import type { AnswerQuizResponseResult } from "./result/answer-quiz.result.dto";
-import type { AnswerQuizCommand } from '../../command/children-answer-quiz.command';
+import type { AnswerQuizResponseResult } from "./result/parents-answer-quiz-result.dto";
+import type { ChildrenAnswerQuizCommand } from '../../command/children-answer-quiz.command';
 
 /**
  * 아이 정답 제출 유스케이스 계약
@@ -8,5 +8,5 @@ import type { AnswerQuizCommand } from '../../command/children-answer-quiz.comma
  * - answer는 request body에서 수신
  */
 export interface AnswerQuizUseCase {
-  execute(cmd: AnswerQuizCommand): Promise<AnswerQuizResponseResult>;
+  execute(cmd: ChildrenAnswerQuizCommand): Promise<AnswerQuizResponseResult>;
 }

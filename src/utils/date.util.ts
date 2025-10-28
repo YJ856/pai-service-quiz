@@ -5,22 +5,6 @@
  * - 비즈니스 타임존(기본: Asia/Seoul) 기준 계산
  */
 
-/**
- * 비즈니스 타임존(기본: Asia/Seoul) 기준 '오늘' 날짜를 'yyyy-MM-dd' 형식으로 반환
- * @returns 'yyyy-MM-dd' 형식의 오늘 날짜
- */
-export function todayYmd(): string {
-  const tz = process.env.BUSINESS_TZ || 'Asia/Seoul';
-  // Intl로 타임존 기준 연-월-일을 안전하게 추출
-  const fmt = new Intl.DateTimeFormat('en-CA', {
-    // en-CA => YYYY-MM-DD 형식
-    timeZone: tz,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-  return fmt.format(new Date());
-}
 
 /**
  * 'yyyy-MM-dd' 날짜에 1일을 더한 날짜를 'yyyy-MM-dd' 형식으로 반환
@@ -117,7 +101,7 @@ export function utcDayRangeForYmd(ymd: string): { gte: Date; lt: Date } {
  * - UTC+9 타임존 기준 계산
  * @returns 'yyyy-MM-dd' 형식의 오늘 날짜 (KST)
  */
-export function getTodayYmdKST(): string {
+export function todayYmdKST(): string {
   const now = new Date();
   const kstMs = now.getTime() + 9 * 60 * 60 * 1000; // UTC+9
   const kst = new Date(kstMs);

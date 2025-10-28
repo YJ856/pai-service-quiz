@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { DeleteQuizResponseData } from "pai-shared-types";
-import { DeleteQuizResponseResult } from "src/application/port/in/result/delete-quiz.result.dto";
+import { DeleteQuizResponseResult } from "src/application/port/in/result/parents-delete-quiz-result.dto";
 import { ParentsDeleteQuizCommand } from "src/application/command/parents-delete-quiz.command";
 
 @Injectable()

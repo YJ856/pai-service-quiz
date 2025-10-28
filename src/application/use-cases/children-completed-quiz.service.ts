@@ -1,15 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type {
-  ChildrenTodayResponseResult,
-  ChildrenTodayItemDto,
-} from 'src/application/port/in/result/children-today.result.dto';
+  ChildrenCompletedResponseResult,
+  ChildrenCompletedItemDto,
+} from 'src/application/port/in/result/children-completed-quiz-result.dto';
 
-import type { ListChildrenTodayUseCase } from '../port/in/list-children-today.usecase';
-import type { ChildrenTodayCommand } from '../command/children-today-quiz.command';
+import type { ListChildrenCompletedUseCase } from '../port/in/list-children-completed.usecase';
+import type { ChildrenCompletedCommand } from '../command/children-completed-quiz.command';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type {
   QuizQueryPort,
+  FindChildrenCompletedParams,
 } from '../port/out/quiz.query.port';
 
 import type {
@@ -18,15 +19,20 @@ import type {
 } from '../port/out/profile-directory.port';
 
 // Utils
-import { getTodayYmdKST } from '../../utils/date.util';
-import { decodeIdCursor, encodeIdCursor } from '../../utils/cursor.util';
+import { decodeCompositeCursor, encodeCompositeCursor } from '../../utils/cursor.util';
 import {
   getParentProfilesSafe,
   collectParentProfileIds,
 } from '../../utils/profile.util';
 
+/**
+ * 아이용 완료된 퀴즈 조회
+ * - 정렬: publishDate DESC, id DESC
+ * - 커서: Base64("yyyy-MM-dd|quizId")
+ * - "본인이 푼 것만"은 Repository에서 필터링
+ */
 @Injectable()
-export class ListChildrenTodayService implements ListChildrenTodayUseCase {
+export class ListChildrenCompletedService implements ListChildrenCompletedUseCase {
   constructor(
     @Inject(QUIZ_TOKENS.QuizQueryPort)
     private readonly repo: QuizQueryPort,
@@ -35,24 +41,18 @@ export class ListChildrenTodayService implements ListChildrenTodayUseCase {
     private readonly profiles: ProfileDirectoryPort,
   ) {}
 
-  /**
-   * 오늘의 퀴즈(자녀용)
-   * - 기준 날짜: Asia/Seoul(UTC+9)
-   * - 커서: Base64("quizId")
-   */
-  async execute(cmd: ChildrenTodayCommand): Promise<ChildrenTodayResponseResult> {
-    const { childProfileId } = cmd;
+  async execute(cmd: ChildrenCompletedCommand): Promise<ChildrenCompletedResponseResult> {
     const limit = cmd.limit;
-    const afterQuizId = decodeIdCursor(cmd.cursor ?? null);
-    const todayYmd = getTodayYmdKST();
+    const after = decodeCompositeCursor(cmd.cursor ?? null);
 
-    // 1) DB에서 자녀에게 배정된 TODAY 목록 조회
-    const { items, hasNext } = await this.repo.findChildrenToday({
-      childProfileId,
-      todayYmd,
+    const query: FindChildrenCompletedParams = {
+      childProfileId: cmd.childProfileId,
       limit,
-      afterQuizId: afterQuizId ?? undefined,
-    });
+      ...(after ? { after } : {}),
+    };
+
+    // 1) DB 조회
+    const { items, hasNext } = await this.repo.findChildrenCompleted(query);
 
     // 2) 부모 프로필 정보 배치 조회
     const parentIds = collectParentProfileIds(items);
@@ -61,13 +61,13 @@ export class ListChildrenTodayService implements ListChildrenTodayUseCase {
     // 3) 프로필 정보 보강
     const enrichedItems = this.enrichWithProfiles(items, parentMap);
 
-    // 4) nextCursor 계산 (마지막 아이템의 quizId 기준)
+    // 4) nextCursor 계산
+    const last = enrichedItems[enrichedItems.length - 1];
     const nextCursor =
-      hasNext && enrichedItems.length > 0
-        ? encodeIdCursor(Number(enrichedItems[enrichedItems.length - 1].quizId))
+      hasNext && last
+        ? encodeCompositeCursor(last.publishDate, Number(last.quizId))
         : null;
 
-    // 5) 응답 구성
     return {
       items: enrichedItems,
       nextCursor,
@@ -79,20 +79,20 @@ export class ListChildrenTodayService implements ListChildrenTodayUseCase {
 
   /** 프로필 정보 보강 */
   private enrichWithProfiles(
-    items: ChildrenTodayItemDto[],
+    items: ChildrenCompletedItemDto[],
     parentMap: Record<number, ParentProfileSummary>,
-  ): ChildrenTodayItemDto[] {
+  ): ChildrenCompletedItemDto[] {
     return items.map((q) => {
       const parent = parentMap[q.authorParentProfileId];
       return {
         quizId: q.quizId,
+        publishDate: q.publishDate,
         question: q.question,
-        hint: q.hint,
+        answer: q.answer,
         reward: q.reward,
         authorParentProfileId: q.authorParentProfileId,
         authorParentName: parent?.name ?? q.authorParentName ?? '부모',
         authorParentAvatarMediaId: parent?.avatarMediaId ?? q.authorParentAvatarMediaId ?? null,
-        isSolved: q.isSolved,
       };
     });
   }

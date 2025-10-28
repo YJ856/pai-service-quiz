@@ -1,6 +1,6 @@
-import { DeleteQuizCommand } from '../../command/parents-delete-quiz.command';
-import type { DeleteQuizResponseResult } from './result/delete-quiz.result.dto';
+import { ParentsDeleteQuizCommand } from '../../command/parents-delete-quiz.command';
+import type { DeleteQuizResponseResult } from './result/parents-delete-quiz-result.dto';
 
 export interface DeleteQuizUseCase {
-  execute(cmd: DeleteQuizCommand): Promise<DeleteQuizResponseResult>;
+  execute(cmd: ParentsDeleteQuizCommand): Promise<DeleteQuizResponseResult>;
 }

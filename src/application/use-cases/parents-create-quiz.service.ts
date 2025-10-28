@@ -6,12 +6,12 @@ import type { CreateQuizUseCase } from '../port/in/create-quiz.usecase';
 import type { CreateQuizCommand } from '../command/parents-create-quiz.command';
 import type { QuizCommandPort } from '../port/out/quiz.repository.port';
 import type { QuizQueryPort } from '../port/out/quiz.query.port';
-import type { CreateQuizResponseResult } from '../port/in/result/create-quiz.result.dto';
+import type { CreateQuizResponseResult } from '../port/in/result/parents-create-quiz-result.dto';
 // 도메인/토큰/런타임 클래스는 일반 import
 import { Quiz } from '../../domain/model/quiz';
 import { QUIZ_TOKENS } from '../../quiz.token';
 import { todayYmd, plusOneYmd, isValidYmd } from '../../utils/date.util';
-import { CreateQuizMapper } from '../../mapper/parents-create-quiz.mapper';
+import { CreateQuizMapper } from '../../adapter/in/http/mapper/parents-create-quiz.mapper';
 
 @Injectable()
 export class CreateQuizService implements CreateQuizUseCase {

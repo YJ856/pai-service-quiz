@@ -6,11 +6,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import type { ParentsQuizDetailResponseResult } from 'src/application/port/in/result/detail-quiz.result.dto';
+import type { ParentsQuizDetailResponseResult } from 'src/application/port/in/result/parents-detail-quiz-result.dto';
 
 import type { GetParentsQuizDetailUseCase } from '../port/in/get-parents-quiz-detail.usecase';
 import { DetailQuizCommand } from '../command/parents-detail-quiz.command';
-import { DetailQuizMapper } from '../../mapper/parents-detail-quiz.mapper';
+import { DetailQuizMapper } from '../../adapter/in/http/mapper/parents-detail-quiz.mapper';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type {

@@ -14,8 +14,8 @@ import type { DeleteQuizCommand } from '../command/parents-delete-quiz.command';
 import type { DeleteQuizUseCase } from '../port/in/delete-quiz.usecase';
 import type { QuizQueryPort } from '../port/out/quiz.query.port';
 import type { QuizCommandPort } from '../port/out/quiz.repository.port';
-import type { DeleteQuizResponseResult } from '../port/in/result/delete-quiz.result.dto';
-import { DeleteQuizMapper } from '../../mapper/parents-delete-quiz.mapper';
+import type { DeleteQuizResponseResult } from '../port/in/result/parents-delete-quiz-result.dto';
+import { DeleteQuizMapper } from '../../adapter/in/http/mapper/parents-delete-quiz.mapper';
 
 @Injectable()
 export class DeleteQuizService implements DeleteQuizUseCase {

@@ -6,7 +6,7 @@ export interface ChildrenCompletedItemDto {
   reward: string | null; // 완료 목록이므로 항상 노출 가능
   authorParentProfileId: number;
   authorParentName: string;
-  authorParentAvatarMediaId: number | null;
+  authorParentAvatarMediaId: bigint | null;
 }
 
 export interface ChildrenCompletedResponseResult {

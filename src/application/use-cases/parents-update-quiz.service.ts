@@ -11,7 +11,7 @@ import { QUIZ_TOKENS } from '../../quiz.token';
 import { isValidYmd, ymdToUtcDate, toYmdFromDate, todayYmd } from '../../utils/date.util';
 import { canEdit } from '../../domain/policy/quiz.policy';
 import { Quiz } from '../../domain/model/quiz';
-import { UpdateQuizMapper } from '../../mapper/parents-update-quiz.mapper';
+import { UpdateQuizMapper } from '../../adapter/in/http/mapper/parents-update-quiz.mapper';
 
 import type { UpdateQuizCommand } from '../command/parents-update-quiz.command';
 import type { UpdateQuizUseCase } from '../port/in/update-quiz.usecase';
@@ -20,7 +20,7 @@ import type {
   QuizCommandPort,
   QuizUpdateRepoPatch,
 } from '../port/out/quiz.repository.port';
-import type { UpdateQuizResponseResult } from '../port/in/result/update-quiz.result.dto';
+import type { UpdateQuizResponseResult } from '../port/in/result/parents-update-quiz-result.dto';
 
 @Injectable()
 export class UpdateQuizService implements UpdateQuizUseCase {

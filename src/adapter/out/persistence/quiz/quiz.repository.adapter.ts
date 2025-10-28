@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from './prisma/prisma.service';
-import { Quiz } from '../../../domain/model/quiz';
-import { QuizMapper } from './mapper/quiz.mapper';
+import { PrismaService } from '../prisma/prisma.service';
+import { Quiz } from '../../../../domain/model/quiz';
+import { QuizMapper } from './quiz.mapper';
 import { PrismaClient } from '@prisma/client';
 import type {
   QuizCommandPort,
   QuizUpdateRepoPatch,
   MarkSolvedParams,
-} from '../../../application/port/out/quiz.repository.port';
-import { ymdToUtcDate, utcDateToYmd, todayYmd } from '../../../utils/date.util';
+} from '../../../../application/port/out/quiz.repository.port';
+import { ymdToUtcDate, utcDateToYmd, todayYmd } from '../../../../utils/date.util';
 
 @Injectable()
 export class QuizRepositoryAdapter implements QuizCommandPort {

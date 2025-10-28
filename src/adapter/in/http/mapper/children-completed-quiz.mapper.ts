@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { ChildrenCompletedQueryParam } from 'src/adapter/in/http/dto/request/children-completed-quiz-request.dto'; // 로컬 DTO 클래스
 import { ChildrenCompletedQuizCommand } from 'src/application/command/children-completed-quiz.command';
 import type { ChildrenCompletedResponseData } from 'pai-shared-types'; // 출력은 shared 타입으로 계약 고정
-import type { ChildrenCompletedResponseResult } from 'src/application/port/in/result/children-completed.result.dto';
+import type { ChildrenCompletedResponseResult } from 'src/application/port/in/result/children-completed-quiz-result.dto';
 
 @Injectable()
 export class ChildrenCompletedMapper {

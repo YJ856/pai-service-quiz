@@ -1,6 +1,6 @@
-import type { ChildrenTodayResponseResult } from "./result/children-today.result.dto";
-import type { ChildrenTodayCommand } from '../../command/children-today-quiz.command';
+import type { ChildrenTodayResponseResult } from "./result/children-today-quiz-result.dto";
+import type { ChildrenTodayQuizCommand } from '../../command/children-today-quiz.command';
 
 export interface ListChildrenTodayUseCase {
-  execute(cmd: ChildrenTodayCommand): Promise<ChildrenTodayResponseResult>;
+  execute(cmd: ChildrenTodayQuizCommand): Promise<ChildrenTodayResponseResult>;
 }

@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { AnswerQuizResponseResult } from 'src/application/port/in/result/answer-quiz.result.dto';
+import type { AnswerQuizResponseResult } from 'src/application/port/in/result/parents-answer-quiz-result.dto';
 
 import type { AnswerQuizUseCase } from '../port/in/answer-quiz.usecase';
 import { AnswerQuizCommand } from '../command/children-answer-quiz.command';

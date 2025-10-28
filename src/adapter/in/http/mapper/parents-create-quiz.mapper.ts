@@ -1,16 +1,26 @@
 import { Injectable } from "@nestjs/common";
 import { CreateQuizRequestDto } from "src/adapter/in/http/dto/request/parents-create-quiz-request.dto";
 import { CreateQuizResponseData } from "pai-shared-types";
-import { CreateQuizResponseResult } from "src/application/port/in/result/create-quiz.result.dto";
+import { CreateQuizResponseResult } from "src/application/port/in/result/parents-create-quiz-result.dto";
 import { ParentsCreateQuizCommand } from "src/application/command/parents-create-quiz.command";
 import { Quiz } from "src/domain/model/quiz";
-import { todayYmd } from "src/utils/date.util";
+import { todayYmdKST } from "src/utils/date.util";
+
+function isEditablePolicy(args: {
+  publishDateYmd: string;
+  authorParentProfileId: number;
+  requestorParentProfileId: number;
+  todayYmd: string;
+}) {
+  const { publishDateYmd, authorParentProfileId, requestorParentProfileId, todayYmd } = args;
+  return authorParentProfileId === requestorParentProfileId && publishDateYmd >= todayYmd;
+}
 
 @Injectable()
 export class CreateQuizMapper {
   toCommand(parentProfileId: number, dto: CreateQuizRequestDto): ParentsCreateQuizCommand {
     return new ParentsCreateQuizCommand(
-      parentProfileId, // number -> bigint 변환
+      parentProfileId, 
       dto.question,
       dto.answer,
       dto.hint ?? null,
@@ -32,23 +42,26 @@ export class CreateQuizMapper {
     };
   }
 
+
   // Service용 - Result DTO 사용
-  toResponseResult(quiz: Quiz): CreateQuizResponseResult {
-    const today = todayYmd();
+  toResponseResult(quiz: Quiz, requestorParentProfileId: number): CreateQuizResponseResult {
+    const today = todayYmdKST();
+    const publishDateYmd = quiz.getPublishDate().ymd;
+    const isEditable = isEditablePolicy({
+      publishDateYmd,
+      authorParentProfileId: quiz.getParentProfileId(),
+      requestorParentProfileId,
+      todayYmd: today,
+    });
 
     return {
-      quizId: quiz.id!,
-      question: quiz.question,
-      answer: quiz.answer,
-      hint: quiz.hint ?? null,
-      reward: quiz.reward ?? null,
-      publishDate: quiz.publishDate,
-      isEditable: isEditable(
-        quiz.publishDate,
-        quiz.authorParentProfileId,
-        quiz.authorParentProfileId,
-        today
-      ),
+      quizId: quiz.getId()!,
+      question: quiz.getQuestion(),
+      answer: quiz.getAnswer(),
+      hint: quiz.getHint(),
+      reward: quiz.getReward(),
+      publishDate: publishDateYmd,
+      isEditable,
     };
   }
 

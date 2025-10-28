@@ -1,5 +1,5 @@
 export interface ParentsCompletedChildResultDto {
-  childProfileId: bigint;
+  childProfileId: number;
   childName: string;
   childAvatarMediaId: bigint | null;
   isSolved: boolean;
@@ -12,7 +12,7 @@ export interface ParentsCompletedItemDto {
   question: string;
   answer: string;
   reward: string | null;
-  authorParentProfileId: bigint;
+  authorParentProfileId: number;
   authorParentName: string;
   authorParentAvatarMediaId: bigint | null;
   children: ParentsCompletedChildResultDto[];

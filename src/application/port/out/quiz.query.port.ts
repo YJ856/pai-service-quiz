@@ -1,9 +1,9 @@
 // 내부용 Result DTO (bigint 타입 사용)
-import type { ParentsTodayItemDto } from '../in/result/parents-today.result.dto';
-import type { ParentsCompletedItemDto } from '../in/result/parents-completed.result.dto';
-import type { ParentsScheduledItemDto } from '../in/result/parents-scheduled.result.dto';
-import type { ChildrenTodayItemDto } from '../in/result/children-today.result.dto';
-import type { ChildrenCompletedItemDto } from '../in/result/children-completed.result.dto';
+import type { ParentsTodayItemDto } from '../in/result/parents-today-quiz-result.dto';
+import type { ParentsCompletedItemDto } from '../in/result/parents-completed-quiz-result.dto';
+import type { ParentsScheduledItemDto } from '../in/result/parents-scheduled-quiz-result.dto';
+import type { ChildrenTodayItemDto } from '../in/result/children-today-quiz-result.dto';
+import type { ChildrenCompletedItemDto } from '../in/result/children-completed-quiz-result.dto';
 
 // ============================================================
 // 기본 유틸리티 조회

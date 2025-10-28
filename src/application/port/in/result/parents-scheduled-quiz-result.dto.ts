@@ -5,7 +5,7 @@ export interface ParentsScheduledItemDto {
   answer: string;
   hint: string | null;
   reward: string | null;
-  authorParentProfileId: bigint;
+  authorParentProfileId: number;
   authorParentName: string;
   authorParentAvatarMediaId: bigint | null;
   isEditable: boolean;

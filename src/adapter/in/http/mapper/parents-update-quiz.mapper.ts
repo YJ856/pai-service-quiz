@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { UpdateQuizRequestDto } from "src/adapter/in/http/dto/request/parents-update-quiz-request.dto";
 import { UpdateQuizResponseData } from "pai-shared-types";
-import { UpdateQuizResponseResult } from "src/application/port/in/result/update-quiz.result.dto";
+import { UpdateQuizResponseResult } from "src/application/port/in/result/parents-update-quiz-result.dto";
 import { ParentsUpdateQuizCommand } from "src/application/command/parents-update-quiz.command";
 import { Quiz } from "src/domain/model/quiz";
 import { todayYmd } from "src/utils/date.util";

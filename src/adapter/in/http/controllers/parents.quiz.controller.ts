@@ -41,14 +41,14 @@ import type { GetParentsQuizDetailUseCase } from '../../../../application/port/i
 import type { UpdateQuizUseCase } from '../../../../application/port/in/update-quiz.usecase';
 import type { DeleteQuizUseCase } from '../../../../application/port/in/delete-quiz.usecase';
 
-import { NextPublishDateMapper } from '../../../../mapper/next-publish-date.mapper';
-import { CreateQuizMapper } from '../../../../mapper/parents-create-quiz.mapper';
-import { UpdateQuizMapper } from '../../../../mapper/parents-update-quiz.mapper';
-import { DeleteQuizMapper } from '../../../../mapper/parents-delete-quiz.mapper';
-import { DetailQuizMapper } from '../../../../mapper/parents-detail-quiz.mapper';
-import { ParentsTodayMapper } from '../../../../mapper/parents-today-quiz.mapper';
-import { ParentsScheduledMapper } from '../../../../mapper/parents-scheduled-quiz.mapper';
-import { ParentsCompletedMapper } from '../../../../mapper/parents-completed-quiz.mapper';
+import { NextPublishDateMapper } from '../mapper/next-publish-date.mapper';
+import { CreateQuizMapper } from '../mapper/parents-create-quiz.mapper';
+import { UpdateQuizMapper } from '../mapper/parents-update-quiz.mapper';
+import { DeleteQuizMapper } from '../mapper/parents-delete-quiz.mapper';
+import { DetailQuizMapper } from '../mapper/parents-detail-quiz.mapper';
+import { ParentsTodayMapper } from '../mapper/parents-today-quiz.mapper';
+import { ParentsScheduledMapper } from '../mapper/parents-scheduled-quiz.mapper';
+import { ParentsCompletedMapper } from '../mapper/parents-completed-quiz.mapper';
 
 import { ParentGuard } from '../auth/guards/auth.guard';
 import { Auth } from '../decorators/auth.decorator';

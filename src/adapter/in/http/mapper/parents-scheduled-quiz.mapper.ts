@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { ParentsScheduledQueryDto } from "src/adapter/in/http/dto/request/parents-scheduled-quiz-request.dto";
 import type { ParentsScheduledResponseData } from "pai-shared-types";
-import type { ParentsScheduledResponseResult } from "src/application/port/in/result/parents-scheduled.result.dto";
+import type { ParentsScheduledResponseResult } from "src/application/port/in/result/parents-scheduled-quiz-result.dto";
 import { ParentsScheduledQuizCommand } from "src/application/command/parents-scheduled-quiz.command";
 
 @Injectable()
