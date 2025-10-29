@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from './prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import type {
   QuizQueryPort,
   FindParentsTodayParams,
@@ -14,17 +14,18 @@ import type {
   FindChildrenCompletedResult,
   FindAnswerTargetParams,
   AnswerTargetRow,
-  QuizDetailRow,
-} from '../../../application/port/out/quiz.query.port';
-import type { MarkSolvedParams } from '../../../application/port/out/quiz.repository.port';
-import { toYmdFromDate, ymdToUtcDate, utcDayRangeForYmd, todayYmd } from '../../../utils/date.util';
+  QuizDetailRow
+}
+from '../../../../application/port/out/quiz.query.port';
+import type { MarkSolvedParams } from '../../../../application/port/out/quiz.repository.port';
+import { toYmdFromDate, ymdToUtcDate, utcDayRangeForYmd, todayYmdKST } from '../../../../utils/date.util';
 
 @Injectable()
 export class QuizQueryAdapter implements QuizQueryPort {
   constructor(private readonly prisma: PrismaService) {}
 
   async findLastScheduledDateYmd(parentProfileId: number): Promise<string | null> {
-    const today = todayYmd();
+    const today = todayYmdKST();
 
     // SCHEDULED = publishDate > today(KST)
     const row = await this.prisma.quiz.findFirst({
@@ -107,7 +108,7 @@ export class QuizQueryAdapter implements QuizQueryPort {
 
   async findParentsCompleted(params: FindParentsCompletedParams): Promise<FindParentsCompletedResult> {
     const { parentProfileId, limit, after } = params;
-    const today = todayYmd();
+    const today = todayYmdKST();
 
     // 커서 조건 (정렬: publishDate DESC, id DESC)
     //  - (publishDate < D) OR (publishDate == D AND id < Q)
@@ -183,7 +184,7 @@ export class QuizQueryAdapter implements QuizQueryPort {
 
   async findParentsScheduled(params: FindParentsScheduledParams): Promise<FindParentsScheduledResult> {
     const { parentProfileId, limit, after } = params;
-    const today = todayYmd();
+    const today = todayYmdKST();
 
     // 커서 조건 (정렬: publishDate ASC, id ASC)
     //  - (publishDate > D) OR (publishDate == D AND id > Q)
@@ -244,7 +245,7 @@ export class QuizQueryAdapter implements QuizQueryPort {
     return { items, hasNext };
   }
 
-  async findDetailById(quizId: number): Promise<QuizDetailRow | null> {
+  async findDetailById(quizId: bigint): Promise<QuizDetailRow | null> {
     const row = await this.prisma.quiz.findUnique({
       where: { id: quizId },
       select: {
@@ -335,7 +336,7 @@ export class QuizQueryAdapter implements QuizQueryPort {
    */
   async findChildrenCompleted(params: FindChildrenCompletedParams): Promise<FindChildrenCompletedResult> {
     const { childProfileId, limit, after } = params;
-    const today = todayYmd();
+    const today = todayYmdKST();
 
     // 커서 조건 (부모용 completed와 동일한 규칙)
     //  - (publishDate < D) OR (publishDate == D AND id < Q)

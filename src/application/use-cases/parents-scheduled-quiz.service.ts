@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { ParentsScheduledResponseResult, ParentsScheduledItemDto } from 'src/application/port/in/result/parents-scheduled-quiz-result.dto';
+import type { ParentsScheduledResponseResult, ParentsScheduledItemDto } from '../port/in/result/parents-scheduled-quiz-result.dto';
 
 import type { ListParentsScheduledUseCase,} from '../port/in/parents-scheduled-quiz.usecase';
 import type { ParentsScheduledQuizCommand } from '../command/parents-scheduled-quiz.command';
@@ -96,7 +96,7 @@ export class ListParentsScheduledService implements ListParentsScheduledUseCase 
       return {
         ...q,
         authorParentName: parent?.name ?? q.authorParentName ?? '부모',
-        authorParentAvatarMediaId: (parent?.avatarMediaId ? BigInt(parent.avatarMediaId) : null) ?? q.authorParentAvatarMediaId ?? null,
+        authorParentAvatarMediaId: parent?.avatarMediaId ?? q.authorParentAvatarMediaId ?? null,
         isEditable: editable,
       };
     });

@@ -1,7 +1,7 @@
 import { IsNotEmpty, IsOptional, IsString, IsNumberString } from "class-validator";
-import type { 
-    UpdateQuizPathParam as SharedPath, 
-    UpdateQuizRequestDto as SharedBody 
+import type {
+    UpdateQuizPathParam as SharedPath,
+    UpdateQuizRequestDto as SharedBody
 } from "pai-shared-types";
 import { TrimString, TrimToNull } from "../common/transforms";
 
@@ -23,8 +23,9 @@ export class UpdateQuizRequestDto implements SharedBody {
     @IsString() @IsOptional() @TrimToNull()
     reward?: string | null;
 
-    @IsString() @IsOptional() @TrimString() @IsNotEmpty()
-    publishDate?: string;
+    // publishDate는 shared-types에서 required (string | null)
+    @IsString() @TrimToNull()
+    publishDate!: string | null;
 }
 
 /**

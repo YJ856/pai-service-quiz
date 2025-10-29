@@ -14,11 +14,10 @@ import type {
  */
 export async function getParentProfileSafe(
   profiles: ProfileDirectoryPort,
-  id: bigint | number
+  id: number
 ): Promise<ParentProfileSummary | null> {
   try {
-    const bigintId = typeof id === 'bigint' ? id : BigInt(id);
-    return await profiles.getParentProfile(bigintId);
+    return await profiles.getParentProfile(id);
   } catch {
     return null;
   }
@@ -26,14 +25,14 @@ export async function getParentProfileSafe(
 
 /**
  * 자녀 프로필 안전 조회 (배치)
+ * Record<string, ...>로 반환 (키는 profileId.toString())
  */
 export async function getChildProfilesSafe(
   profiles: ProfileDirectoryPort,
-  ids: bigint[] | number[]
+  ids: number[]
 ): Promise<Record<string, ChildProfileSummary>> {
   try {
-    const bigintIds = ids.map((id: bigint | number) => typeof id === 'bigint' ? id : BigInt(id));
-    return await profiles.getChildProfiles(bigintIds);
+    return await profiles.getChildProfiles(ids);
   } catch {
     return {};
   }
@@ -41,19 +40,19 @@ export async function getChildProfilesSafe(
 
 /**
  * 부모 프로필 안전 조회 (배치)
+ * Record<string, ...>로 반환 (키는 profileId.toString())
  */
 export async function getParentProfilesSafe(
   profiles: ProfileDirectoryPort,
-  ids: bigint[] | number[]
+  ids: number[]
 ): Promise<Record<string, ParentProfileSummary>> {
   try {
     if (ids.length === 0) return {};
     const results = await Promise.all(
-      ids.map(async (id: bigint | number) => {
+      ids.map(async (id: number) => {
         try {
-          const bigintId = typeof id === 'bigint' ? id : BigInt(id);
-          const profile = await profiles.getParentProfile(bigintId);
-          return profile ? ([bigintId.toString(), profile] as const) : null;
+          const profile = await profiles.getParentProfile(id);
+          return profile ? ([id.toString(), profile] as const) : null;
         } catch {
           return null;
         }

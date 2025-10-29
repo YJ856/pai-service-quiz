@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { ParentsCompletedResponseResult, ParentsCompletedItemDto, } from 'src/application/port/in/result/parents-completed-quiz-result.dto';
+import type { ParentsCompletedResponseResult, ParentsCompletedItemDto, } from '../port/in/result/parents-completed-quiz-result.dto';
 
 import type { ListParentsCompletedUseCase,} from '../port/in/parents-completed-quiz.usecase';
 import type { ParentsCompletedQuizCommand } from '../command/parents-completed-quiz.command';
@@ -81,19 +81,18 @@ export class ListParentsCompletedService implements ListParentsCompletedUseCase 
   private enrichWithProfiles(
     rows: ParentsCompletedItemDto[],
     parent: ParentProfileSummary | null,
-    childMap: Record<number, ChildProfileSummary>,
+    childMap: Record<string, ChildProfileSummary>,
   ): ParentsCompletedItemDto[] {
     return rows.map((q) => ({
       ...q,
       authorParentName: parent?.name ?? q.authorParentName ?? '부모',
-      authorParentAvatarMediaId:
-        (parent?.avatarMediaId ? BigInt(parent.avatarMediaId) : null) ?? q.authorParentAvatarMediaId ?? null,
+      authorParentAvatarMediaId: parent?.avatarMediaId ?? q.authorParentAvatarMediaId ?? null,
       children: q.children.map((c) => {
-        const info = childMap[Number(c.childProfileId)];
+        const info = childMap[c.childProfileId.toString()];
         return {
           ...c,
           childName: info?.name ?? c.childName ?? '',
-          childAvatarMediaId: (info?.avatarMediaId ? BigInt(info.avatarMediaId) : null) ?? c.childAvatarMediaId ?? null,
+          childAvatarMediaId: info?.avatarMediaId ?? c.childAvatarMediaId ?? null,
         };
       }),
     }));

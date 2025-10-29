@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { ParentsTodayResponseResult, ParentsTodayItemDto, } from 'src/application/port/in/result/parents-today-quiz-result.dto';
+import type { ParentsTodayResponseResult, ParentsTodayItemDto, } from '../port/in/result/parents-today-quiz-result.dto';
 
 import type {
   ListParentsTodayUseCase,
@@ -79,21 +79,19 @@ export class ListParentsTodayService implements ListParentsTodayUseCase {
   private enrichWithProfiles(
     rows: ParentsTodayItemDto[],
     parent: ParentProfileSummary | null,
-    childMap: Record<number, ChildProfileSummary>,
+    childMap: Record<string, ChildProfileSummary>,
   ): ParentsTodayItemDto[] {
     return rows.map((q) => ({
       ...q,
       authorParentProfileId: q.authorParentProfileId,
       authorParentName: parent?.name ?? q.authorParentName ?? '부모',
-      authorParentAvatarMediaId:
-        (parent?.avatarMediaId ? BigInt(parent.avatarMediaId) : null) ?? q.authorParentAvatarMediaId ?? null,
+      authorParentAvatarMediaId: parent?.avatarMediaId ?? q.authorParentAvatarMediaId ?? null,
       children: q.children.map((c) => {
-        const info = childMap[Number(c.childProfileId)];
+        const info = childMap[c.childProfileId.toString()];
         return {
           ...c,
           childName: info?.name ?? c.childName ?? '',
-          childAvatarMediaId:
-            (info?.avatarMediaId ? BigInt(info.avatarMediaId) : null) ?? c.childAvatarMediaId ?? null,
+          childAvatarMediaId: info?.avatarMediaId ?? c.childAvatarMediaId ?? null,
         };
       }),
     }));

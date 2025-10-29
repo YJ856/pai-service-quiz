@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import type { ParentsQuizDetailResponseResult } from 'src/application/port/in/result/parents-detail-quiz-result.dto';
+import type { ParentsQuizDetailResponseResult } from '../port/in/result/parents-detail-quiz-result.dto';
 
 import type { GetParentsQuizDetailUseCase } from '../port/in/parents-detail-quiz.usecase';
 import { ParentsDetailQuizCommand } from '../command/parents-detail-quiz.command';
@@ -54,9 +54,9 @@ export class GetParentsQuizDetailService implements GetParentsQuizDetailUseCase 
    * - 상태: SCHEDULED만 수정 가능(아니면 409 NOT_SCHEDULED)
    * - 성공 시: 상세 데이터 + isEditable 반환
    */
-  async execute(cmd: ParentsDetailQuizCommand): Promise<ParentsQuizDetailResponseResult> {
-    const quizId = cmd.quizId;
-    const requesterPid = cmd.parentProfileId; // 이미 bigint
+  async execute(command: ParentsDetailQuizCommand): Promise<ParentsQuizDetailResponseResult> {
+    const quizId = command.quizId;
+    const requesterPid = command.parentProfileId;
 
     // 1) 단건 조회
     const row = await this.repo.findDetailById(quizId);

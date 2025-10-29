@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import type {
   ChildrenTodayResponseResult,
   ChildrenTodayItemDto,
-} from 'src/application/port/in/result/children-today-quiz-result.dto';
+} from '../port/in/result/children-today-quiz-result.dto';
 
 import type { ListChildrenTodayUseCase } from '../port/in/children-today-quiz.usecase';
 import type { ChildrenTodayQuizCommand } from '../command/children-today-quiz.command';
@@ -80,10 +80,10 @@ export class ListChildrenTodayService implements ListChildrenTodayUseCase {
   /** 프로필 정보 보강 */
   private enrichWithProfiles(
     items: ChildrenTodayItemDto[],
-    parentMap: Record<number, ParentProfileSummary>,
+    parentMap: Record<string, ParentProfileSummary>,
   ): ChildrenTodayItemDto[] {
     return items.map((q) => {
-      const parent = parentMap[q.authorParentProfileId];
+      const parent = parentMap[q.authorParentProfileId.toString()];
       return {
         quizId: q.quizId,
         question: q.question,

@@ -56,10 +56,10 @@ export class ProfileDirectoryHttpAdapter implements ProfileDirectoryPort {
   /**
    * 부모 프로필 단건 조회
    * - GET /api/profiles/parent (Body에 profileType: 'PARENT' 전달)
-   * - 성공: { id, name, avatarMediaId } 로 표준화해 반환 (모두 bigint)
+   * - 성공: { id: number, name, avatarMediaId: bigint } 로 표준화해 반환
    * - 실패: null (유스케이스에서 안전 폴백)
    */
-  async getParentProfile(parentProfileId: bigint): Promise<ParentProfileSummary | null> {
+  async getParentProfile(parentProfileId: number): Promise<ParentProfileSummary | null> {
     if (!this.baseUrl) {
       this.logger.warn('USER_SERVICE_BASE_URL is not set');
       return null;
@@ -76,12 +76,12 @@ export class ProfileDirectoryHttpAdapter implements ProfileDirectoryPort {
       );
 
       const profiles = resp?.data?.data?.profiles ?? [];
-      const profile = profiles.find(p => BigInt(p.profileId) === parentProfileId);
+      const profile = profiles.find(p => p.profileId === parentProfileId);
 
       if (!profile) return null;
 
       return {
-        id: BigInt(profile.profileId),
+        id: profile.profileId,
         name: profile.name,
         avatarMediaId: profile.avatarMediaId ? BigInt(profile.avatarMediaId) : null,
       };
@@ -94,10 +94,10 @@ export class ProfileDirectoryHttpAdapter implements ProfileDirectoryPort {
   /**
    * 자녀 프로필 배치 조회
    * - GET /api/profiles/child (Body에 profileType: 'CHILD' 전달)
-   * - 성공: { [childId]: { id, name, avatarMediaId } } 형태의 맵으로 반환 (모두 bigint)
+   * - 성공: { [childId]: { id: number, name, avatarMediaId: bigint } } 형태의 맵으로 반환
    * - 실패: 빈 객체 {} (유스케이스에서 안전 폴백)
    */
-  async getChildProfiles(childProfileIds: bigint[]): Promise<Record<string, ChildProfileSummary>> {
+  async getChildProfiles(childProfileIds: number[]): Promise<Record<string, ChildProfileSummary>> {
     const result: Record<string, ChildProfileSummary> = {};
     if (!this.baseUrl || childProfileIds.length === 0) return result;
 
@@ -115,12 +115,11 @@ export class ProfileDirectoryHttpAdapter implements ProfileDirectoryPort {
       const profiles = resp?.data?.data?.profiles ?? [];
 
       // childProfileIds에 해당하는 프로필만 필터링하여 맵으로 변환
-      const idSet = new Set(childProfileIds.map(id => id.toString()));
+      const idSet = new Set(childProfileIds);
       for (const profile of profiles) {
-        const profileIdStr = profile.profileId.toString();
-        if (idSet.has(profileIdStr)) {
-          result[profileIdStr] = {
-            id: BigInt(profile.profileId),
+        if (idSet.has(profile.profileId)) {
+          result[profile.profileId.toString()] = {
+            id: profile.profileId,
             name: profile.name,
             avatarMediaId: profile.avatarMediaId ? BigInt(profile.avatarMediaId) : null,
           };

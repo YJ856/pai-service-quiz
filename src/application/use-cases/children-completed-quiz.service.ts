@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import type {
   ChildrenCompletedResponseResult,
   ChildrenCompletedItemDto,
-} from 'src/application/port/in/result/children-completed-quiz-result.dto';
+} from '../port/in/result/children-completed-quiz-result.dto';
 
 import type { ListChildrenCompletedUseCase } from '../port/in/children-completed-quiz.usecase';
 import type { ChildrenCompletedQuizCommand } from '../command/children-completed-quiz.command';
@@ -81,10 +81,10 @@ export class ListChildrenCompletedService implements ListChildrenCompletedUseCas
   /** 프로필 정보 보강 */
   private enrichWithProfiles(
     items: ChildrenCompletedItemDto[],
-    parentMap: Record<number, ParentProfileSummary>,
+    parentMap: Record<string, ParentProfileSummary>,
   ): ChildrenCompletedItemDto[] {
     return items.map((q) => {
-      const parent = parentMap[q.authorParentProfileId];
+      const parent = parentMap[q.authorParentProfileId.toString()];
       return {
         quizId: q.quizId,
         publishDate: q.publishDate,

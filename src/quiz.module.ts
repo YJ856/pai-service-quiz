@@ -10,23 +10,23 @@ import { QUIZ_TOKENS } from './quiz.token';
 
 // Ports 구현체(Adapters)
 import { QuizRepositoryAdapter } from './adapter/out/persistence/quiz/quiz.repository.adapter';
-import { QuizQueryAdapter } from './adapter/out/persistence/quiz.query.adapter';
+import { QuizQueryAdapter } from './adapter/out/persistence/quiz/quiz.query.adapter';
 import { ProfileDirectoryHttpAdapter } from './adapter/out/user/profile-directory.http.adapter';
 
 // UseCases (구현)
 // 부모
 import { GetNextPublishDateService } from './application/use-cases/next-publish-date.service';
-import { GetParentsQuizDetailService } from './application/use-cases/get-parents-quiz-detail.service';
-import { ListParentsTodayService } from './application/use-cases/list-parents-today.service';
-import { ListParentsCompletedService } from './application/use-cases/list-parents-completed.service';
-import { ListParentsScheduledService } from './application/use-cases/list-parents-scheduled.service';
-import { CreateQuizService } from './application/use-cases/create-quiz.service';
-import { UpdateQuizService } from './application/use-cases/update-quiz.service';
-import { DeleteQuizService } from './application/use-cases/delete-quiz.service';
+import { GetParentsQuizDetailService } from './application/use-cases/parents-detail-quiz.service';
+import { ListParentsTodayService } from './application/use-cases/parents-today-quiz.service';
+import { ListParentsCompletedService } from './application/use-cases/parents-completed-quiz.service';
+import { ListParentsScheduledService } from './application/use-cases/parents-scheduled-quiz.service';
+import { CreateQuizService } from './application/use-cases/parents-create-quiz.service';
+import { UpdateQuizService } from './application/use-cases/parents-update-quiz.service';
+import { DeleteQuizService } from './application/use-cases/parents-delete-quiz.service';
 // 아이
-import { ListChildrenTodayService } from './application/use-cases/list-children-today.service';
-import { ListChildrenCompletedService } from './application/use-cases/list-children-completed.service';
-import { AnswerQuizService } from './application/use-cases/answer-quiz.service';
+import { ListChildrenTodayService } from './application/use-cases/children-today-quiz.service';
+import { ListChildrenCompletedService } from './application/use-cases/children-completed-quiz.service';
+import { AnswerQuizService } from './application/use-cases/children-answer-quiz.service';
 
 // Infra (Prisma)
 import { PrismaService } from './adapter/out/persistence/prisma/prisma.service';

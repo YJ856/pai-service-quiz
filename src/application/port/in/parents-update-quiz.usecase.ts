@@ -1,5 +1,5 @@
 import type { UpdateQuizResponseResult } from './result/parents-update-quiz-result.dto';
-import type { UpdateQuizCommand } from '../../command/parents-update-quiz.command';
+import type { ParentsUpdateQuizCommand } from '../../command/parents-update-quiz.command';
 
 /**
  * 부모용 퀴즈 수정 UseCase
@@ -8,5 +8,5 @@ import type { UpdateQuizCommand } from '../../command/parents-update-quiz.comman
  * - 전달된 필드만 부분 수정 (hint/reward = null 이면 제거)
  */
 export interface UpdateQuizUseCase {
-  execute(cmd: UpdateQuizCommand): Promise<UpdateQuizResponseResult>;
+  execute(cmd: ParentsUpdateQuizCommand): Promise<UpdateQuizResponseResult>;
 }
