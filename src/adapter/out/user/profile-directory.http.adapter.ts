@@ -1,6 +1,8 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Scope, Inject } from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
 import { firstValueFrom } from 'rxjs';
+import type { Request } from 'express';
 import type {
   ProfileDirectoryPort,
   ParentProfileSummary,
@@ -40,7 +42,7 @@ type UserApiResponse = {
  * - USER_API_PARENT_PATH:   (선택) 부모 프로필 경로. 기본 '/api/profiles/parent'
  * - USER_API_CHILD_PATH: (선택) 자녀 프로필 경로. 기본 '/api/profiles/child'
  */
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class ProfileDirectoryHttpAdapter implements ProfileDirectoryPort {
   private readonly logger = new Logger(ProfileDirectoryHttpAdapter.name);
 
@@ -51,7 +53,10 @@ export class ProfileDirectoryHttpAdapter implements ProfileDirectoryPort {
   private readonly parentPath = process.env.USER_API_PARENT_PATH ?? '/api/profiles/parent';
   private readonly childPath = process.env.USER_API_CHILD_PATH ?? '/api/profiles/child';
 
-  constructor(private readonly http: HttpService) {}
+  constructor(
+    private readonly http: HttpService,
+    @Inject(REQUEST) private readonly request: Request,
+  ) {}
 
   /**
    * 부모 프로필 단건 조회
@@ -67,9 +72,15 @@ export class ProfileDirectoryHttpAdapter implements ProfileDirectoryPort {
     const url = this.join(this.baseUrl, this.parentPath);
 
     try {
+      // 현재 요청의 Authorization 헤더를 가져와서 User 서비스에 전달
+      const authHeader = this.request.headers.authorization || '';
+
       // GET 요청이지만 Body를 전달 (user-service API 스펙에 맞춤)
       const resp = await firstValueFrom(
         this.http.get<UserApiResponse>(url, {
+          headers: {
+            Authorization: authHeader,
+          },
           data: { profileType: 'PARENT' },
           timeout: 3000,
         }),
@@ -104,9 +115,15 @@ export class ProfileDirectoryHttpAdapter implements ProfileDirectoryPort {
     const url = this.join(this.baseUrl, this.childPath);
 
     try {
+      // 현재 요청의 Authorization 헤더를 가져와서 User 서비스에 전달
+      const authHeader = this.request.headers.authorization || '';
+
       // GET 요청이지만 Body를 전달 (user-service API 스펙에 맞춤)
       const resp = await firstValueFrom(
         this.http.get<UserApiResponse>(url, {
+          headers: {
+            Authorization: authHeader,
+          },
           data: { profileType: 'CHILD' },
           timeout: 3000,
         }),

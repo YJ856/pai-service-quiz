@@ -5,6 +5,8 @@
  * - 비즈니스 타임존(기본: Asia/Seoul) 기준 계산
  */
 
+import { log } from "console";
+
 
 /**
  * 'yyyy-MM-dd' 날짜에 1일을 더한 날짜를 'yyyy-MM-dd' 형식으로 반환
@@ -104,9 +106,12 @@ export function utcDayRangeForYmd(ymd: string): { gte: Date; lt: Date } {
 export function todayYmdKST(): string {
   const now = new Date();
   const kstMs = now.getTime() + 9 * 60 * 60 * 1000; // UTC+9
+  console.log(kstMs);
   const kst = new Date(kstMs);
   const y = kst.getUTCFullYear();
   const m = String(kst.getUTCMonth() + 1).padStart(2, '0');
   const d = String(kst.getUTCDate()).padStart(2, '0');
+  console.log(`${y}-${m}-${d}`);
+  
   return `${y}-${m}-${d}`;
 }

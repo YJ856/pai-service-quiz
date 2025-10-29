@@ -90,8 +90,8 @@ export class ListChildrenTodayService implements ListChildrenTodayUseCase {
         hint: q.hint,
         reward: q.reward,
         authorParentProfileId: q.authorParentProfileId,
-        authorParentName: parent?.name ?? q.authorParentName ?? '부모',
-        authorParentAvatarMediaId: parent?.avatarMediaId ?? q.authorParentAvatarMediaId ?? null,
+        authorParentName: parent?.name ?? '',
+        authorParentAvatarMediaId: parent?.avatarMediaId ?? null,
         isSolved: q.isSolved,
       };
     });

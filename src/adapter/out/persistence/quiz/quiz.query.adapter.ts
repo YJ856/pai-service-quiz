@@ -92,7 +92,7 @@ export class QuizQueryAdapter implements QuizQueryPort {
       answer: q.answer,
       reward: q.reward ?? null,
       authorParentProfileId: q.parentProfileId,
-      authorParentName: '부모',
+      authorParentName: '',
       authorParentAvatarMediaId: null,
 
       children: (q.assignments ?? []).map((a) => ({
@@ -167,7 +167,7 @@ export class QuizQueryAdapter implements QuizQueryPort {
       reward: q.reward ?? null,
 
       authorParentProfileId: q.parentProfileId,
-      authorParentName: '부모',                // ← 외부 user 서비스에서 보강 (서비스에서 merge)
+      authorParentName: '',                // ← 외부 user 서비스에서 보강 (서비스에서 merge)
       authorParentAvatarMediaId: null,        // ← 외부 user 서비스에서 보강
 
       children: (q.assignments ?? []).map((a) => ({
@@ -237,7 +237,7 @@ export class QuizQueryAdapter implements QuizQueryPort {
       reward: q.reward ?? null,
 
       authorParentProfileId: q.parentProfileId,
-      authorParentName: '부모',                // 서비스에서 실제 프로필 정보로 보강
+      authorParentName: '',                // 서비스에서 실제 프로필 정보로 보강
       authorParentAvatarMediaId: null,        // 서비스에서 보강
       isEditable: false,                       // 서비스에서 최종 계산(본인+SCHEDULED)으로 덮어씀
     }));
@@ -319,7 +319,7 @@ export class QuizQueryAdapter implements QuizQueryPort {
       reward: q.reward ?? null,
 
       authorParentProfileId: q.parentProfileId,
-      authorParentName: '부모',            // 서비스에서 실제 프로필 정보 보강 가능
+      authorParentName: '',            // 서비스에서 실제 프로필 정보 보강 가능
       authorParentAvatarMediaId: null,    // 서비스에서 보강 가능
 
       isSolved: !!q.assignments[0]?.isSolved,
@@ -392,7 +392,7 @@ export class QuizQueryAdapter implements QuizQueryPort {
       reward: q.reward ?? null,
 
       authorParentProfileId: q.parentProfileId,
-      authorParentName: '부모',             // 필요 시 서비스 레이어에서 실제 이름으로 보강
+      authorParentName: '',             // 필요 시 서비스 레이어에서 실제 이름으로 보강
       authorParentAvatarMediaId: null,      // 필요 시 서비스 레이어에서 보강
     }));
 
@@ -436,7 +436,7 @@ export class QuizQueryAdapter implements QuizQueryPort {
       reward: row.reward ?? null,
       isSolved: !!row.assignments?.[0]?.isSolved,
       authorParentProfileId: row.parentProfileId,
-      authorParentName: null,          // 프로필 보강이 필요하면 서비스 레이어에서 채움
+      authorParentName: '',          // 프로필 보강이 필요하면 서비스 레이어에서 채움
       authorParentAvatarMediaId: null, // 프로필 보강이 필요하면 서비스 레이어에서 채움
     };
   }

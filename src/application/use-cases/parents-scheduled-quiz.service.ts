@@ -95,8 +95,8 @@ export class ListParentsScheduledService implements ListParentsScheduledUseCase 
 
       return {
         ...q,
-        authorParentName: parent?.name ?? q.authorParentName ?? '부모',
-        authorParentAvatarMediaId: parent?.avatarMediaId ?? q.authorParentAvatarMediaId ?? null,
+        authorParentName: parent?.name ?? '',
+        authorParentAvatarMediaId: parent?.avatarMediaId ?? null,
         isEditable: editable,
       };
     });

@@ -85,8 +85,8 @@ export class ListParentsCompletedService implements ListParentsCompletedUseCase 
   ): ParentsCompletedItemDto[] {
     return rows.map((q) => ({
       ...q,
-      authorParentName: parent?.name ?? q.authorParentName ?? '부모',
-      authorParentAvatarMediaId: parent?.avatarMediaId ?? q.authorParentAvatarMediaId ?? null,
+      authorParentName: parent?.name ?? '',
+      authorParentAvatarMediaId: parent?.avatarMediaId ?? null,
       children: q.children.map((c) => {
         const info = childMap[c.childProfileId.toString()];
         return {
