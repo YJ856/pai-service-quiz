@@ -133,8 +133,8 @@ export class ParentsQuizController {
     @Auth('profileId') parentProfileId: number,
     @Query() query: ParentsCompletedQueryParam,
   ): Promise<BaseResponse<ParentsCompletedResponseData>> {
-    const cmd = this.parentsCompletedMapper.toCommand(query, parentProfileId);
-    const result = await this.listParentsCompleted.execute(cmd);
+    const command = this.parentsCompletedMapper.toCommand(query, parentProfileId);
+    const result = await this.listParentsCompleted.execute(command);
     const data = this.parentsCompletedMapper.toResponse(result);
     return { success: true, message: '완료된 퀴즈 조회 성공', data };
   }

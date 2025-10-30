@@ -5,6 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import type { Request } from 'express';
 import type {
   ProfileDirectoryPort,
+  FamilyProfileSummary,
   ParentProfileSummary,
   ChildProfileSummary,
 } from '../../../application/port/out/profile-directory.port';
@@ -15,7 +16,7 @@ import type {
  */
 type ProfileDto = {
   profileId: number;
-  profileType: 'PARENT' | 'CHILD';
+  profileType: 'parent' | 'child';
   name: string;
   birthDate: string;
   gender: string;
@@ -32,16 +33,7 @@ type UserApiResponse = {
   };
 };
 
-/**
- * ProfileDirectoryHttpAdapter
- * - 유스케이스에서 의존하는 "ProfileDirectoryPort"의 HTTP 구현체.
- * - 부모/자녀의 "표시용 최소 정보"를 외부 User 서비스에서 가져온다.
- *
- * 환경변수(.env)
- * - USER_SERVICE_BASE_URL: 유저 서비스 베이스 URL (예: http://localhost:3001)
- * - USER_API_PARENT_PATH:   (선택) 부모 프로필 경로. 기본 '/api/profiles/parent'
- * - USER_API_CHILD_PATH: (선택) 자녀 프로필 경로. 기본 '/api/profiles/child'
- */
+
 @Injectable({ scope: Scope.REQUEST })
 export class ProfileDirectoryHttpAdapter implements ProfileDirectoryPort {
   private readonly logger = new Logger(ProfileDirectoryHttpAdapter.name);
@@ -50,109 +42,71 @@ export class ProfileDirectoryHttpAdapter implements ProfileDirectoryPort {
   private readonly baseUrl = process.env.USER_SERVICE_BASE_URL ?? '';
 
   // 엔드포인트 경로(옵션)
-  private readonly parentPath = process.env.USER_API_PARENT_PATH ?? '/api/profiles/parent';
-  private readonly childPath = process.env.USER_API_CHILD_PATH ?? '/api/profiles/child';
+  private readonly profilePath = process.env.USER_API_PROFILE_PATH ?? '/api/profiles';
 
   constructor(
     private readonly http: HttpService,
     @Inject(REQUEST) private readonly request: Request,
   ) {}
 
-  /**
-   * 부모 프로필 단건 조회
-   * - GET /api/profiles/parent (Body에 profileType: 'PARENT' 전달)
-   * - 성공: { id: number, name, avatarMediaId: bigint } 로 표준화해 반환
-   * - 실패: null (유스케이스에서 안전 폴백)
-   */
-  async getParentProfile(parentProfileId: number): Promise<ParentProfileSummary | null> {
+  async getFamilyProfileWithScopeAll(): Promise<FamilyProfileSummary> {
     if (!this.baseUrl) {
       this.logger.warn('USER_SERVICE_BASE_URL is not set');
-      return null;
+      return { parents: [], children: [] };
     }
-    const url = this.join(this.baseUrl, this.parentPath);
+
+    const url = this.joinUrl(this.baseUrl, this.profilePath);
+    const authorization = normalizeBearer(this.request.headers.authorization);
 
     try {
-      // 현재 요청의 Authorization 헤더를 가져와서 User 서비스에 전달
-      const authHeader = this.request.headers.authorization || '';
-
-      // GET 요청이지만 Body를 전달 (user-service API 스펙에 맞춤)
-      const resp = await firstValueFrom(
+      const { data } = await firstValueFrom(
         this.http.get<UserApiResponse>(url, {
-          headers: {
-            Authorization: authHeader,
-          },
-          data: { profileType: 'PARENT' },
+          headers: authorization ? { Authorization: authorization } : undefined,
+          params: { profileType: 'all' },
           timeout: 3000,
         }),
       );
 
-      const profiles = resp?.data?.data?.profiles ?? [];
-      const profile = profiles.find(p => p.profileId === parentProfileId);
+      const profiles = data?.data?.profiles ?? [];
+      const parents: ParentProfileSummary[] = [];
+      const children: ChildProfileSummary[] = [];
 
-      if (!profile) return null;
-
-      return {
-        id: profile.profileId,
-        name: profile.name,
-        avatarMediaId: profile.avatarMediaId ? BigInt(profile.avatarMediaId) : null,
-      };
-    } catch (err) {
-      this.logger.warn(`getParentProfile(${parentProfileId}) failed: ${String(err)}`);
-      return null;
-    }
-  }
-
-  /**
-   * 자녀 프로필 배치 조회
-   * - GET /api/profiles/child (Body에 profileType: 'CHILD' 전달)
-   * - 성공: { [childId]: { id: number, name, avatarMediaId: bigint } } 형태의 맵으로 반환
-   * - 실패: 빈 객체 {} (유스케이스에서 안전 폴백)
-   */
-  async getChildProfiles(childProfileIds: number[]): Promise<Record<string, ChildProfileSummary>> {
-    const result: Record<string, ChildProfileSummary> = {};
-    if (!this.baseUrl || childProfileIds.length === 0) return result;
-
-    const url = this.join(this.baseUrl, this.childPath);
-
-    try {
-      // 현재 요청의 Authorization 헤더를 가져와서 User 서비스에 전달
-      const authHeader = this.request.headers.authorization || '';
-
-      // GET 요청이지만 Body를 전달 (user-service API 스펙에 맞춤)
-      const resp = await firstValueFrom(
-        this.http.get<UserApiResponse>(url, {
-          headers: {
-            Authorization: authHeader,
-          },
-          data: { profileType: 'CHILD' },
-          timeout: 3000,
-        }),
-      );
-
-      const profiles = resp?.data?.data?.profiles ?? [];
-
-      // childProfileIds에 해당하는 프로필만 필터링하여 맵으로 변환
-      const idSet = new Set(childProfileIds);
       for (const profile of profiles) {
-        if (idSet.has(profile.profileId)) {
-          result[profile.profileId.toString()] = {
-            id: profile.profileId,
-            name: profile.name,
-            avatarMediaId: profile.avatarMediaId ? BigInt(profile.avatarMediaId) : null,
-          };
-        }
+        const summary = {
+          profileId: Number(profile.profileId),
+          name: String(profile.name ?? ''),
+          avatarMediaId: parseBigIntOrNull(profile.avatarMediaId),
+        };
+
+        if (profile.profileType === 'parent') parents.push(summary);
+        else if (profile.profileType === 'child') children.push(summary);
       }
-      return result;
-    } catch (err) {
-      this.logger.warn(`getChildProfiles(${childProfileIds.length}) failed: ${String(err)}`);
-      return result;
+
+      return { parents, children };
+    } catch (error) {
+      this.logger.warn(`getFamilyProfileWithScopeAll failed: ${String(error)}`);
+      return { parents: [], children: [] };
     }
   }
 
   // ---- utils ----
-  private join(base: string, path: string): string {
+  private joinUrl(base: string, path: string): string {
     if (!base.endsWith('/') && !path.startsWith('/')) return `${base}/${path}`;
     if (base.endsWith('/') && path.startsWith('/')) return `${base}${path.slice(1)}`;
     return `${base}${path}`;
   }
+}
+
+function parseBigIntOrNull(input: unknown): bigint | null {
+  if (input === null || input === undefined) return null;
+  const stringTrimmed = String(input).trim();
+  if (!stringTrimmed) return null;
+  try { return BigInt(stringTrimmed); } catch { return null }
+}
+
+function normalizeBearer(authorizationHeader?: string): string | undefined {
+  if (!authorizationHeader) return undefined;
+  const match = authorizationHeader.match(/^Bearer\s+(.+)$/i);
+  const token = match?.[1]?.trim();
+  return token ? `Bearer ${token}` : undefined;
 }

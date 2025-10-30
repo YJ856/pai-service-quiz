@@ -17,7 +17,7 @@ export interface CursorById {
   afterQuizId?: bigint;
 }
 export interface CursorByDateId {
-  after?: { publishDateYmd: string; quizId: bigint };
+  paginationCursor?: { publishDateYmd: string; quizId: bigint };
 }
 
 
@@ -31,12 +31,32 @@ export interface FindParentsTodayParams extends CursorById {
 }
 export type FindParentsTodayResult = PageResult<ParentsTodayItemDto>
 
-// 완료된 퀴즈(부모용)
+// 완료된 퀴즈 조회 요청(부모용) 이건 쓸모 없는 거 같기도...?
 export interface FindParentsCompletedParams extends CursorByDateId {
-  parentProfileId: number;
+  parentProfileId: number; 
   limit: number;
 }
 export type FindParentsCompletedResult = PageResult<ParentsCompletedItemDto>
+
+
+
+// 완료된 퀴즈 전체 조회
+export interface FindFamilyParentsCompletedParams extends CursorByDateId { // 탐색 의뢰서
+  parentProfileIds: number[];
+  beforeDateYmd: string; // 탐색 기준(상한선: 이 날짜보다 이전 날짜)
+  limit: number;
+}
+export type FamilyParentsCompletedRow = { // 발견한 기록 한 줄
+  quizId: bigint;
+  publishDateYmd: string;
+  question: string;
+  answer: string;
+  reward: string | null;
+  authorParentProfileId: number;
+}
+export type FindFamilyParentsCompletedResult = PageResult<FamilyParentsCompletedRow>; // 탐색 보고서(페이지네이션 포함)
+
+
 
 // 예정된 퀴즈(부모용)
 export interface FindParentsScheduledParams extends CursorByDateId {

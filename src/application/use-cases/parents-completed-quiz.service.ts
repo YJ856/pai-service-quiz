@@ -23,6 +23,7 @@ import {
   getChildProfilesSafe,
   collectChildProfileIds,
 } from '../../utils/profile.util';
+import { todayYmdKST } from 'src/utils/date.util';
 
 @Injectable()
 export class ListParentsCompletedService implements ListParentsCompletedUseCase {
@@ -34,21 +35,30 @@ export class ListParentsCompletedService implements ListParentsCompletedUseCase 
     private readonly profiles: ProfileDirectoryPort,
   ) {}
 
-  /**
-   * 완료된 퀴즈(부모용)
-   * - 정렬: publishDate DESC, quizId DESC
-   * - 커서: Base64("\"yyyy-MM-dd|quizId\"")
-   */
-  async execute(cmd: ParentsCompletedQuizCommand): Promise<ParentsCompletedResponseResult> {
-    const { parentProfileId } = cmd;
-    const limit = cmd.limit;
-    const after = decodeCompositeCursor(cmd.cursor ?? null);
+
+  async execute(command: ParentsCompletedQuizCommand): Promise<ParentsCompletedResponseResult> {
+    const { parentProfileId, limit, cursor } = command;
+    const paginationCursor = decodeCompositeCursor(cursor ?? null);
+    const todayKst = todayYmdKST()
+
+    // 1) 가족 구성원 모두의 프로필 정보 요청(부모, 아이 모두)
+
+
+    // 2) 불러온 부모 ID가 출제자 ID와 동일하면서 날짜가 오늘 이전인 퀴즈 정보 조회(DB 조회)
+
+
+    // 3) 해당 퀴즈의 아이 제출 여부 조회(quizId로 Assignment테이블 DB 조회, 있으면 맞춘 거고 없으면 못 맞춘 것)
+
+
+    // 4) 모든 정보를 형식에 맞춰서 넣은 뒤 날짜가 최신순 내림차순으로 보내기
+
+
 
     // 1) DB 조회
     const findParams: FindParentsCompletedParams = {
       parentProfileId,
       limit,
-      after: after ?? undefined,
+      paginationCursor: paginationCursor ?? undefined,
     };
     const { items, hasNext } = await this.repo.findParentsCompleted(findParams);
 

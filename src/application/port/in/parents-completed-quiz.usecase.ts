@@ -2,5 +2,5 @@ import type { ParentsCompletedResponseResult } from "./result/parents-completed-
 import type { ParentsCompletedQuizCommand } from '../../command/parents-completed-quiz.command';
 
 export interface ListParentsCompletedUseCase {
-  execute(cmd: ParentsCompletedQuizCommand): Promise<ParentsCompletedResponseResult>;
+  execute(command: ParentsCompletedQuizCommand): Promise<ParentsCompletedResponseResult>;
 }
