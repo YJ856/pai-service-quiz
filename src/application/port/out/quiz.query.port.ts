@@ -1,6 +1,5 @@
 // 내부용 Result DTO (bigint 타입 사용)
 import type { ParentsTodayItemDto } from '../in/result/parents-today-quiz-result.dto';
-import type { ParentsCompletedItemDto } from '../in/result/parents-completed-quiz-result.dto';
 import type { ParentsScheduledItemDto } from '../in/result/parents-scheduled-quiz-result.dto';
 import type { ChildrenTodayItemDto } from '../in/result/children-today-quiz-result.dto';
 import type { ChildrenCompletedItemDto } from '../in/result/children-completed-quiz-result.dto';
@@ -30,13 +29,6 @@ export interface FindParentsTodayParams extends CursorById {
   limit: number;
 }
 export type FindParentsTodayResult = PageResult<ParentsTodayItemDto>
-
-// 완료된 퀴즈 조회 요청(부모용) 이건 쓸모 없는 거 같기도...?
-export interface FindParentsCompletedParams extends CursorByDateId {
-  parentProfileId: number; 
-  limit: number;
-}
-export type FindParentsCompletedResult = PageResult<ParentsCompletedItemDto>
 
 
 
@@ -122,9 +114,8 @@ export interface QuizQueryPort {
   findLastScheduledDateYmd(parentProfileId: number): Promise<string | null>;
   existsAnyOnDate(parentProfileId: number, ymd: string): Promise<boolean>;
 
-  // 부모용 
+  // 부모용
   findParentsToday(params: FindParentsTodayParams): Promise<FindParentsTodayResult>;
-  findParentsCompleted(params: FindParentsCompletedParams): Promise<FindParentsCompletedResult>;
   findParentsScheduled(params: FindParentsScheduledParams): Promise<FindParentsScheduledResult>;
   findDetailById(quizId: bigint): Promise<QuizDetailRow | null>;
 
@@ -134,4 +125,16 @@ export interface QuizQueryPort {
 
   // 정답 제출 대상 조회
   findAnswerTarget(params: FindAnswerTargetParams): Promise<AnswerTargetRow | null>;
+
+  // 가족(다수 부모)용 완료 목록
+  findFamilyParentsCompleted(params: FindFamilyParentsCompletedParams): Promise<FindFamilyParentsCompletedResult>;
+
+  // (퀴즈들 x 자녀들) 과제/보상 상태 조회
+  findAssignmentsForQuizzes(params: { quizIds: bigint[]; childProfileIds: number[]; }): 
+  Promise<Array<{
+    quizId: bigint;
+    childProfileId: number;
+    isSolved: boolean;
+    rewardGranted: boolean;
+  }>>;
 }

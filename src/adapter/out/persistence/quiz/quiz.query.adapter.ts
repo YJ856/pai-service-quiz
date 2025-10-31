@@ -4,8 +4,6 @@ import type {
   QuizQueryPort,
   FindParentsTodayParams,
   FindParentsTodayResult,
-  FindParentsCompletedParams,
-  FindParentsCompletedResult,
   FindFamilyParentsCompletedParams,
   FindFamilyParentsCompletedResult,
   FamilyParentsCompletedRow,
@@ -103,82 +101,6 @@ export class QuizQueryAdapter implements QuizQueryPort {
         childName: '',
         childAvatarMediaId: null,
         isSolved: !!a.isSolved,
-      })),
-    }));
-
-    return { items, hasNext };
-  }
-
-  async findParentsCompleted(params: FindParentsCompletedParams): Promise<FindParentsCompletedResult> {
-    const { parentProfileId, limit, paginationCursor } = params;
-    const today = todayYmdKST();
-
-    // 커서 조건 (정렬: publishDate DESC, id DESC)
-    //  - (publishDate < D) OR (publishDate == D AND id < Q)
-    const cursorWhere = paginationCursor
-      ? {
-          OR: [
-            { publishDate: { lt: ymdToUtcDate(paginationCursor.publishDateYmd) } },
-            {
-              AND: [
-                { publishDate: ymdToUtcDate(paginationCursor.publishDateYmd) },
-                { id: { lt: paginationCursor.quizId } },
-              ],
-            },
-          ],
-        }
-      : {};
-
-    // COMPLETED = publishDate < today(KST)
-    const resultRecords = await this.prisma.quiz.findMany({
-      where: {
-        parentProfileId,
-        publishDate: { lt: ymdToUtcDate(today) },  // publishDate < today
-        ...cursorWhere,
-      },
-      orderBy: [
-        { publishDate: 'desc' },
-        { id: 'desc' },
-      ],
-      take: limit + 1, // hasNext 판단용
-      select: {
-        id: true,
-        publishDate: true,
-        question: true,
-        answer: true,
-        reward: true,
-        parentProfileId: true,
-        // 자녀 결과(보상 포함)
-        assignments: {
-          select: {
-            childProfileId: true,
-            isSolved: true,
-            rewardGranted: true,
-          },
-        },
-      },
-    });
-
-    const hasNext = resultRecords.length > limit;
-    const page = hasNext ? resultRecords.slice(0, limit) : resultRecords;
-
-    const items = page.map((q) => ({
-      quizId: q.id,
-      publishDate: toYmdFromDate(q.publishDate), // 'yyyy-MM-dd'
-      question: q.question,
-      answer: q.answer,
-      reward: q.reward ?? null,
-
-      authorParentProfileId: q.parentProfileId,
-      authorParentName: '',                // ← 외부 user 서비스에서 보강 (서비스에서 merge)
-      authorParentAvatarMediaId: null,        // ← 외부 user 서비스에서 보강
-
-      children: (q.assignments ?? []).map((a) => ({
-        childProfileId: a.childProfileId,
-        childName: '',                        // ← 외부 user 서비스에서 보강
-        childAvatarMediaId: null,             // ← 외부 user 서비스에서 보강
-        isSolved: !!a.isSolved,
-        rewardGranted: !!a.rewardGranted,
       })),
     }));
 
