@@ -18,4 +18,6 @@ export interface FamilyProfileSummary {
 
 export interface ProfileDirectoryPort {
   getFamilyProfileWithScopeAll(): Promise<FamilyProfileSummary>;
+  getFamilyProfileWithScopeParents(): Promise<{ parents: ParentProfileSummary[] }>;
 }
+

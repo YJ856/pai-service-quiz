@@ -20,10 +20,6 @@ import type {
 // Utils
 import { todayYmdKST } from '../../utils/date.util';
 import { decodeIdCursor, encodeIdCursor } from '../../utils/cursor.util';
-import {
-  getParentProfilesSafe,
-  collectParentProfileIds,
-} from '../../utils/profile.util';
 
 @Injectable()
 export class ListChildrenTodayService implements ListChildrenTodayUseCase {
@@ -35,65 +31,66 @@ export class ListChildrenTodayService implements ListChildrenTodayUseCase {
     private readonly profiles: ProfileDirectoryPort,
   ) {}
 
-  /**
-   * 오늘의 퀴즈(자녀용)
-   * - 기준 날짜: Asia/Seoul(UTC+9)
-   * - 커서: Base64("quizId")
-   */
-  async execute(cmd: ChildrenTodayQuizCommand): Promise<ChildrenTodayResponseResult> {
-    const { childProfileId } = cmd;
-    const limit = cmd.limit;
-    const afterQuizId = decodeIdCursor(cmd.cursor ?? null);
-    const todayYmd = todayYmdKST();
+  async execute(command: ChildrenTodayQuizCommand): Promise<ChildrenTodayResponseResult> {
+      const { childProfileId, limit, cursor } = command;
 
-    // 1) DB에서 자녀에게 배정된 TODAY 목록 조회
-    const { items, hasNext } = await this.repo.findChildrenToday({
-      childProfileId,
-      todayYmd,
-      limit,
-      afterQuizId: afterQuizId ?? undefined,
-    });
+      const paginationCursor = decodeIdCursor(cursor ?? null) ?? undefined;
 
-    // 2) 부모 프로필 정보 배치 조회
-    const parentIds = collectParentProfileIds(items);
-    const parentMap = await getParentProfilesSafe(this.profiles, parentIds);
+      const pageSize = Math.min(Math.max(limit ?? 10, 1), 50);
+      const todayKst = todayYmdKST();
 
-    // 3) 프로필 정보 보강
-    const enrichedItems = this.enrichWithProfiles(items, parentMap);
+      // 1) 부모 프로필 조회
+      const { parents } = await this.profiles.getFamilyProfileWithScopeParents();
+      const parentMap: Record<number, ParentProfileSummary> =
+        Object.fromEntries((parents ?? []).map(parent => [parent.profileId, parent]));
+      const familyParentIds = (parents ?? []).map(parent => parent.profileId);
 
-    // 4) nextCursor 계산 (마지막 아이템의 quizId 기준)
-    const nextCursor =
-      hasNext && enrichedItems.length > 0
-        ? encodeIdCursor(enrichedItems[enrichedItems.length - 1].quizId)
-        : null;
+      if (familyParentIds.length === 0) {
+        return { items: [], nextCursor: null, hasNext: false };
+      }
 
-    // 5) 응답 구성
-    return {
-      items: enrichedItems,
-      nextCursor,
-      hasNext,
-    };
-  }
+      // 2) 오늘 퀴즈 조회
+      const { items: familyRows, hasNext } = await this.repo.findFamilyParentsToday({
+        parentProfileIds: familyParentIds,
+        dateYmd: todayKst,
+        paginationCursor,
+        limit: pageSize,
+      });
 
-  // ============== Helpers ==============
+      // 3) 아이 본인 제출 여부만 조회 (퀴즈는 모두 포함, isSolved만 체크)
+      const quizIds = familyRows.map(row => row.quizId);
+      const assignmentMatrix = 
+        quizIds.length 
+        ? await this.repo.findAssignmentsForQuizzes({
+            quizIds,
+            childProfileIds: [childProfileId],
+          })
+        : [];
 
-  /** 프로필 정보 보강 */
-  private enrichWithProfiles(
-    items: ChildrenTodayItemDto[],
-    parentMap: Record<string, ParentProfileSummary>,
-  ): ChildrenTodayItemDto[] {
-    return items.map((q) => {
-      const parent = parentMap[q.authorParentProfileId.toString()];
-      return {
-        quizId: q.quizId,
-        question: q.question,
-        hint: q.hint,
-        reward: q.reward,
-        authorParentProfileId: q.authorParentProfileId,
-        authorParentName: parent?.name ?? '',
-        authorParentAvatarMediaId: parent?.avatarMediaId ?? null,
-        isSolved: q.isSolved,
-      };
-    });
+      const solvedSet = new Set(
+        assignmentMatrix.filter(assignment => assignment.isSolved).map(assignment => String(assignment.quizId)),
+      );
+
+      // 4) DTO 매핑
+      const items: ChildrenTodayItemDto[] = familyRows.map(row => {
+        const author = parentMap[row.authorParentProfileId];
+        return {
+          quizId: row.quizId,
+          question: row.question,
+          hint: row.hint,
+          reward: row.reward,
+
+          authorParentProfileId: row.authorParentProfileId,
+          authorParentName: author?.name ?? '',
+          authorParentAvatarMediaId: author?.avatarMediaId ?? null,
+
+          isSolved: solvedSet.has(String(row.quizId)),
+        };
+      });
+
+      const tail = items.at(-1);
+      const nextCursor = hasNext && tail ? encodeIdCursor(tail.quizId) : null;
+
+    return { items, nextCursor, hasNext };
   }
 }

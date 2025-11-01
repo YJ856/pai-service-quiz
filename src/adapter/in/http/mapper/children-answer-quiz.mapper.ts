@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { AnswerQuizPathParam, AnswerQuizRequestDto } from "src/adapter/in/http/dto/request/children-answer-quiz-request.dto";
 import type { AnswerQuizResponseData } from "pai-shared-types";
-import type { AnswerQuizResponseResult } from "src/application/port/in/result/parents-answer-quiz-result.dto";
+import type { AnswerQuizResponseResult } from "src/application/port/in/result/children-answer-quiz-result.dto";
 import { ChildrenAnswerQuizCommand } from "src/application/command/children-answer-quiz.command";
 
 @Injectable()

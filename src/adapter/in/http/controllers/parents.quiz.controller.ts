@@ -121,8 +121,8 @@ export class ParentsQuizController {
     @Auth('profileId') parentProfileId: number,
     @Query() query: ParentsTodayQueryParam,
   ): Promise<BaseResponse<ParentsTodayResponseData>> {
-    const cmd = this.parentsTodayMapper.toCommand(query, parentProfileId);
-    const result = await this.listParentsToday.execute(cmd);
+    const command = this.parentsTodayMapper.toCommand(query, parentProfileId);
+    const result = await this.listParentsToday.execute(command);
     const data = this.parentsTodayMapper.toResponse(result);
     return { success: true, message: '오늘의 퀴즈 조회 성공', data };
   }

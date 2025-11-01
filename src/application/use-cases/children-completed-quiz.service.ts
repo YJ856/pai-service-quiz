@@ -10,7 +10,6 @@ import type { ChildrenCompletedQuizCommand } from '../command/children-completed
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type {
   QuizQueryPort,
-  FindChildrenCompletedParams,
 } from '../port/out/quiz.query.port';
 
 import type { 
@@ -20,7 +19,7 @@ import type {
 
 // Utils
 import { decodeCompositeCursor, encodeCompositeCursor } from '../../utils/cursor.util';
-import { getParentProfilesSafe, collectParentProfileIds, } from '../../utils/profile.util';
+import { todayYmdKST } from 'src/utils/date.util';
 
 /**
  * 아이용 완료된 퀴즈 조회
@@ -39,62 +38,47 @@ export class ListChildrenCompletedService implements ListChildrenCompletedUseCas
   ) {}
 
   async execute(command: ChildrenCompletedQuizCommand): Promise<ChildrenCompletedResponseResult> {
-    const limit = command.limit;
-    
-    // 1) 커서 디코드 → 레포 after 형식으로 매핑
-    const rawAfter = command.cursor ? decodeCompositeCursor(command.cursor) : null;
-    // rawAfter 예상 형태: { publishDateYmd: string, quizId: bigint }
-    const after = rawAfter ?? undefined;
+      const { childProfileId, limit, cursor } = command;
 
-    const query: FindChildrenCompletedParams = {
-      childProfileId: command.childProfileId,
-      limit,
-      ...(after ? { after } : {}),
-    };
+      const rawCursor = decodeCompositeCursor(cursor ?? null);
+      const paginationCursor = rawCursor ? { publishDateYmd: rawCursor.publishDateYmd, quizId: BigInt(rawCursor.quizId) } : undefined;
 
-    // 2) DB 조회
-    const { items, hasNext } = await this.repo.findChildrenCompleted(query);
+      const pageSize = Math.min(Math.max(limit ?? 10, 1), 50);
+      const todayKst = todayYmdKST();
 
-    // 3) 부모 프로필 정보 배치 조회
-    const parentIds = collectParentProfileIds(items);
-    const parentMap = await getParentProfilesSafe(this.profiles, parentIds);
+      // 1) 아이가 푼 퀴즈 중 오늘 이전 조회
+      const { items: familyRows, hasNext } = await this.repo.findChildrenCompleted({
+        childProfileId,
+        beforeDateYmd: todayKst,
+        paginationCursor,
+        limit: pageSize,
+      });
 
-    // 4) 프로필 정보 보강
-    const enrichedItems = this.enrichWithProfiles(items, parentMap);
+      // 2) 부모 프로필만 조회(이름/아바타 매핑)
+      const { parents } = await this.profiles.getFamilyProfileWithScopeParents();
+      const parentMap: Record<number, ParentProfileSummary> =
+        Object.fromEntries((parents ?? []).map(parent => [parent.profileId, parent]));
 
-    // 5) nextCursor 계산
-    const last = enrichedItems[enrichedItems.length - 1];
-    const nextCursor =
-      hasNext && last
-        ? encodeCompositeCursor(last.publishDate, last.quizId)
-        : null;
+      // 3) DTO 매핑
+      const items: ChildrenCompletedItemDto[] = familyRows.map(row => {
+        const author = parentMap[row.authorParentProfileId];
+        return {
+          quizId: row.quizId,
+          publishDate: row.publishDateYmd,
+          question: row.question,
+          answer: row.answer,
+          reward: row.reward,
 
-    return {
-      items: enrichedItems,
-      nextCursor,
-      hasNext,
-    };
-  }
+          authorParentProfileId: row.authorParentProfileId,
+          authorParentName: author?.name ?? '',
+          authorParentAvatarMediaId: author?.avatarMediaId ?? null,
+        };
+      });
 
-  // ============== Helpers ==============
+      const tail = items.at(-1);
+      const nextCursor = 
+        hasNext && tail ? encodeCompositeCursor(tail.publishDate, tail.quizId) : null;
 
-  /** 프로필 정보 보강 */
-  private enrichWithProfiles(
-    items: ChildrenCompletedItemDto[],
-    parentMap: Record<string, ParentProfileSummary>,
-  ): ChildrenCompletedItemDto[] {
-    return items.map((q) => {
-      const parent = parentMap[q.authorParentProfileId.toString()];
-      return {
-        quizId: q.quizId,
-        publishDate: q.publishDate,
-        question: q.question,
-        answer: q.answer,
-        reward: q.reward,
-        authorParentProfileId: q.authorParentProfileId,
-        authorParentName: parent?.name ?? '',
-        authorParentAvatarMediaId: parent?.avatarMediaId ?? null,
-      };
-    });
+      return { items, nextCursor, hasNext };
   }
 }

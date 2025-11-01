@@ -7,31 +7,13 @@ import type { ParentsScheduledQuizCommand } from '../command/parents-scheduled-q
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type {
   QuizQueryPort,
-  FindParentsScheduledParams,
 } from '../port/out/quiz.query.port';
 import type { ProfileDirectoryPort, ParentProfileSummary } from '../port/out/profile-directory.port';
 
 // Utils
 import { decodeCompositeCursor, encodeCompositeCursor } from '../../utils/cursor.util';
-import { getParentProfileSafe } from '../../utils/profile.util';
 import { todayYmdKST } from '../../utils/date.util';
 
-const isEditable = (
-  publishDate: string,
-  authorParentProfileId: number,
-  requesterParentProfileId: number,
-  today: string
-): boolean => {
-  // 작성자만 수정 가능
-  if (authorParentProfileId !== requesterParentProfileId) {
-    return false;
-  }
-  // publishDate가 오늘 이후인 경우만 수정 가능 (SCHEDULED 상태)
-  if (publishDate > today) {
-    return true;
-  }
-  return false;
-};
 
 @Injectable()
 export class ListParentsScheduledService implements ListParentsScheduledUseCase {
@@ -42,63 +24,56 @@ export class ListParentsScheduledService implements ListParentsScheduledUseCase 
     private readonly profiles: ProfileDirectoryPort,
   ) {}
 
-  /**
-   * 예정된 퀴즈(부모용)
-   * - 정렬: publishDate ASC, quizId ASC
-   * - 커서: Base64("\"yyyy-MM-dd|quizId\"")
-   */
-  async execute(cmd: ParentsScheduledQuizCommand): Promise<ParentsScheduledResponseResult> {
-    const { parentProfileId } = cmd;
-    const limit = cmd.limit;
-    const after = decodeCompositeCursor(cmd.cursor ?? null);
+  async execute(command: ParentsScheduledQuizCommand): Promise<ParentsScheduledResponseResult> {
+    const { parentProfileId, limit, cursor } = command;
 
-    // 1) DB 조회
-    const findParams: FindParentsScheduledParams = {
-      parentProfileId,
-      limit,
-      after: after ?? undefined,
-    };
-    const { items, hasNext } = await this.repo.findParentsScheduled(findParams);
+    const rawCursor = decodeCompositeCursor(cursor ?? null);
+    const paginationCursor = rawCursor ? { publishDateYmd: rawCursor.publishDateYmd, quizId: BigInt(rawCursor.quizId)} : undefined;
 
-    // 2) 부모 프로필(이름/아바타) 보강
-    const parent = await getParentProfileSafe(this.profiles, parentProfileId);
-    const merged = this.enrichWithParent(items, parent, parentProfileId);
+    const pageSize = Math.min(Math.max(limit ?? 10, 1), 50);
+    const todayKst = todayYmdKST();
 
-    // 3) nextCursor (ASC 정렬이므로 페이지의 마지막 아이템 기준)
-    const tail = merged.length ? merged[merged.length - 1] : null;
-    const nextCursor = hasNext && tail ? encodeCompositeCursor(tail.publishDate, tail.quizId) : null;
+    // 1) 가족 부모 프로필 조회
+    const { parents } = await this.profiles.getFamilyProfileWithScopeParents();
+    const parentMap: Record<number, ParentProfileSummary> = 
+      Object.fromEntries((parents ?? []).map(parent => [parent.profileId, parent]));
+    const familyParentIds = (parents ?? []).map(parent => parent.profileId);
 
-    return {
-      items: merged,
-      nextCursor,
-      hasNext,
-    };
-  }
+    if (familyParentIds.length === 0) {
+      return { items: [], nextCursor: null, hasNext: false };
+    }
 
-  // ============== Helpers ==============
+    // 2) 예정된 퀴즈 조회
+    const { items: familyRows, hasNext } = await this.repo.findFamilyParentsScheduled({
+      parentProfileIds: familyParentIds,
+      afterDateYmd: todayKst,
+      paginationCursor,
+      limit: pageSize,
+    });
 
-  private enrichWithParent(
-    rows: ParentsScheduledItemDto[],
-    parent: ParentProfileSummary | null,
-    requesterParentId: number,
-  ): ParentsScheduledItemDto[] {
-    const today = todayYmdKST();
-
-    return rows.map((q) => {
-      // 도메인 정책 사용: publishDate > today && 본인 작성
-      const editable = isEditable(
-        q.publishDate,
-        q.authorParentProfileId,
-        requesterParentId,
-        today,
-      );
-
+    // 3) DTO 매핑
+    const items: ParentsScheduledItemDto[] = familyRows.map(row => {
+      const author = parentMap[row.authorParentProfileId];
       return {
-        ...q,
-        authorParentName: parent?.name ?? '',
-        authorParentAvatarMediaId: parent?.avatarMediaId ?? null,
-        isEditable: editable,
+        quizId: row.quizId,
+        publishDate: row.publishDateYmd,
+        question: row.question,
+        answer: row.answer,
+        hint: row.hint,
+        reward: row.reward,
+
+        authorParentProfileId: row.authorParentProfileId,
+        authorParentName: author?.name ?? '',
+        authorParentAvatarMediaId: author?.avatarMediaId ?? null,
+
+        isEditable: row.authorParentProfileId === parentProfileId,
       };
     });
+
+    const tail = items.at(-1);
+    const nextCursor = 
+      hasNext && tail ? encodeCompositeCursor(tail.publishDate, tail.quizId) : null;
+
+    return { items, nextCursor, hasNext };
   }
 }

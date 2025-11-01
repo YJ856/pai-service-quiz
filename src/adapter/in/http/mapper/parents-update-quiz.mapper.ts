@@ -31,9 +31,9 @@ export class UpdateQuizMapper {
   toCommand(quizId: string, parentProfileId: number, dto: UpdateQuizRequestDto): ParentsUpdateQuizCommand {
     const question    = hasKey(dto, 'question') ? dto.question : undefined;
     const answer      = hasKey(dto, 'answer')   ? dto.answer   : undefined;
-    const hint        = hasKey(dto, 'hint')     ? (dto.hint ?? null) : undefined;
-    const reward      = hasKey(dto, 'reward')   ? (dto.reward ?? null) : undefined;
-    const publishDate = hasKey(dto, 'publishDate') ? (dto.publishDate ?? null) : undefined;
+    const hint        = hasKey(dto, 'hint')     ? dto.hint : undefined;
+    const reward      = hasKey(dto, 'reward')   ? dto.reward : undefined;
+    const publishDate = hasKey(dto, 'publishDate') ? dto.publishDate : undefined;
 
     return new ParentsUpdateQuizCommand(
       BigInt(quizId), // string -> bigint 변환
@@ -44,19 +44,6 @@ export class UpdateQuizMapper {
       reward,
       publishDate,
     );
-  }
-
-  // Controller용 - Result를 shared-types로 변환
-  toResponse(result: UpdateQuizResponseResult): UpdateQuizResponseData {
-    return {
-      quizId: result.quizId.toString(), // bigint -> string 변환
-      question: result.question,
-      answer: result.answer,
-      hint: result.hint,
-      reward: result.reward,
-      publishDate: result.publishDate,
-      isEditable: result.isEditable,
-    };
   }
 
   // Service용 - Result DTO 사용
@@ -79,4 +66,18 @@ export class UpdateQuizMapper {
       ),
     };
   }
+
+  // Controller용 - Result를 shared-types로 변환
+  toResponse(result: UpdateQuizResponseResult): UpdateQuizResponseData {
+    return {
+      quizId: result.quizId.toString(), // bigint -> string 변환
+      question: result.question,
+      answer: result.answer,
+      hint: result.hint,
+      reward: result.reward,
+      publishDate: result.publishDate,
+      isEditable: result.isEditable,
+    };
+  }
+
 }

@@ -92,10 +92,10 @@ export function toYmdFromDate(dt: Date): string {
 }
 
 /** 'yyyy-MM-dd' → 해당 날짜의 UTC 경계 (gte/lt) */
-export function utcDayRangeForYmd(ymd: string): { gte: Date; lt: Date } {
-  const start = ymdToUtcDate(ymd);                 // 기존 함수 재사용
-  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
-  return { gte: start, lt: end };
+export function utcDayRangeForYmd(ymd: string): { startUtc: Date; endUtc: Date } {
+  const startUtc = ymdToUtcDate(ymd);                 // 기존 함수 재사용
+  const endUtc = new Date(startUtc.getTime() + 24 * 60 * 60 * 1000);
+  return { startUtc, endUtc };
 }
 
 /**

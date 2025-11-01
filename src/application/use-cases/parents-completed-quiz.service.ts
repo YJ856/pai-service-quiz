@@ -60,20 +60,20 @@ export class ListParentsCompletedService implements ListParentsCompletedUseCase 
     });
 
     // 3) 해당 퀴즈의 아이 제출 여부 조회(quizId로 Assignment테이블 DB 조회, 있으면 맞춘 거고 없으면 못 맞춘 것)
-    let assignmentMatrix: Array<{
+    const quizIds = familyRows.map(row => row.quizId);
+    const assignmentMatrix: Array<{
       quizId: bigint;
       childProfileId: number;
       isSolved: boolean;
       rewardGranted: boolean;
-    }> = [];
-
-    const quizIds = familyRows.map(row => row.quizId);
-    if (quizIds.length && familyChildIds.length) {
-      assignmentMatrix = await this.repo.findAssignmentsForQuizzes({
-        quizIds,
-        childProfileIds: familyChildIds,
-      });
-    }
+    }> = 
+    (quizIds.length && familyChildIds.length)
+      ? await this.repo.findAssignmentsForQuizzes({ 
+          quizIds, 
+          childProfileIds: familyChildIds 
+        }) 
+      : [];
+    
 
     // 빠른 접근 맵: quizId → [{ childProfileId, isSolved, rewardGranted }, ...]
     const byQuizId: Record<string, Array<{ childProfileId: number; isSolved: boolean; rewardGranted: boolean }>> = {};

@@ -12,7 +12,7 @@ export class ChildrenCompletedMapper {
     return new ChildrenCompletedQuizCommand(
       childProfileId,   
       query.limit ?? 20,        // 기본값만 보조
-      query.cursor              // undefined | base64 string
+      query.cursor             // undefined | base64 string
     );
   }
 

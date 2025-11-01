@@ -1,4 +1,4 @@
-import type { AnswerQuizResponseResult } from "./result/parents-answer-quiz-result.dto";
+import type { AnswerQuizResponseResult } from "./result/children-answer-quiz-result.dto";
 import type { ChildrenAnswerQuizCommand } from '../../command/children-answer-quiz.command';
 
 /**

@@ -2,5 +2,5 @@ import type { ParentsTodayResponseResult } from "./result/parents-today-quiz-res
 import type { ParentsTodayQuizCommand } from "../../command/parents-today-quiz.command";
 
 export interface ListParentsTodayUseCase {
-    execute(cmd: ParentsTodayQuizCommand): Promise<ParentsTodayResponseResult>;
+    execute(command: ParentsTodayQuizCommand): Promise<ParentsTodayResponseResult>;
 }

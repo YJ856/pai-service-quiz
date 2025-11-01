@@ -89,6 +89,37 @@ export class ProfileDirectoryHttpAdapter implements ProfileDirectoryPort {
     }
   }
 
+  async getFamilyProfileWithScopeParents(): Promise<{ parents: ParentProfileSummary[] }> {
+    if (!this.baseUrl) { 
+      this.logger.warn('USER_SERVICE_BASE_URL is not set'); 
+      return { parents: [] }; 
+    }
+
+    const url = this.joinUrl(this.baseUrl, this.profilePath);
+    const authorization = normalizeBearer(this.request.headers.authorization);
+
+    try {
+      const { data } = await firstValueFrom(
+        this.http.get<UserApiResponse>(url, {
+          headers: authorization ? { Authorization: authorization } : undefined,
+          params: { profileType: 'parent' },
+          timeout: 3000,
+        }),
+      );
+
+      const profiles = data?.data?.profiles ?? [];
+      const parents: ParentProfileSummary[] = profiles.map((profile) => ({
+        profileId: Number(profile.profileId),
+        name: String(profile.name ?? ''),
+        avatarMediaId: parseBigIntOrNull(profile.avatarMediaId),
+      }));
+      return { parents };
+    } catch (error) {
+      this.logger.warn(`getFamilyProfileWithScopeParents failed: ${String(error)}`);
+      return { parents: [] };
+    }
+  }
+
   // ---- utils ----
   private joinUrl(base: string, path: string): string {
     if (!base.endsWith('/') && !path.startsWith('/')) return `${base}/${path}`;
