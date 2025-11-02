@@ -74,19 +74,6 @@ export function encodeCompositeCursor(publishDateYmd: string, quizId: bigint | n
 }
 
 /**
- * Query parameter cursor를 안전하게 파싱
- * - 빈 문자열이면 null 반환
- * - trim 처리
- * @param cursor Query parameter로 받은 cursor (string | null | undefined)
- * @returns 유효한 cursor 문자열 또는 null
- */
-export function parseCursorParam(cursor: string | null | undefined): string | null {
-  if (!cursor) return null;
-  const trimmed = String(cursor).trim();
-  return trimmed !== '' ? trimmed : null;
-}
-
-/**
  * 안전한 JSON 파싱
  */
 function safeJsonParse(input: string): unknown {

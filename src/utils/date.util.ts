@@ -5,9 +5,6 @@
  * - 비즈니스 타임존(기본: Asia/Seoul) 기준 계산
  */
 
-import { log } from "console";
-
-
 /**
  * 'yyyy-MM-dd' 날짜에 1일을 더한 날짜를 'yyyy-MM-dd' 형식으로 반환
  * @param ymd 'yyyy-MM-dd' 형식의 날짜
@@ -62,27 +59,6 @@ export function isValidYmd(s: string): boolean {
 }
 
 /**
- * 'yyyy-MM-dd' 형식 유효성을 체크하고, 유효하면 원본 문자열 반환, 아니면 undefined
- * @param ymd 검증할 날짜 문자열 (옵션)
- * @returns 유효하면 원본 문자열, 아니면 undefined
- */
-export function toYmdOrUndefined(ymd?: string | null): string | undefined {
-  if (!ymd) return undefined;
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd);
-  if (!m) return undefined;
-  const y = +m[1],
-    mo = +m[2],
-    d = +m[3];
-  // 달력 유효성 체크 (예: 2025-02-31 방지)
-  const dt = new Date(Date.UTC(y, mo - 1, d));
-  const ok =
-    dt.getUTCFullYear() === y &&
-    dt.getUTCMonth() === mo - 1 &&
-    dt.getUTCDate() === d;
-  return ok ? ymd : undefined;
-}
-
-/**
  * Date 객체를 'yyyy-MM-dd' 형식으로 변환 (utcDateToYmd의 별칭)
  * @param dt Date 객체
  * @returns 'yyyy-MM-dd' 형식 문자열
@@ -106,12 +82,10 @@ export function utcDayRangeForYmd(ymd: string): { startUtc: Date; endUtc: Date }
 export function todayYmdKST(): string {
   const now = new Date();
   const kstMs = now.getTime() + 9 * 60 * 60 * 1000; // UTC+9
-  console.log(kstMs);
   const kst = new Date(kstMs);
   const y = kst.getUTCFullYear();
   const m = String(kst.getUTCMonth() + 1).padStart(2, '0');
   const d = String(kst.getUTCDate()).padStart(2, '0');
-  console.log(`${y}-${m}-${d}`);
   
   return `${y}-${m}-${d}`;
 }

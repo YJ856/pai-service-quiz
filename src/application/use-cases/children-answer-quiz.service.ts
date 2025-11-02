@@ -12,6 +12,7 @@ import { ChildrenAnswerQuizCommand } from '../command/children-answer-quiz.comma
 import { QUIZ_TOKENS } from '../../quiz.token';
 import type { QuizQueryPort, } from '../port/out/quiz.query.port';
 import type { QuizCommandPort, } from '../port/out/quiz.repository.port';
+import type { ProfileDirectoryPort } from '../port/out/profile-directory.port';
 
 // Utils
 import { todayYmdKST } from '../../utils/date.util';
@@ -24,6 +25,9 @@ export class AnswerQuizService implements AnswerQuizUseCase {
 
     @Inject(QUIZ_TOKENS.QuizCommandPort)
     private readonly commandRepo: QuizCommandPort,
+
+    @Inject(QUIZ_TOKENS.ProfileDirectoryPort)
+    private readonly profiles: ProfileDirectoryPort,
   ) {}
 
   /**
@@ -49,39 +53,53 @@ export class AnswerQuizService implements AnswerQuizUseCase {
 
     const todayYmd = todayYmdKST();
 
-    // 제출 대상 조회 (본인 배정 + publishDate = today)
-    const target = await this.queryRepo.findAnswerTarget({
-      childProfileId,
-      quizId,
-      todayYmd,
-    });
-    if (!target) {
-      // 배정되지 않았거나 존재하지 않는 퀴즈 또는 오늘이 아님
-      throw new NotFoundException('QUIZ_NOT_ASSIGNED_OR_NOT_FOUND');
+    // 1) 가족 부모 프로필 조회
+    const { parents } = await this.profiles.getFamilyProfileWithScopeParents();
+    const familyParentIds = (parents ?? []).map(parent => parent.profileId);
+
+    if (familyParentIds.length === 0) {
+      throw new NotFoundException('NO_PARENTS_FOUND');
     }
 
-    // 채점 (정규화 후 비교: 대소문자 무시, 공백/기호 제거)
-    const isCorrect = this.checkAnswer(trimmedAnswer, target.answer, true);
+    // 2) 오늘의 퀴즈 중에서 해당 quizId 찾기 (오늘 날짜 + 가족 부모 검증)
+    const { items: todayQuizzes } = await this.queryRepo.findFamilyParentsToday({
+      parentProfileIds: familyParentIds,
+      dateYmd: todayYmd,
+      limit: 100, // 충분히 큰 수
+    });
 
-    // 저장 (정답이면서 아직 미해결인 경우에만)
-    if (isCorrect && !target.isSolved) {
+    const targetQuiz = todayQuizzes.find(quiz => quiz.quizId === quizId);
+    if (!targetQuiz) {
+      throw new NotFoundException('QUIZ_NOT_FOUND_OR_NOT_TODAY');
+    }
+
+    // 3) 이미 풀었는지 확인
+    const assignments = await this.queryRepo.findAssignmentsForQuizzes({
+      quizIds: [quizId],
+      childProfileIds: [childProfileId],
+    });
+    const alreadySolved = assignments.some(assignment => assignment.quizId === quizId && assignment.isSolved);
+
+    // 4) 채점 (정규화 후 비교: 대소문자 무시, 공백/기호 제거)
+    const isCorrect = this.checkAnswer(trimmedAnswer, targetQuiz.answer, true);
+
+    // 5) 저장 (정답이면서 아직 미해결인 경우에만)
+    if (isCorrect && !alreadySolved) {
       await this.commandRepo.markSolved({
         childProfileId,
         quizId,
       });
     }
 
-    // 응답 - 단순화
-    // - 정답: isSolved=true, reward 반환
-    // - 오답: isSolved=false, reward 없음
+    // 6) 응답
     const response: AnswerQuizResponseResult = {
       quizId,
       isSolved: isCorrect,
     };
 
     // 정답인 경우에만 reward 포함
-    if (isCorrect && target.reward) {
-      response.reward = target.reward;
+    if (isCorrect && targetQuiz.reward) {
+      response.reward = targetQuiz.reward;
     }
 
     return response;

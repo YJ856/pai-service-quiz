@@ -25,7 +25,7 @@ export class UpdateQuizRequestDto implements SharedBody {
 
     // publishDate는 shared-types에서 required (string | null)
     @IsString() @TrimToNull()
-    publishDate!: string | null;
+    publishDate!: string;
 }
 
 /**

@@ -103,26 +103,6 @@ export type ChildrenCompletedRow = {
 export type FindChildrenCompletedResult = PageResult<ChildrenCompletedRow>;
 
 
-// 정답 제출 대상 조회 =============================================
-
-export interface FindAnswerTargetParams {
-  childProfileId: number;
-  quizId: bigint;
-  todayYmd: string;
-}
-
-export interface AnswerTargetRow {
-  quizId: bigint;
-  publishDateYmd: string;
-  answer: string;
-  reward?: string | null;
-  isSolved: boolean;
-  authorParentProfileId: number;
-  authorParentName?: string | null;
-  authorParentAvatarMediaId?: bigint | null;
-}
-
-
 // 통합 읽기 포트 ================================================
 
 export interface QuizQueryPort {
@@ -136,9 +116,6 @@ export interface QuizQueryPort {
   // 자녀(개인) 완료 목록
   findChildrenCompleted(params: FindChildrenCompletedParams): Promise<FindChildrenCompletedResult>;
 
-  // 정답 제출 대상 조회
-  findAnswerTarget(params: FindAnswerTargetParams): Promise<AnswerTargetRow | null>;
-
   // 가족(다수 부모)용 오늘 목록
   findFamilyParentsToday(params: FindFamilyParentsTodayParams): Promise<FindFamilyParentsTodayResult>;
 
@@ -149,7 +126,7 @@ export interface QuizQueryPort {
   findFamilyParentsScheduled(params: FindFamilyParentsScheduledParams): Promise<FindFamilyParentsScheduledResult>;
 
   // (퀴즈들 x 자녀들) 과제/보상 상태 조회
-  findAssignmentsForQuizzes(params: { quizIds: bigint[]; childProfileIds: number[]; }): 
+  findAssignmentsForQuizzes(params: { quizIds: bigint[]; childProfileIds: number[]; }):
   Promise<Array<{
     quizId: bigint;
     childProfileId: number;

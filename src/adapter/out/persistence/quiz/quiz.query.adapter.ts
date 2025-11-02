@@ -7,8 +7,6 @@ import type {
   FamilyParentsCompletedRow,
   FindChildrenCompletedParams,
   FindChildrenCompletedResult,
-  FindAnswerTargetParams,
-  AnswerTargetRow,
   QuizDetailRow,
   FindFamilyParentsTodayParams,
   FindFamilyParentsTodayResult,
@@ -331,48 +329,6 @@ export class QuizQueryAdapter implements QuizQueryPort {
     }));
 
     return { items, hasNext };
-  }
-
-  async findAnswerTarget(params: FindAnswerTargetParams): Promise<AnswerTargetRow | null> {
-    const { childProfileId, quizId, todayYmd } = params;
-    const { startUtc, endUtc } = utcDayRangeForYmd(todayYmd);
-
-    // TODAY = publishDate = today(KST)
-    const resultRecords = await this.prisma.quiz.findFirst({
-      where: {
-        id: quizId,
-        publishDate: { gte: startUtc, lt: endUtc }, // publishDate = today
-        assignments: {
-          some: { childProfileId }, // 본인에게 배정된 퀴즈만
-        },
-      },
-      select: {
-        id: true,
-        publishDate: true,
-        answer: true,
-        reward: true,
-        parentProfileId: true,
-        // 자녀 자신의 완료 여부만 조회
-        assignments: {
-          where: { childProfileId },
-          select: { isSolved: true },
-          take: 1,
-        },
-      },
-    });
-
-    if (!resultRecords) return null;
-
-    return {
-      quizId: resultRecords.id,
-      publishDateYmd: toYmdFromDate(resultRecords.publishDate), // 'yyyy-MM-dd'
-      answer: resultRecords.answer,
-      reward: resultRecords.reward ?? null,
-      isSolved: !!resultRecords.assignments?.[0]?.isSolved,
-      authorParentProfileId: resultRecords.parentProfileId,
-      authorParentName: '',          // 프로필 보강이 필요하면 서비스 레이어에서 채움
-      authorParentAvatarMediaId: null, // 프로필 보강이 필요하면 서비스 레이어에서 채움
-    };
   }
 
   async markSolved(params: MarkSolvedParams): Promise<void> {
