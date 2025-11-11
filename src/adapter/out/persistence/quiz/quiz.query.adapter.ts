@@ -17,7 +17,6 @@ import type {
   ChildrenCompletedRow
 }
 from '../../../../application/port/out/quiz.query.port';
-import type { MarkSolvedParams } from '../../../../application/port/out/quiz.repository.port';
 import { toYmdFromDate, ymdToUtcDate, utcDayRangeForYmd, todayYmdKST } from '../../../../utils/date.util';
 
 @Injectable()
@@ -331,20 +330,6 @@ export class QuizQueryAdapter implements QuizQueryPort {
     return { items, hasNext };
   }
 
-  async markSolved(params: MarkSolvedParams): Promise<void> {
-    const { childProfileId, quizId } = params;
-
-    // Prisma 모델명: Assignment (delegate: prisma.assignment)
-    await this.prisma.assignment.upsert({
-      where: {
-        // @@unique([quizId, childProfileId]) 를 활용한 복합 고유 upsert
-        quizId_childProfileId: { quizId, childProfileId },
-      },
-      update: { isSolved: true },
-      create: { quizId, childProfileId, isSolved: true },
-    });
-  }
-
-
 }
+
 

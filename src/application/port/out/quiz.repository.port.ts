@@ -11,6 +11,11 @@ export type QuizUpdateRepoPatch = {
   publishDate?: Date;
 };
 
+export type UpdateRewardGranted = {
+  quizId: bigint;
+  childProfileId: number;
+  rewardGranted: boolean;
+}
 
 // 정답 처리 =====================================================
 
@@ -28,7 +33,6 @@ export interface QuizCommandPort {
 
   // 조회 (쓰기 작업 전 필요한 경우)
   findById(id: bigint): Promise<Quiz | null>;
-  findLastScheduledDateByFamily(parentProfileId: number): Promise<string | null>;
 
   // 수정
   updateIfScheduledAndAuthor(params: {
@@ -36,6 +40,8 @@ export interface QuizCommandPort {
     parentProfileId: number;
     patch: QuizUpdateRepoPatch;
   }): Promise<number>;
+
+  updateRewardGranted(params: UpdateRewardGranted): Promise<boolean>;
 
   // 삭제
   deleteIfScheduledAndAuthor(params: {

@@ -23,6 +23,7 @@ import { ListParentsScheduledService } from './application/use-cases/parents-sch
 import { CreateQuizService } from './application/use-cases/parents-create-quiz.service';
 import { UpdateQuizService } from './application/use-cases/parents-update-quiz.service';
 import { DeleteQuizService } from './application/use-cases/parents-delete-quiz.service';
+import { GrantRewardService } from './application/use-cases/parents-grant-reward.service';
 // 아이
 import { ListChildrenTodayService } from './application/use-cases/children-today-quiz.service';
 import { ListChildrenCompletedService } from './application/use-cases/children-completed-quiz.service';
@@ -40,6 +41,7 @@ import { DetailQuizMapper } from './adapter/in/http/mapper/parents-detail-quiz.m
 import { ParentsTodayMapper } from './adapter/in/http/mapper/parents-today-quiz.mapper';
 import { ParentsScheduledMapper } from './adapter/in/http/mapper/parents-scheduled-quiz.mapper';
 import { ParentsCompletedMapper } from './adapter/in/http/mapper/parents-completed-quiz.mapper';
+import { ParentsGrantRewardMapper } from './adapter/in/http/mapper/parents-grant-reward.mapper';
 import { ChildrenTodayMapper } from './adapter/in/http/mapper/children-today-quiz.mapper';
 import { ChildrenCompletedMapper } from './adapter/in/http/mapper/children-completed-quiz.mapper';
 import { AnswerQuizMapper } from './adapter/in/http/mapper/children-answer-quiz.mapper';
@@ -62,6 +64,7 @@ import { ChildGuard } from './adapter/in/http/auth/guards/auth.guard';
     ParentsTodayMapper,
     ParentsScheduledMapper,
     ParentsCompletedMapper,
+    ParentsGrantRewardMapper,
     ChildrenTodayMapper,
     ChildrenCompletedMapper,
     AnswerQuizMapper,
@@ -83,6 +86,7 @@ import { ChildGuard } from './adapter/in/http/auth/guards/auth.guard';
     { provide: QUIZ_TOKENS.CreateQuizUseCase, useClass: CreateQuizService },
     { provide: QUIZ_TOKENS.UpdateQuizUseCase, useClass: UpdateQuizService },
     { provide: QUIZ_TOKENS.DeleteQuizUseCase, useClass: DeleteQuizService },
+    { provide: QUIZ_TOKENS.GrantRewardUseCase, useClass: GrantRewardService },
     // 아이
     { provide: QUIZ_TOKENS.ListChildrenTodayUseCase, useClass: ListChildrenTodayService },
     { provide: QUIZ_TOKENS.ListChildrenCompletedUseCase, useClass: ListChildrenCompletedService },

@@ -14,6 +14,7 @@ export const QUIZ_TOKENS = {
     CreateQuizUseCase: Symbol('CreateQuizUseCase'),
     UpdateQuizUseCase: Symbol('UpdateQuizUseCase'),
     DeleteQuizUseCase: Symbol('DeleteQuizUseCase'),
+    GrantRewardUseCase: Symbol('GrantRewardUseCase'),
     
     // 아이
     ListChildrenTodayUseCase: Symbol('ListChildrenTodayUseCase'),

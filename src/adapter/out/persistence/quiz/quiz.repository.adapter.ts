@@ -6,8 +6,9 @@ import type {
   QuizCommandPort,
   QuizUpdateRepoPatch,
   MarkSolvedParams,
+  UpdateRewardGranted,
 } from '../../../../application/port/out/quiz.repository.port';
-import { ymdToUtcDate, utcDateToYmd, todayYmdKST } from '../../../../utils/date.util';
+import { ymdToUtcDate, todayYmdKST } from '../../../../utils/date.util';
 
 @Injectable()
 export class QuizRepositoryAdapter implements QuizCommandPort {
@@ -22,22 +23,6 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
 
     // Prisma Row → 도메인
     return QuizMapper.toDomain(createdQuizRow);
-  }
-
-
-  /** 가족의 마지막 예약일(yyyy-MM-dd) */
-  async findLastScheduledDateByFamily(parentProfileId: number): Promise<string | null> {
-    const todayYmd = todayYmdKST();
-    // SCHEDULED = publishDate > today(KST)
-    const quizRow = await this.prisma.quiz.findFirst({
-      where: {
-        parentProfileId,
-        publishDate: { gt: ymdToUtcDate(todayYmd) }  // publishDate > today
-      },
-      orderBy: { publishDate: 'desc' },
-      select: { publishDate: true },
-    });
-    return quizRow ? utcDateToYmd(quizRow.publishDate) : null;
   }
 
   /** (선택) 상세 조회 */
@@ -130,5 +115,21 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
         isSolved: true
       },
     });
+  }
+
+  /**
+   * 보상 처리: 해당 자녀-퀴즈 assignment.rewardGranted를 업데이트
+   * - 없으면 생성(upsert)
+   * - isSolved는 여기서 건드리지 않음(정답 처리와 분리)
+   * - 멱등: 같은 값으로 다시 호출해도 동일 상태 유지
+   */
+  async updateRewardGranted(params: UpdateRewardGranted): Promise<boolean> {
+      const { quizId, childProfileId, rewardGranted } = params;
+
+      const response = await this.prisma.assignment.updateMany({
+        where: { quizId, childProfileId },
+        data: { rewardGranted },
+      });
+      return response.count > 0;
   }
 }

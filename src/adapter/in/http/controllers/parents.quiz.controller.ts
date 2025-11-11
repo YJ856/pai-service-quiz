@@ -23,13 +23,17 @@ import type {
   ParentsQuizDetailResponseData,
   UpdateQuizResponseData,
   DeleteQuizResponseData,
+  ParentsGrantRewardResponseData,
 } from 'pai-shared-types';
 
 import { CreateQuizRequestDto } from '../dto/request/parents-create-quiz-request.dto';
 import { ParentsTodayQueryParam } from '../dto/request/parents-today-quiz-request.dto';
 import { ParentsCompletedQueryParam } from '../dto/request/parents-completed-quiz-request.dto';
 import { ParentsScheduledQueryParam } from '../dto/request/parents-scheduled-quiz-request.dto';
-import { UpdateQuizRequestDto } from '../dto/request/parents-update-quiz-request.dto';
+import { UpdateQuizPathParam, UpdateQuizRequestDto } from '../dto/request/parents-update-quiz-request.dto';
+import { ParentsGrantRewardPathParam, ParentsGrantRewardRequestDto } from '../dto/request/parents-grant-reward-request.dto';
+import { ParentsQuizDetailPathParam } from '../dto/request/parents-detail-quiz-request.dto';
+import { DeleteQuizPathParam } from '../dto/request/parents-delete-quiz-request.dto';
 
 import { QUIZ_TOKENS } from '../../../../quiz.token';
 
@@ -41,6 +45,7 @@ import type { ListParentsScheduledUseCase } from '../../../../application/port/i
 import type { GetParentsQuizDetailUseCase } from '../../../../application/port/in/parents-detail-quiz.usecase';
 import type { UpdateQuizUseCase } from '../../../../application/port/in/parents-update-quiz.usecase';
 import type { DeleteQuizUseCase } from '../../../../application/port/in/parents-delete-quiz.usecase';
+import type { GrantRewardUseCase } from 'src/application/port/in/parents-grant-reward.usecase';
 
 import { NextPublishDateMapper } from '../mapper/next-publish-date.mapper';
 import { CreateQuizMapper } from '../mapper/parents-create-quiz.mapper';
@@ -50,9 +55,11 @@ import { DetailQuizMapper } from '../mapper/parents-detail-quiz.mapper';
 import { ParentsTodayMapper } from '../mapper/parents-today-quiz.mapper';
 import { ParentsScheduledMapper } from '../mapper/parents-scheduled-quiz.mapper';
 import { ParentsCompletedMapper } from '../mapper/parents-completed-quiz.mapper';
+import { ParentsGrantRewardMapper } from '../mapper/parents-grant-reward.mapper';
 
 import { ParentGuard } from '../auth/guards/auth.guard';
 import { Auth } from '../decorators/auth.decorator';
+
 
 
 
@@ -91,6 +98,10 @@ export class ParentsQuizController {
     @Inject(QUIZ_TOKENS.DeleteQuizUseCase)
     private readonly deleteQuiz: DeleteQuizUseCase,
     private readonly deleteQuizMapper: DeleteQuizMapper,
+
+    @Inject(QUIZ_TOKENS.GrantRewardUseCase)
+    private readonly grantReward: GrantRewardUseCase,
+    private readonly parentsGrantRewardMapper: ParentsGrantRewardMapper,
   ) {}
 
   @Get('next-publish-date')
@@ -145,8 +156,8 @@ export class ParentsQuizController {
     @Auth('profileId') parentProfileId: number,
     @Query() query: ParentsScheduledQueryParam,
   ): Promise<BaseResponse<ParentsScheduledResponseData>> {
-    const cmd = this.parentsScheduledMapper.toCommand(query, parentProfileId);
-    const result = await this.listParentsScheduled.execute(cmd);
+    const command = this.parentsScheduledMapper.toCommand(query, parentProfileId);
+    const result = await this.listParentsScheduled.execute(command);
     const data = this.parentsScheduledMapper.toResponse(result);
     return { success: true, message: '예정된 퀴즈 조회 성공', data };
   }
@@ -154,11 +165,11 @@ export class ParentsQuizController {
   @Get(':quizId')
   @HttpCode(HttpStatus.OK)
   async getParentsQuizDetailHandler(
-    @Param('quizId') quizId: string,
+    @Param() path: ParentsQuizDetailPathParam,
     @Auth('profileId') parentProfileId: number,
   ): Promise<BaseResponse<ParentsQuizDetailResponseData>> {
-    const cmd = this.detailQuizMapper.toCommand(quizId, parentProfileId);
-    const result = await this.getParentsQuizDetail.execute(cmd);
+    const command = this.detailQuizMapper.toCommand(path.quizId, parentProfileId);
+    const result = await this.getParentsQuizDetail.execute(command);
     const data = this.detailQuizMapper.toResponse(result);
 
     return { success: true, message: '퀴즈 상세 조회 성공', data };
@@ -167,12 +178,12 @@ export class ParentsQuizController {
   @Patch(':quizId')
   @HttpCode(HttpStatus.OK)
   async updateQuizHandler(
-    @Param('quizId') quizId: string,
+    @Param() path: UpdateQuizPathParam,
     @Auth('profileId') parentProfileId: number,
     @Body() body: UpdateQuizRequestDto,
   ): Promise<BaseResponse<UpdateQuizResponseData>> {
-    const cmd = this.updateQuizMapper.toCommand(quizId, parentProfileId, body ?? {});
-    const result = await this.updateQuiz.execute(cmd);
+    const command = this.updateQuizMapper.toCommand(path.quizId, parentProfileId, body ?? {});
+    const result = await this.updateQuiz.execute(command);
     const data = this.updateQuizMapper.toResponse(result);
     return { success: true, message: '수정이 완료되었습니다!', data };
   }
@@ -180,13 +191,26 @@ export class ParentsQuizController {
   @Delete(':quizId')
   @HttpCode(HttpStatus.OK)
   async deleteQuizHandler(
-    @Param('quizId') quizId: string,
+    @Param() path: DeleteQuizPathParam,
     @Auth('profileId') parentProfileId: number,
   ): Promise<BaseResponse<DeleteQuizResponseData>> {
-    const cmd = this.deleteQuizMapper.toCommand(quizId, parentProfileId);
-    const result = await this.deleteQuiz.execute(cmd);
+    const command = this.deleteQuizMapper.toCommand(path.quizId, parentProfileId);
+    const result = await this.deleteQuiz.execute(command);
     const data = this.deleteQuizMapper.toResponse(result);
 
     return { success: true, message: '삭제가 완료되었습니다!', data };
+  }
+
+  @Patch(':quizId/:childProfileId/reward')
+  @HttpCode(HttpStatus.OK)
+  async grantRewardHandler(
+    @Param() path: ParentsGrantRewardPathParam,
+    @Body() body: ParentsGrantRewardRequestDto,
+  ): Promise<BaseResponse<ParentsGrantRewardResponseData>> {
+    const command = this.parentsGrantRewardMapper.toCommand(path.quizId, path.childProfileId, body);
+    const result = await this.grantReward.execute(command)
+    const data = this.parentsGrantRewardMapper.toResponse(result);
+
+    return { success: true, message: '보상 지급 처리 완료', data };
   }
 }
