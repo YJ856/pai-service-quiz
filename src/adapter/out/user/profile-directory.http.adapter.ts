@@ -9,21 +9,7 @@ import type {
   ParentProfileSummary,
   ChildProfileSummary,
 } from '../../../application/port/out/profile-directory.port';
-
-/**
- * 외부 User API의 응답 모양 (pai-shared-types 기반)
- * - BaseResponse<GetProfilesResponseData> 형태
- */
-type ProfileDto = {
-  profileId: number;
-  profileType: 'parent' | 'child';
-  name: string;
-  birthDate: string;
-  gender: string;
-  avatarMediaId?: string;
-  voiceMediaId?: number;
-  createdAt: string;
-};
+import { ProfileDto } from 'pai-shared-types';
 
 type UserApiResponse = {
   success: boolean;
