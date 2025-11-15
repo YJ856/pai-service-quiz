@@ -74,6 +74,8 @@ export class ListChildrenTodayService implements ListChildrenTodayUseCase {
       // 4) DTO 매핑
       const items: ChildrenTodayItemDto[] = familyRows.map(row => {
         const author = parentMap[row.authorParentProfileId];
+        const isSolved = solvedSet.has(String(row.quizId));
+
         return {
           quizId: row.quizId,
           question: row.question,
@@ -84,7 +86,9 @@ export class ListChildrenTodayService implements ListChildrenTodayUseCase {
           authorParentName: author?.name ?? '',
           authorParentAvatarMediaId: author?.avatarMediaId ?? null,
 
-          isSolved: solvedSet.has(String(row.quizId)),
+          isSolved,
+          // 이미 푼 퀴즈는 정답도 함께 반환
+          ...(isSolved && { answer: row.answer }),
         };
       });
 

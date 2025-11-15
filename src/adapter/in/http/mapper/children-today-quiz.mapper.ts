@@ -25,6 +25,7 @@ export class ChildrenTodayMapper {
         authorParentName: item.authorParentName,
         authorParentAvatarMediaId: item.authorParentAvatarMediaId?.toString() ?? null, // number | null -> string | null
         isSolved: item.isSolved,
+        ...(item.answer && { answer: item.answer }), // isSolved일 때만 포함
       })),
       nextCursor: result.nextCursor ?? null,
       hasNext: result.hasNext,
