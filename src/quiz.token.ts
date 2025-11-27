@@ -3,6 +3,7 @@ export const QUIZ_TOKENS = {
     QuizQueryPort: Symbol('QuizQueryPort'),
     QuizCommandPort: Symbol('QuizCommandPort'),
     ProfileDirectoryPort: Symbol('ProfileDirectoryPort'), // 외부 User 서비스 포트(프로필 디렉터리)
+    TokenVersionQueryPort: Symbol('TokenVersionQueryPort'), // 토큰 버전 조회 포트
 
     // 부모
     GetNextPublishDateUseCase: Symbol('GetNextPublishDateUseCase'),

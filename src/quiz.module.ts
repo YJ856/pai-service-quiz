@@ -12,6 +12,8 @@ import { QUIZ_TOKENS } from './quiz.token';
 import { QuizRepositoryAdapter } from './adapter/out/persistence/quiz/quiz.repository.adapter';
 import { QuizQueryAdapter } from './adapter/out/persistence/quiz/quiz.query.adapter';
 import { ProfileDirectoryHttpAdapter } from './adapter/out/user/profile-directory.http.adapter';
+import { RedisTokenVersionQueryAdapter } from './adapter/out/cache/redis-token-version.query.adapter';
+import { RedisModule } from './adapter/out/cache/redis.module';
 
 // UseCases (구현)
 // 부모
@@ -52,7 +54,7 @@ import { ChildGuard } from './adapter/in/http/auth/guards/auth.guard';
 
 
 @Module({
-  imports: [HttpModule],
+  imports: [HttpModule, RedisModule],
   controllers: [ParentsQuizController, ChildrenQuizController],
   providers: [
     PrismaService,
@@ -75,6 +77,7 @@ import { ChildGuard } from './adapter/in/http/auth/guards/auth.guard';
     { provide: QUIZ_TOKENS.QuizQueryPort, useClass: QuizQueryAdapter },
     { provide: QUIZ_TOKENS.QuizCommandPort, useClass: QuizRepositoryAdapter },
     { provide: QUIZ_TOKENS.ProfileDirectoryPort, useClass: ProfileDirectoryHttpAdapter },
+    { provide: QUIZ_TOKENS.TokenVersionQueryPort, useClass: RedisTokenVersionQueryAdapter },
 
     // UseCase(계약) ↔ 구현
     // 부모

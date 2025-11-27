@@ -2,13 +2,20 @@ import { BadRequestException,
          CanActivate,
          ExecutionContext,
          ForbiddenException,
+         Inject,
          Injectable,
          UnauthorizedException,
          } from "@nestjs/common";
 import { verifyAccessToken, type AuthClaims } from "../token.verifier";
+import type { TokenVersionQueryPort } from 'src/application/port/out/token-version.query.port';
+import { QUIZ_TOKENS } from 'src/quiz.token';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
+    constructor(
+        @Inject(QUIZ_TOKENS.TokenVersionQueryPort)
+        private readonly tokenVersionQuery: TokenVersionQueryPort,
+    ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         // HTTP 요청 객체 가져오기
@@ -40,7 +47,16 @@ export class AuthGuard implements CanActivate {
             throw new ForbiddenException('FORBIDDEN: invalid profile type');
         }
 
-        // 4) 쓰기 쉽게 저장
+        // 4) Token Version 검증 (무효화된 토큰 차단)
+        const tokenVersion = claims.tokenVersion;
+        if (tokenVersion !== undefined) {
+            const currentVersion = await this.tokenVersionQuery.getVersion(Number(userId));
+            if (tokenVersion !== currentVersion) {
+                throw new UnauthorizedException('UNAUTHORIZED: token has been revoked (version mismatch)');
+            }
+        }
+
+        // 5) 쓰기 쉽게 저장
         // req에 넣어두면, 같은 요청에서 컨트롤러/서비스가 재검증 없이 이 정보를 바로 씀
         req.auth = { token, userId, profileId, profileType, claims, };
         return true;
