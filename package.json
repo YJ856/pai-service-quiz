@@ -33,6 +33,7 @@
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "ioredis": "^5.8.2",
     "jose": "^6.1.0",
     "pai-shared-types": "^2.0.24",
     "passport": "^0.7.0",
