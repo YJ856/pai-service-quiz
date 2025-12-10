@@ -2,8 +2,9 @@ import { createRemoteJWKSet, jwtVerify, JWTPayload } from 'jose';
 
 export type AuthClaims = JWTPayload & {
   sub: string; // userId (가족 계정)
-  profileId?: string; // 프로필 ID (부모/자녀)
-  profileType?: 'PARENT' | 'CHILD';
+  tokenVersion?: number; // 토큰 버전 (무효화 용)
+  profileId?: string | number; // 프로필 ID (부모/자녀)
+  profileType?: 'parent' | 'child';
 };
 
 let jwks: ReturnType<typeof createRemoteJWKSet> | null = null;
@@ -18,8 +19,8 @@ async function verifyWithJwks(token: string): Promise<AuthClaims> {
 
 /** 대칭키(HMAC) 검증 */
 async function verifyWithHmac(token: string): Promise<AuthClaims> {
-  const secret = process.env.AUTH_JWT_SECRET;
-  if (!secret) throw new Error('AUTH_JWT_SECRET is not set');
+  const secret = process.env.JWT_ACCESS_SECRET;
+  if (!secret) throw new Error('JWT_ACCESS_SECRET is not set');
   const key = new TextEncoder().encode(secret);
   const { payload } = await jwtVerify(token, key, { clockTolerance: '5s' });
   return payload as AuthClaims;
