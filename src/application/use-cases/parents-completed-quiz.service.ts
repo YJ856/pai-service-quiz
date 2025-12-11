@@ -30,7 +30,7 @@ export class ListParentsCompletedService implements ListParentsCompletedUseCase 
   ) {}
 
   async execute(command: ParentsCompletedQuizCommand): Promise<ParentsCompletedResponseResult> {
-    const { parentProfileId, limit, cursor } = command;
+    const { limit, cursor } = command;
     const rawCursor = decodeCompositeCursor(cursor ?? null);
     const paginationCursor = rawCursor ? { publishDateYmd: rawCursor.publishDateYmd, quizId: BigInt(rawCursor.quizId)} : undefined;
     

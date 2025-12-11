@@ -27,7 +27,7 @@ export class ListParentsTodayService implements ListParentsTodayUseCase {
   ) {}
 
   async execute(command: ParentsTodayQuizCommand): Promise<ParentsTodayResponseResult> {
-    const { parentProfileId, limit, cursor } = command;
+    const { limit, cursor } = command;
     const paginationCursor = decodeIdCursor(cursor ?? null) ?? undefined;
     
     const pageSize = Math.min(Math.max(limit ?? 10, 1), 50);

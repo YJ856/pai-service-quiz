@@ -116,6 +116,7 @@ export class ProfileDirectoryHttpAdapter implements ProfileDirectoryPort {
 
 function parseBigIntOrNull(input: unknown): bigint | null {
   if (input === null || input === undefined) return null;
+  if (typeof input !== 'string' && typeof input !== 'number') return null;
   const stringTrimmed = String(input).trim();
   if (!stringTrimmed) return null;
   try { return BigInt(stringTrimmed); } catch { return null }

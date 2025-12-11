@@ -6,7 +6,7 @@ import { ParentsUpdateQuizCommand } from "src/application/command/parents-update
 import { Quiz } from "src/domain/model/quiz";
 import { todayYmdKST } from "src/utils/date.util";
 
-const hasKey = <T extends object>(o: T, k: keyof any) =>
+const hasKey = <T extends object>(o: T, k: keyof any): k is keyof T =>
   o != null && Object.prototype.hasOwnProperty.call(o, k);
 
 const isEditable = (

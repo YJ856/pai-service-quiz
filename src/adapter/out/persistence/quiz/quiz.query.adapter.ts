@@ -256,7 +256,7 @@ export class QuizQueryAdapter implements QuizQueryPort {
     if (!resultRecords) return null;
 
     return {
-      id: resultRecords.id,
+      id: resultRecords.id as unknown as bigint,
       question: resultRecords.question,
       answer: resultRecords.answer,
       hint: resultRecords.hint ?? null,
