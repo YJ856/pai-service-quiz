@@ -1,8 +1,11 @@
-import { Injectable } from "@nestjs/common";
-import { AnswerQuizPathParam, AnswerQuizRequestDto } from "src/adapter/in/http/dto/request/children-answer-quiz-request.dto";
-import type { AnswerQuizResponseData } from "pai-shared-types";
-import type { AnswerQuizResponseResult } from "src/application/port/in/result/children-answer-quiz-result.dto";
-import { ChildrenAnswerQuizCommand } from "src/application/command/children-answer-quiz.command";
+import { Injectable } from '@nestjs/common';
+import {
+  AnswerQuizPathParam,
+  AnswerQuizRequestDto,
+} from 'src/adapter/in/http/dto/request/children-answer-quiz-request.dto';
+import type { AnswerQuizResponseData } from 'pai-shared-types';
+import type { AnswerQuizResponseResult } from 'src/application/port/in/result/children-answer-quiz-result.dto';
+import { ChildrenAnswerQuizCommand } from 'src/application/command/children-answer-quiz.command';
 
 @Injectable()
 export class AnswerQuizMapper {
@@ -13,7 +16,7 @@ export class AnswerQuizMapper {
   ): ChildrenAnswerQuizCommand {
     return new ChildrenAnswerQuizCommand(
       BigInt(param.quizId), // -> bigint 변환
-      childProfileId, 
+      childProfileId,
       body.answer,
     );
   }
@@ -28,7 +31,7 @@ export class AnswerQuizMapper {
     // 정답 맞췄을 때만 reward 공개
     if (result.isSolved && result.reward) {
       const reward = result.reward.trim();
-      if (reward) return {...base, reward};
+      if (reward) return { ...base, reward };
     }
     return base;
   }

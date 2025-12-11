@@ -13,7 +13,7 @@ const canDelete = (
   publishDateYmd: string,
   authorParentProfileId: number,
   requesterParentProfileId: number,
-  today: string
+  today: string,
 ): boolean => {
   // 작성자만 삭제 가능
   if (authorParentProfileId !== requesterParentProfileId) {
@@ -48,7 +48,9 @@ export class DeleteQuizService implements DeleteQuizUseCase {
    * - 작성자 본인만
    * - 상태가 SCHEDULED인 경우에만
    */
-  async execute(cmd: ParentsDeleteQuizCommand): Promise<DeleteQuizResponseResult> {
+  async execute(
+    cmd: ParentsDeleteQuizCommand,
+  ): Promise<DeleteQuizResponseResult> {
     const { quizId, parentProfileId } = cmd;
 
     // 1) 대상 조회
@@ -59,7 +61,9 @@ export class DeleteQuizService implements DeleteQuizUseCase {
     const today = todayYmdKST();
     const publishDateYmd = toYmdFromDate(quiz.publishDate);
 
-    if (!canDelete(publishDateYmd, quiz.parentProfileId, parentProfileId, today)) {
+    if (
+      !canDelete(publishDateYmd, quiz.parentProfileId, parentProfileId, today)
+    ) {
       // 작성자가 아니거나 SCHEDULED 상태가 아님
       if (quiz.parentProfileId !== parentProfileId) {
         throw new ForbiddenException('FORBIDDEN');

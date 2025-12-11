@@ -24,25 +24,34 @@ export class CreateQuizService implements CreateQuizUseCase {
     private readonly createQuizMapper: CreateQuizMapper,
   ) {}
 
-  async execute(command: ParentsCreateQuizCommand): Promise<CreateQuizResponseResult> {
+  async execute(
+    command: ParentsCreateQuizCommand,
+  ): Promise<CreateQuizResponseResult> {
     // 0) 필수 헤더(부모 프로필) 확인 — Guard/@Auth에서 주입되지만 방어적으로 확인
     if (command.parentProfileId == null) {
-      throw new BadRequestException('VALIDATION_ERROR: parentProfileId required');
+      throw new BadRequestException(
+        'VALIDATION_ERROR: parentProfileId required',
+      );
     }
     const parentProfileId = command.parentProfileId;
 
     // 1) publishDate 결정(yyyy-MM-dd)
     const publishDate =
-      command.publishDate ?? (await this.nextDefaultDateForFamily(parentProfileId));
+      command.publishDate ??
+      (await this.nextDefaultDateForFamily(parentProfileId));
 
     // 2) 입력 검증
     const question = (command.question ?? '').trim();
     const answer = (command.answer ?? '').trim();
 
-    if (!question) throw new BadRequestException('VALIDATION_ERROR: question required');
-    if (!answer) throw new BadRequestException('VALIDATION_ERROR: answer required');
+    if (!question)
+      throw new BadRequestException('VALIDATION_ERROR: question required');
+    if (!answer)
+      throw new BadRequestException('VALIDATION_ERROR: answer required');
     if (!isValidYmd(publishDate)) {
-      throw new BadRequestException('VALIDATION_ERROR: publishDate must be yyyy-MM-dd');
+      throw new BadRequestException(
+        'VALIDATION_ERROR: publishDate must be yyyy-MM-dd',
+      );
     }
 
     // 3) 도메인 객체 생성

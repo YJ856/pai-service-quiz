@@ -1,4 +1,4 @@
-import type { AnswerQuizResponseResult } from "./result/children-answer-quiz-result.dto";
+import type { AnswerQuizResponseResult } from './result/children-answer-quiz-result.dto';
 import type { ChildrenAnswerQuizCommand } from '../../command/children-answer-quiz.command';
 
 /**
@@ -8,5 +8,7 @@ import type { ChildrenAnswerQuizCommand } from '../../command/children-answer-qu
  * - answer는 request body에서 수신
  */
 export interface AnswerQuizUseCase {
-  execute(command: ChildrenAnswerQuizCommand): Promise<AnswerQuizResponseResult>;
+  execute(
+    command: ChildrenAnswerQuizCommand,
+  ): Promise<AnswerQuizResponseResult>;
 }

@@ -16,12 +16,12 @@ import type { CreateQuizResponseResult } from './result/parents-create-quiz-resu
  * 컨트롤러는 이 인터페이스만 알고, 구현은 application/use-cases에 둔다.
  */
 
-export interface CreateQuizUseCase { // 컨트롤러 -> 유즈케이스(피호출자)의 계약에 의존
-    execute(command: ParentsCreateQuizCommand): Promise<CreateQuizResponseResult>;
-    /** 약속
-     * execute라는 이름의 함수가 반드시 존재하고,
-     * 입력은 CreateQuizCommand 1개,
-     * 출력은 Promise<CreateQuizResponseResult> (Result DTO)
-     */
+export interface CreateQuizUseCase {
+  // 컨트롤러 -> 유즈케이스(피호출자)의 계약에 의존
+  execute(command: ParentsCreateQuizCommand): Promise<CreateQuizResponseResult>;
+  /** 약속
+   * execute라는 이름의 함수가 반드시 존재하고,
+   * 입력은 CreateQuizCommand 1개,
+   * 출력은 Promise<CreateQuizResponseResult> (Result DTO)
+   */
 }
-

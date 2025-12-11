@@ -1,6 +1,5 @@
 import type { Quiz } from '../../../domain/model/quiz';
 
-
 // 수정 ========================================================
 
 export type QuizUpdateRepoPatch = {
@@ -15,7 +14,7 @@ export type UpdateRewardGranted = {
   quizId: bigint;
   childProfileId: number;
   rewardGranted: boolean;
-}
+};
 
 // 정답 처리 =====================================================
 
@@ -23,7 +22,6 @@ export interface MarkSolvedParams {
   childProfileId: number;
   quizId: bigint;
 }
-
 
 // 통합 쓰기 포트 ================================================
 

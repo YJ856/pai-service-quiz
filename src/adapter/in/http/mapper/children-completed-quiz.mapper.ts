@@ -8,17 +8,22 @@ import type { ChildrenCompletedResponseResult } from 'src/application/port/in/re
 @Injectable()
 export class ChildrenCompletedMapper {
   // 입력: 로컬 DTO 클래스(검증 통과한 값이 들어옴)
-  toCommand(query: ChildrenCompletedQueryParam, childProfileId: number): ChildrenCompletedQuizCommand {
+  toCommand(
+    query: ChildrenCompletedQueryParam,
+    childProfileId: number,
+  ): ChildrenCompletedQuizCommand {
     return new ChildrenCompletedQuizCommand(
-      childProfileId,   
-      query.limit ?? 20,        // 기본값만 보조
-      query.cursor             // undefined | base64 string
+      childProfileId,
+      query.limit ?? 20, // 기본값만 보조
+      query.cursor, // undefined | base64 string
     );
   }
 
-  toResponse(result: ChildrenCompletedResponseResult): ChildrenCompletedResponseData {
+  toResponse(
+    result: ChildrenCompletedResponseResult,
+  ): ChildrenCompletedResponseData {
     return {
-      items: result.items.map(item => ({
+      items: result.items.map((item) => ({
         quizId: item.quizId.toString(), // bigint -> string
         publishDate: item.publishDate,
         question: item.question,
@@ -26,7 +31,8 @@ export class ChildrenCompletedMapper {
         reward: item.reward,
         authorParentProfileId: item.authorParentProfileId,
         authorParentName: item.authorParentName,
-        authorParentAvatarMediaId: item.authorParentAvatarMediaId?.toString() ?? null, // number | null -> string | null
+        authorParentAvatarMediaId:
+          item.authorParentAvatarMediaId?.toString() ?? null, // number | null -> string | null
       })),
       nextCursor: result.nextCursor ?? null,
       hasNext: result.hasNext,

@@ -52,7 +52,6 @@ import { AnswerQuizMapper } from './adapter/in/http/mapper/children-answer-quiz.
 import { ParentGuard } from './adapter/in/http/auth/guards/auth.guard';
 import { ChildGuard } from './adapter/in/http/auth/guards/auth.guard';
 
-
 @Module({
   imports: [HttpModule, RedisModule],
   controllers: [ParentsQuizController, ChildrenQuizController],
@@ -76,23 +75,50 @@ import { ChildGuard } from './adapter/in/http/auth/guards/auth.guard';
     // Port ↔ Adapter
     { provide: QUIZ_TOKENS.QuizQueryPort, useClass: QuizQueryAdapter },
     { provide: QUIZ_TOKENS.QuizCommandPort, useClass: QuizRepositoryAdapter },
-    { provide: QUIZ_TOKENS.ProfileDirectoryPort, useClass: ProfileDirectoryHttpAdapter },
-    { provide: QUIZ_TOKENS.TokenVersionQueryPort, useClass: RedisTokenVersionQueryAdapter },
+    {
+      provide: QUIZ_TOKENS.ProfileDirectoryPort,
+      useClass: ProfileDirectoryHttpAdapter,
+    },
+    {
+      provide: QUIZ_TOKENS.TokenVersionQueryPort,
+      useClass: RedisTokenVersionQueryAdapter,
+    },
 
     // UseCase(계약) ↔ 구현
     // 부모
-    { provide: QUIZ_TOKENS.GetNextPublishDateUseCase, useClass: GetNextPublishDateService },
-    { provide: QUIZ_TOKENS.GetParentsQuizDetailUseCase, useClass: GetParentsQuizDetailService },
-    { provide: QUIZ_TOKENS.ListParentsTodayUseCase, useClass: ListParentsTodayService },
-    { provide: QUIZ_TOKENS.ListParentsCompletedUseCase, useClass: ListParentsCompletedService },
-    { provide: QUIZ_TOKENS.ListParentsScheduledUseCase, useClass: ListParentsScheduledService },
+    {
+      provide: QUIZ_TOKENS.GetNextPublishDateUseCase,
+      useClass: GetNextPublishDateService,
+    },
+    {
+      provide: QUIZ_TOKENS.GetParentsQuizDetailUseCase,
+      useClass: GetParentsQuizDetailService,
+    },
+    {
+      provide: QUIZ_TOKENS.ListParentsTodayUseCase,
+      useClass: ListParentsTodayService,
+    },
+    {
+      provide: QUIZ_TOKENS.ListParentsCompletedUseCase,
+      useClass: ListParentsCompletedService,
+    },
+    {
+      provide: QUIZ_TOKENS.ListParentsScheduledUseCase,
+      useClass: ListParentsScheduledService,
+    },
     { provide: QUIZ_TOKENS.CreateQuizUseCase, useClass: CreateQuizService },
     { provide: QUIZ_TOKENS.UpdateQuizUseCase, useClass: UpdateQuizService },
     { provide: QUIZ_TOKENS.DeleteQuizUseCase, useClass: DeleteQuizService },
     { provide: QUIZ_TOKENS.GrantRewardUseCase, useClass: GrantRewardService },
     // 아이
-    { provide: QUIZ_TOKENS.ListChildrenTodayUseCase, useClass: ListChildrenTodayService },
-    { provide: QUIZ_TOKENS.ListChildrenCompletedUseCase, useClass: ListChildrenCompletedService },
+    {
+      provide: QUIZ_TOKENS.ListChildrenTodayUseCase,
+      useClass: ListChildrenTodayService,
+    },
+    {
+      provide: QUIZ_TOKENS.ListChildrenCompletedUseCase,
+      useClass: ListChildrenCompletedService,
+    },
     { provide: QUIZ_TOKENS.AnswerQuizUseCase, useClass: AnswerQuizService },
   ],
   // exports: []  // 다른 모듈에서 이 토큰/서비스를 쓰게 하려면 여기에 내보내기

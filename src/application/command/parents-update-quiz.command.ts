@@ -12,5 +12,3 @@ export class ParentsUpdateQuizCommand {
     public readonly publishDate?: string | null,
   ) {}
 }
-
-

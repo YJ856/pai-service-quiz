@@ -41,7 +41,7 @@ export function encodeIdCursor(id: number | bigint): string {
  * 예: "MjAyNS0xMC0xNnwxMjM=" → { publishDateYmd: "2025-10-16", quizId: 123n }
  */
 export function decodeCompositeCursor(
-  cursor: string | null
+  cursor: string | null,
 ): { publishDateYmd: string; quizId: bigint } | null {
   if (!cursor) return null;
   try {
@@ -68,7 +68,10 @@ export function decodeCompositeCursor(
  * { publishDateYmd, quizId } → Base64("yyyy-MM-dd|quizId")
  * 예: { publishDateYmd: "2025-10-16", quizId: 123n } → "MjAyNS0xMC0xNnwxMjM="
  */
-export function encodeCompositeCursor(publishDateYmd: string, quizId: bigint | number): string {
+export function encodeCompositeCursor(
+  publishDateYmd: string,
+  quizId: bigint | number,
+): string {
   const payload = JSON.stringify(`${publishDateYmd}|${quizId.toString()}`);
   return Buffer.from(payload, 'utf8').toString('base64');
 }

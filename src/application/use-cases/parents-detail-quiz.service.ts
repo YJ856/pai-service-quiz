@@ -13,9 +13,7 @@ import { ParentsDetailQuizCommand } from '../command/parents-detail-quiz.command
 import { DetailQuizMapper } from '../../adapter/in/http/mapper/parents-detail-quiz.mapper';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
-import type {
-  QuizQueryPort,
-} from '../port/out/quiz.query.port';
+import type { QuizQueryPort } from '../port/out/quiz.query.port';
 
 // Domain
 import { Quiz } from '../../domain/model/quiz';
@@ -27,7 +25,7 @@ const canEdit = (
   publishDateYmd: string,
   authorParentProfileId: number,
   requesterParentProfileId: number,
-  today: string
+  today: string,
 ): boolean => {
   // 작성자만 접근 가능
   if (authorParentProfileId !== requesterParentProfileId) {
@@ -41,7 +39,9 @@ const canEdit = (
 };
 
 @Injectable()
-export class GetParentsQuizDetailService implements GetParentsQuizDetailUseCase {
+export class GetParentsQuizDetailService
+  implements GetParentsQuizDetailUseCase
+{
   constructor(
     @Inject(QUIZ_TOKENS.QuizQueryPort)
     private readonly repo: QuizQueryPort,
@@ -54,7 +54,9 @@ export class GetParentsQuizDetailService implements GetParentsQuizDetailUseCase 
    * - 상태: SCHEDULED만 수정 가능(아니면 409 NOT_SCHEDULED)
    * - 성공 시: 상세 데이터 + isEditable 반환
    */
-  async execute(command: ParentsDetailQuizCommand): Promise<ParentsQuizDetailResponseResult> {
+  async execute(
+    command: ParentsDetailQuizCommand,
+  ): Promise<ParentsQuizDetailResponseResult> {
     const quizId = command.quizId;
     const requesterPid = command.parentProfileId;
 

@@ -8,7 +8,12 @@ import {
 } from '@nestjs/common';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
-import { isValidYmd, ymdToUtcDate, toYmdFromDate, todayYmdKST } from '../../utils/date.util';
+import {
+  isValidYmd,
+  ymdToUtcDate,
+  toYmdFromDate,
+  todayYmdKST,
+} from '../../utils/date.util';
 import { Quiz } from '../../domain/model/quiz';
 import { UpdateQuizMapper } from '../../adapter/in/http/mapper/parents-update-quiz.mapper';
 
@@ -16,7 +21,7 @@ const canEdit = (
   publishDateYmd: string,
   authorParentProfileId: number,
   requesterParentProfileId: number,
-  today: string
+  today: string,
 ): boolean => {
   // 작성자만 수정 가능
   if (authorParentProfileId !== requesterParentProfileId) {
@@ -57,7 +62,9 @@ export class UpdateQuizService implements UpdateQuizUseCase {
    * - 전달된 필드만 부분 수정 (hint/reward === null 이면 제거)
    * - 수정된 퀴즈 Result DTO 반환
    */
-  async execute(cmd: ParentsUpdateQuizCommand): Promise<UpdateQuizResponseResult> {
+  async execute(
+    cmd: ParentsUpdateQuizCommand,
+  ): Promise<UpdateQuizResponseResult> {
     const quizId = cmd.quizId;
     const requesterPid = cmd.parentProfileId; // 이미 bigint
 
@@ -100,14 +107,14 @@ export class UpdateQuizService implements UpdateQuizUseCase {
         cmd.hint === null
           ? null
           : cmd.hint !== undefined
-          ? String(cmd.hint)
-          : undefined,
+            ? String(cmd.hint)
+            : undefined,
       reward:
         cmd.reward === null
           ? null
           : cmd.reward !== undefined
-          ? String(cmd.reward)
-          : undefined,
+            ? String(cmd.reward)
+            : undefined,
       publishDate, // undefined면 변경 없음
     };
 

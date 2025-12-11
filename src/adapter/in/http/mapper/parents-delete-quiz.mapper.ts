@@ -1,7 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import { DeleteQuizResponseData } from "pai-shared-types";
-import { DeleteQuizResponseResult } from "src/application/port/in/result/parents-delete-quiz-result.dto";
-import { ParentsDeleteQuizCommand } from "src/application/command/parents-delete-quiz.command";
+import { Injectable } from '@nestjs/common';
+import { DeleteQuizResponseData } from 'pai-shared-types';
+import { DeleteQuizResponseResult } from 'src/application/port/in/result/parents-delete-quiz-result.dto';
+import { ParentsDeleteQuizCommand } from 'src/application/command/parents-delete-quiz.command';
 
 @Injectable()
 export class DeleteQuizMapper {

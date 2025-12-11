@@ -10,8 +10,8 @@ import type { AnswerQuizUseCase } from '../port/in/children-answer-quiz.usecase'
 import { ChildrenAnswerQuizCommand } from '../command/children-answer-quiz.command';
 
 import { QUIZ_TOKENS } from '../../quiz.token';
-import type { QuizQueryPort, } from '../port/out/quiz.query.port';
-import type { QuizCommandPort, } from '../port/out/quiz.repository.port';
+import type { QuizQueryPort } from '../port/out/quiz.query.port';
+import type { QuizCommandPort } from '../port/out/quiz.repository.port';
 import type { ProfileDirectoryPort } from '../port/out/profile-directory.port';
 
 // Utils
@@ -37,7 +37,9 @@ export class AnswerQuizService implements AnswerQuizUseCase {
    * - 해당 날짜(Asia/Seoul)가 지나면 제출 불가
    * - 채점: 기본 완전 일치, normalize=true 시 간단 정규화 후 비교
    */
-  async execute(command: ChildrenAnswerQuizCommand): Promise<AnswerQuizResponseResult> {
+  async execute(
+    command: ChildrenAnswerQuizCommand,
+  ): Promise<AnswerQuizResponseResult> {
     const { childProfileId, quizId } = command;
 
     // quizId 검증 (null 체크)
@@ -55,20 +57,22 @@ export class AnswerQuizService implements AnswerQuizUseCase {
 
     // 1) 가족 부모 프로필 조회
     const { parents } = await this.profiles.getFamilyProfileWithScopeParents();
-    const familyParentIds = (parents ?? []).map(parent => parent.profileId);
+    const familyParentIds = (parents ?? []).map((parent) => parent.profileId);
 
     if (familyParentIds.length === 0) {
       throw new NotFoundException('NO_PARENTS_FOUND');
     }
 
     // 2) 오늘의 퀴즈 중에서 해당 quizId 찾기 (오늘 날짜 + 가족 부모 검증)
-    const { items: todayQuizzes } = await this.queryRepo.findFamilyParentsToday({
-      parentProfileIds: familyParentIds,
-      dateYmd: todayYmd,
-      limit: 100, // 충분히 큰 수
-    });
+    const { items: todayQuizzes } = await this.queryRepo.findFamilyParentsToday(
+      {
+        parentProfileIds: familyParentIds,
+        dateYmd: todayYmd,
+        limit: 100, // 충분히 큰 수
+      },
+    );
 
-    const targetQuiz = todayQuizzes.find(quiz => quiz.quizId === quizId);
+    const targetQuiz = todayQuizzes.find((quiz) => quiz.quizId === quizId);
     if (!targetQuiz) {
       throw new NotFoundException('QUIZ_NOT_FOUND_OR_NOT_TODAY');
     }
@@ -78,7 +82,9 @@ export class AnswerQuizService implements AnswerQuizUseCase {
       quizIds: [quizId],
       childProfileIds: [childProfileId],
     });
-    const alreadySolved = assignments.some(assignment => assignment.quizId === quizId && assignment.isSolved);
+    const alreadySolved = assignments.some(
+      (assignment) => assignment.quizId === quizId && assignment.isSolved,
+    );
 
     // 4) 채점 (정규화 후 비교: 대소문자 무시, 공백/기호 제거)
     const isCorrect = this.checkAnswer(trimmedAnswer, targetQuiz.answer, true);
@@ -108,7 +114,11 @@ export class AnswerQuizService implements AnswerQuizUseCase {
   // ===== Helpers =====
 
   /** 채점: 기본 완전 일치, normalize=true면 간단 정규화 후 비교 */
-  private checkAnswer(input: string, correct: string, normalize: boolean): boolean {
+  private checkAnswer(
+    input: string,
+    correct: string,
+    normalize: boolean,
+  ): boolean {
     if (!normalize) {
       return input === correct;
     }

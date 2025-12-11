@@ -6,5 +6,7 @@ import type { ParentsDetailQuizCommand } from '../../command/parents-detail-quiz
  * - 작성자 본인 확인 + 상세 데이터 반환
  */
 export interface GetParentsQuizDetailUseCase {
-  execute(cmd: ParentsDetailQuizCommand): Promise<ParentsQuizDetailResponseResult>;
+  execute(
+    cmd: ParentsDetailQuizCommand,
+  ): Promise<ParentsQuizDetailResponseResult>;
 }

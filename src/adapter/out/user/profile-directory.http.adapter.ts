@@ -19,7 +19,6 @@ type UserApiResponse = {
   };
 };
 
-
 @Injectable({ scope: Scope.REQUEST })
 export class ProfileDirectoryHttpAdapter implements ProfileDirectoryPort {
   private readonly logger = new Logger(ProfileDirectoryHttpAdapter.name);
@@ -28,7 +27,8 @@ export class ProfileDirectoryHttpAdapter implements ProfileDirectoryPort {
   private readonly baseUrl = process.env.USER_SERVICE_BASE_URL ?? '';
 
   // 엔드포인트 경로(옵션)
-  private readonly profilePath = process.env.USER_API_PROFILE_PATH ?? '/api/profiles';
+  private readonly profilePath =
+    process.env.USER_API_PROFILE_PATH ?? '/api/profiles';
 
   constructor(
     private readonly http: HttpService,
@@ -75,10 +75,12 @@ export class ProfileDirectoryHttpAdapter implements ProfileDirectoryPort {
     }
   }
 
-  async getFamilyProfileWithScopeParents(): Promise<{ parents: ParentProfileSummary[] }> {
-    if (!this.baseUrl) { 
-      this.logger.warn('USER_SERVICE_BASE_URL is not set'); 
-      return { parents: [] }; 
+  async getFamilyProfileWithScopeParents(): Promise<{
+    parents: ParentProfileSummary[];
+  }> {
+    if (!this.baseUrl) {
+      this.logger.warn('USER_SERVICE_BASE_URL is not set');
+      return { parents: [] };
     }
 
     const url = this.joinUrl(this.baseUrl, this.profilePath);
@@ -101,7 +103,9 @@ export class ProfileDirectoryHttpAdapter implements ProfileDirectoryPort {
       }));
       return { parents };
     } catch (error) {
-      this.logger.warn(`getFamilyProfileWithScopeParents failed: ${String(error)}`);
+      this.logger.warn(
+        `getFamilyProfileWithScopeParents failed: ${String(error)}`,
+      );
       return { parents: [] };
     }
   }
@@ -109,7 +113,8 @@ export class ProfileDirectoryHttpAdapter implements ProfileDirectoryPort {
   // ---- utils ----
   private joinUrl(base: string, path: string): string {
     if (!base.endsWith('/') && !path.startsWith('/')) return `${base}/${path}`;
-    if (base.endsWith('/') && path.startsWith('/')) return `${base}${path.slice(1)}`;
+    if (base.endsWith('/') && path.startsWith('/'))
+      return `${base}${path.slice(1)}`;
     return `${base}${path}`;
   }
 }
@@ -119,7 +124,11 @@ function parseBigIntOrNull(input: unknown): bigint | null {
   if (typeof input !== 'string' && typeof input !== 'number') return null;
   const stringTrimmed = String(input).trim();
   if (!stringTrimmed) return null;
-  try { return BigInt(stringTrimmed); } catch { return null }
+  try {
+    return BigInt(stringTrimmed);
+  } catch {
+    return null;
+  }
 }
 
 function normalizeBearer(authorizationHeader?: string): string | undefined {

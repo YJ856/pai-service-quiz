@@ -1,31 +1,50 @@
-import { IsNotEmpty, IsOptional, IsString, IsNumberString } from "class-validator";
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumberString,
+} from 'class-validator';
 import type {
-    UpdateQuizPathParam as SharedPath,
-    UpdateQuizRequestDto as SharedBody
-} from "pai-shared-types";
-import { TrimString, TrimToNull } from "../common/transforms";
+  UpdateQuizPathParam as SharedPath,
+  UpdateQuizRequestDto as SharedBody,
+} from 'pai-shared-types';
+import { TrimString, TrimToNull } from '../common/transforms';
 
 export class UpdateQuizPathParam implements SharedPath {
-    @TrimString() @IsString() @IsNotEmpty() @IsNumberString({ no_symbols: true })
-    quizId!: string;
+  @TrimString()
+  @IsString()
+  @IsNotEmpty()
+  @IsNumberString({ no_symbols: true })
+  quizId!: string;
 }
 
 export class UpdateQuizRequestDto implements SharedBody {
-    @IsString() @IsOptional() @TrimString() @IsNotEmpty()
-    question?: string;
+  @IsString()
+  @IsOptional()
+  @TrimString()
+  @IsNotEmpty()
+  question?: string;
 
-    @IsString() @IsOptional() @TrimString() @IsNotEmpty()
-    answer?: string;
+  @IsString()
+  @IsOptional()
+  @TrimString()
+  @IsNotEmpty()
+  answer?: string;
 
-    @IsString() @IsOptional() @TrimToNull()
-    hint?: string | null;
+  @IsString()
+  @IsOptional()
+  @TrimToNull()
+  hint?: string | null;
 
-    @IsString() @IsOptional() @TrimToNull()
-    reward?: string | null;
+  @IsString()
+  @IsOptional()
+  @TrimToNull()
+  reward?: string | null;
 
-    // publishDate는 shared-types에서 required (string | null)
-    @IsString() @TrimToNull()
-    publishDate!: string;
+  // publishDate는 shared-types에서 required (string | null)
+  @IsString()
+  @TrimToNull()
+  publishDate!: string;
 }
 
 /**

@@ -1,15 +1,15 @@
-import { Injectable } from "@nestjs/common";
-import { ParentsQuizDetailResponseData } from "pai-shared-types";
-import { ParentsQuizDetailResponseResult } from "src/application/port/in/result/parents-detail-quiz-result.dto";
-import { ParentsDetailQuizCommand } from "src/application/command/parents-detail-quiz.command";
-import { Quiz } from "src/domain/model/quiz";
-import { todayYmdKST } from "src/utils/date.util";
+import { Injectable } from '@nestjs/common';
+import { ParentsQuizDetailResponseData } from 'pai-shared-types';
+import { ParentsQuizDetailResponseResult } from 'src/application/port/in/result/parents-detail-quiz-result.dto';
+import { ParentsDetailQuizCommand } from 'src/application/command/parents-detail-quiz.command';
+import { Quiz } from 'src/domain/model/quiz';
+import { todayYmdKST } from 'src/utils/date.util';
 
 const isEditable = (
   publishDate: string,
   currentParentProfileId: number,
   authorParentProfileId: number,
-  today: string
+  today: string,
 ): boolean => {
   // 작성자만 수정 가능
   if (currentParentProfileId !== authorParentProfileId) {
@@ -27,12 +27,14 @@ export class DetailQuizMapper {
   toCommand(quizId: string, parentProfileId: number): ParentsDetailQuizCommand {
     return new ParentsDetailQuizCommand(
       BigInt(quizId), // string -> bigint 변환
-      parentProfileId, 
+      parentProfileId,
     );
   }
 
   // Controller용 - Result를 shared-types로 변환
-  toResponse(result: ParentsQuizDetailResponseResult): ParentsQuizDetailResponseData {
+  toResponse(
+    result: ParentsQuizDetailResponseResult,
+  ): ParentsQuizDetailResponseData {
     return {
       quizId: result.quizId.toString(), // bigint -> string 변환
       question: result.question,
@@ -45,7 +47,10 @@ export class DetailQuizMapper {
   }
 
   // Service용 - Result DTO 사용
-  toResponseResult(quiz: Quiz, currentParentProfileId: number): ParentsQuizDetailResponseResult {
+  toResponseResult(
+    quiz: Quiz,
+    currentParentProfileId: number,
+  ): ParentsQuizDetailResponseResult {
     const today = todayYmdKST();
     const publishDate = quiz.getPublishDate();
 
@@ -60,7 +65,7 @@ export class DetailQuizMapper {
         publishDate.ymd,
         currentParentProfileId,
         quiz.getParentProfileId(),
-        today
+        today,
       ),
     };
   }

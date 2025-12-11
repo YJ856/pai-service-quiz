@@ -50,9 +50,10 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
     const updateData: Record<string, any> = {};
     if (patch.question !== undefined) updateData.question = patch.question;
     if (patch.answer !== undefined) updateData.answer = patch.answer;
-    if (patch.hint !== undefined) updateData.hint = patch.hint;               // string | null
-    if (patch.reward !== undefined) updateData.reward = patch.reward;         // string | null
-    if (patch.publishDate !== undefined) updateData.publishDate = patch.publishDate; // Date
+    if (patch.hint !== undefined) updateData.hint = patch.hint; // string | null
+    if (patch.reward !== undefined) updateData.reward = patch.reward; // string | null
+    if (patch.publishDate !== undefined)
+      updateData.publishDate = patch.publishDate; // Date
 
     // 변경할 게 없으면 굳이 쿼리 안 보냄
     if (Object.keys(updateData).length === 0) return 0;
@@ -62,7 +63,7 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
       where: {
         id: quizId,
         parentProfileId,
-        publishDate: { gt: ymdToUtcDate(todayYmd) }  // publishDate > today
+        publishDate: { gt: ymdToUtcDate(todayYmd) }, // publishDate > today
       },
       data: updateData,
     });
@@ -87,7 +88,7 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
       where: {
         id: quizId,
         parentProfileId,
-        publishDate: { gt: ymdToUtcDate(todayYmd) }  // publishDate > today
+        publishDate: { gt: ymdToUtcDate(todayYmd) }, // publishDate > today
       },
     });
 
@@ -105,14 +106,14 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
       where: {
         quizId_childProfileId: {
           quizId,
-          childProfileId
+          childProfileId,
         },
       },
       update: { isSolved: true },
       create: {
         quizId,
         childProfileId,
-        isSolved: true
+        isSolved: true,
       },
     });
   }
@@ -124,12 +125,12 @@ export class QuizRepositoryAdapter implements QuizCommandPort {
    * - 멱등: 같은 값으로 다시 호출해도 동일 상태 유지
    */
   async updateRewardGranted(params: UpdateRewardGranted): Promise<boolean> {
-      const { quizId, childProfileId, rewardGranted } = params;
+    const { quizId, childProfileId, rewardGranted } = params;
 
-      const response = await this.prisma.assignment.updateMany({
-        where: { quizId, childProfileId },
-        data: { rewardGranted },
-      });
-      return response.count > 0;
+    const response = await this.prisma.assignment.updateMany({
+      where: { quizId, childProfileId },
+      data: { rewardGranted },
+    });
+    return response.count > 0;
   }
 }

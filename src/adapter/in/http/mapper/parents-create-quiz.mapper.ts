@@ -1,10 +1,10 @@
-import { Injectable } from "@nestjs/common";
-import { CreateQuizRequestDto } from "src/adapter/in/http/dto/request/parents-create-quiz-request.dto";
-import { CreateQuizResponseData } from "pai-shared-types";
-import { CreateQuizResponseResult } from "src/application/port/in/result/parents-create-quiz-result.dto";
-import { ParentsCreateQuizCommand } from "src/application/command/parents-create-quiz.command";
-import { Quiz } from "src/domain/model/quiz";
-import { todayYmdKST } from "src/utils/date.util";
+import { Injectable } from '@nestjs/common';
+import { CreateQuizRequestDto } from 'src/adapter/in/http/dto/request/parents-create-quiz-request.dto';
+import { CreateQuizResponseData } from 'pai-shared-types';
+import { CreateQuizResponseResult } from 'src/application/port/in/result/parents-create-quiz-result.dto';
+import { ParentsCreateQuizCommand } from 'src/application/command/parents-create-quiz.command';
+import { Quiz } from 'src/domain/model/quiz';
+import { todayYmdKST } from 'src/utils/date.util';
 
 function isEditablePolicy(args: {
   publishDateYmd: string;
@@ -12,15 +12,26 @@ function isEditablePolicy(args: {
   requestorParentProfileId: number;
   todayYmd: string;
 }) {
-  const { publishDateYmd, authorParentProfileId, requestorParentProfileId, todayYmd } = args;
-  return authorParentProfileId === requestorParentProfileId && publishDateYmd >= todayYmd;
+  const {
+    publishDateYmd,
+    authorParentProfileId,
+    requestorParentProfileId,
+    todayYmd,
+  } = args;
+  return (
+    authorParentProfileId === requestorParentProfileId &&
+    publishDateYmd >= todayYmd
+  );
 }
 
 @Injectable()
 export class CreateQuizMapper {
-  toCommand(parentProfileId: number, dto: CreateQuizRequestDto): ParentsCreateQuizCommand {
+  toCommand(
+    parentProfileId: number,
+    dto: CreateQuizRequestDto,
+  ): ParentsCreateQuizCommand {
     return new ParentsCreateQuizCommand(
-      parentProfileId, 
+      parentProfileId,
       dto.question,
       dto.answer,
       dto.hint ?? null,
@@ -42,9 +53,11 @@ export class CreateQuizMapper {
     };
   }
 
-
   // Service용 - Result DTO 사용
-  toResponseResult(quiz: Quiz, requestorParentProfileId: number): CreateQuizResponseResult {
+  toResponseResult(
+    quiz: Quiz,
+    requestorParentProfileId: number,
+  ): CreateQuizResponseResult {
     const today = todayYmdKST();
     const publishDateYmd = quiz.getPublishDate().ymd;
     const isEditable = isEditablePolicy({
@@ -64,5 +77,4 @@ export class CreateQuizMapper {
       isEditable,
     };
   }
-
 }

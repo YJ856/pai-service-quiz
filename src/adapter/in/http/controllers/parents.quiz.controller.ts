@@ -30,8 +30,14 @@ import { CreateQuizRequestDto } from '../dto/request/parents-create-quiz-request
 import { ParentsTodayQueryParam } from '../dto/request/parents-today-quiz-request.dto';
 import { ParentsCompletedQueryParam } from '../dto/request/parents-completed-quiz-request.dto';
 import { ParentsScheduledQueryParam } from '../dto/request/parents-scheduled-quiz-request.dto';
-import { UpdateQuizPathParam, UpdateQuizRequestDto } from '../dto/request/parents-update-quiz-request.dto';
-import { ParentsGrantRewardPathParam, ParentsGrantRewardRequestDto } from '../dto/request/parents-grant-reward-request.dto';
+import {
+  UpdateQuizPathParam,
+  UpdateQuizRequestDto,
+} from '../dto/request/parents-update-quiz-request.dto';
+import {
+  ParentsGrantRewardPathParam,
+  ParentsGrantRewardRequestDto,
+} from '../dto/request/parents-grant-reward-request.dto';
 import { ParentsQuizDetailPathParam } from '../dto/request/parents-detail-quiz-request.dto';
 import { DeleteQuizPathParam } from '../dto/request/parents-delete-quiz-request.dto';
 
@@ -59,9 +65,6 @@ import { ParentsGrantRewardMapper } from '../mapper/parents-grant-reward.mapper'
 
 import { ParentGuard } from '../auth/guards/auth.guard';
 import { Auth } from '../decorators/auth.decorator';
-
-
-
 
 @Controller('api/quiz')
 @UseGuards(ParentGuard)
@@ -144,7 +147,10 @@ export class ParentsQuizController {
     @Auth('profileId') parentProfileId: number,
     @Query() query: ParentsCompletedQueryParam,
   ): Promise<BaseResponse<ParentsCompletedResponseData>> {
-    const command = this.parentsCompletedMapper.toCommand(query, parentProfileId);
+    const command = this.parentsCompletedMapper.toCommand(
+      query,
+      parentProfileId,
+    );
     const result = await this.listParentsCompleted.execute(command);
     const data = this.parentsCompletedMapper.toResponse(result);
     return { success: true, message: '완료된 퀴즈 조회 성공', data };
@@ -156,7 +162,10 @@ export class ParentsQuizController {
     @Auth('profileId') parentProfileId: number,
     @Query() query: ParentsScheduledQueryParam,
   ): Promise<BaseResponse<ParentsScheduledResponseData>> {
-    const command = this.parentsScheduledMapper.toCommand(query, parentProfileId);
+    const command = this.parentsScheduledMapper.toCommand(
+      query,
+      parentProfileId,
+    );
     const result = await this.listParentsScheduled.execute(command);
     const data = this.parentsScheduledMapper.toResponse(result);
     return { success: true, message: '예정된 퀴즈 조회 성공', data };
@@ -168,7 +177,10 @@ export class ParentsQuizController {
     @Param() path: ParentsQuizDetailPathParam,
     @Auth('profileId') parentProfileId: number,
   ): Promise<BaseResponse<ParentsQuizDetailResponseData>> {
-    const command = this.detailQuizMapper.toCommand(path.quizId, parentProfileId);
+    const command = this.detailQuizMapper.toCommand(
+      path.quizId,
+      parentProfileId,
+    );
     const result = await this.getParentsQuizDetail.execute(command);
     const data = this.detailQuizMapper.toResponse(result);
 
@@ -182,7 +194,11 @@ export class ParentsQuizController {
     @Auth('profileId') parentProfileId: number,
     @Body() body: UpdateQuizRequestDto,
   ): Promise<BaseResponse<UpdateQuizResponseData>> {
-    const command = this.updateQuizMapper.toCommand(path.quizId, parentProfileId, body ?? {});
+    const command = this.updateQuizMapper.toCommand(
+      path.quizId,
+      parentProfileId,
+      body ?? {},
+    );
     const result = await this.updateQuiz.execute(command);
     const data = this.updateQuizMapper.toResponse(result);
     return { success: true, message: '수정이 완료되었습니다!', data };
@@ -194,7 +210,10 @@ export class ParentsQuizController {
     @Param() path: DeleteQuizPathParam,
     @Auth('profileId') parentProfileId: number,
   ): Promise<BaseResponse<DeleteQuizResponseData>> {
-    const command = this.deleteQuizMapper.toCommand(path.quizId, parentProfileId);
+    const command = this.deleteQuizMapper.toCommand(
+      path.quizId,
+      parentProfileId,
+    );
     const result = await this.deleteQuiz.execute(command);
     const data = this.deleteQuizMapper.toResponse(result);
 
@@ -207,8 +226,12 @@ export class ParentsQuizController {
     @Param() path: ParentsGrantRewardPathParam,
     @Body() body: ParentsGrantRewardRequestDto,
   ): Promise<BaseResponse<ParentsGrantRewardResponseData>> {
-    const command = this.parentsGrantRewardMapper.toCommand(path.quizId, path.childProfileId, body);
-    const result = await this.grantReward.execute(command)
+    const command = this.parentsGrantRewardMapper.toCommand(
+      path.quizId,
+      path.childProfileId,
+      body,
+    );
+    const result = await this.grantReward.execute(command);
     const data = this.parentsGrantRewardMapper.toResponse(result);
 
     return { success: true, message: '보상 지급 처리 완료', data };

@@ -1,5 +1,5 @@
 export class ParentsDeleteQuizCommand {
-  constructor (
+  constructor(
     public readonly parentProfileId: number,
     public readonly quizId: bigint,
   ) {}

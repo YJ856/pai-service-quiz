@@ -68,8 +68,11 @@ export function toYmdFromDate(dt: Date): string {
 }
 
 /** 'yyyy-MM-dd' → 해당 날짜의 UTC 경계 (gte/lt) */
-export function utcDayRangeForYmd(ymd: string): { startUtc: Date; endUtc: Date } {
-  const startUtc = ymdToUtcDate(ymd);                 // 기존 함수 재사용
+export function utcDayRangeForYmd(ymd: string): {
+  startUtc: Date;
+  endUtc: Date;
+} {
+  const startUtc = ymdToUtcDate(ymd); // 기존 함수 재사용
   const endUtc = new Date(startUtc.getTime() + 24 * 60 * 60 * 1000);
   return { startUtc, endUtc };
 }
@@ -86,6 +89,6 @@ export function todayYmdKST(): string {
   const y = kst.getUTCFullYear();
   const m = String(kst.getUTCMonth() + 1).padStart(2, '0');
   const d = String(kst.getUTCDate()).padStart(2, '0');
-  
+
   return `${y}-${m}-${d}`;
 }

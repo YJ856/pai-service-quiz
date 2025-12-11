@@ -23,7 +23,10 @@ export class GetNextPublishDateService implements GetNextPublishDateUseCase {
     if (last) return plusDays(last, 1);
 
     const today = todayKstYmd();
-    const hasToday = await this.quizQuery.existsAnyOnDate(parentProfileId, today);
+    const hasToday = await this.quizQuery.existsAnyOnDate(
+      parentProfileId,
+      today,
+    );
     return hasToday ? plusDays(today, 1) : today;
   }
 }

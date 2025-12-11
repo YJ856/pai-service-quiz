@@ -1,4 +1,3 @@
-
 export class Assignment {
   private constructor(
     private _id: bigint | null,
@@ -9,10 +8,16 @@ export class Assignment {
   ) {}
 
   // 새 배정 생성
-  static create(props: { quizId: bigint; childProfileId: number}) : Assignment {
+  static create(props: { quizId: bigint; childProfileId: number }): Assignment {
     if (props.quizId <= 0n) throw new Error('INVALID_QUIZ_ID');
     if (props.childProfileId <= 0) throw new Error('INVALIDE_CHILD_PROFILE_ID');
-    return new Assignment(null, props.quizId, props.childProfileId, false, false);
+    return new Assignment(
+      null,
+      props.quizId,
+      props.childProfileId,
+      false,
+      false,
+    );
   }
 
   // DB -> 도메인 복원
@@ -25,11 +30,18 @@ export class Assignment {
   }): Assignment {
     if (snapshot.id <= 0n) throw new Error('INVALID_ID');
     if (snapshot.quizId <= 0n) throw new Error('INVALID_QUIZ_ID');
-    if (snapshot.childProfileId <= 0) throw new Error('INVALID_CHILD_PROFILE_ID');
+    if (snapshot.childProfileId <= 0)
+      throw new Error('INVALID_CHILD_PROFILE_ID');
     if (snapshot.rewardGranted && !snapshot.isSolved) {
       throw new Error('REWARD_WITHOUT_SOLVED_INCONSISTENT');
     }
-    return new Assignment(snapshot.id, snapshot.quizId, snapshot.childProfileId, snapshot.isSolved, snapshot.rewardGranted);
+    return new Assignment(
+      snapshot.id,
+      snapshot.quizId,
+      snapshot.childProfileId,
+      snapshot.isSolved,
+      snapshot.rewardGranted,
+    );
   }
 
   // 정답 처리
@@ -46,9 +58,19 @@ export class Assignment {
   }
 
   // 조회 전용 getter
-  getId(): bigint | null { return this._id; }
-  getQuizId(): bigint { return this._quizId; }
-  getChildProfileId(): number { return this._childProfileId; }
-  getIsSolved(): boolean { return this._isSolved };
-  getRewardGranted(): boolean { return this._rewardGranted; }
+  getId(): bigint | null {
+    return this._id;
+  }
+  getQuizId(): bigint {
+    return this._quizId;
+  }
+  getChildProfileId(): number {
+    return this._childProfileId;
+  }
+  getIsSolved(): boolean {
+    return this._isSolved;
+  }
+  getRewardGranted(): boolean {
+    return this._rewardGranted;
+  }
 }

@@ -20,7 +20,10 @@ import type {
 
 import { ChildrenTodayQueryParam } from '../dto/request/children-today-quiz-request.dto';
 import { ChildrenCompletedQueryParam } from '../dto/request/children-completed-quiz-request.dto';
-import { AnswerQuizPathParam, AnswerQuizRequestDto } from '../dto/request/children-answer-quiz-request.dto';
+import {
+  AnswerQuizPathParam,
+  AnswerQuizRequestDto,
+} from '../dto/request/children-answer-quiz-request.dto';
 
 import { QUIZ_TOKENS } from '../../../../quiz.token';
 
@@ -70,7 +73,10 @@ export class ChildrenQuizController {
     @Auth('profileId') childProfileId: number,
     @Query() query: ChildrenCompletedQueryParam,
   ): Promise<BaseResponse<ChildrenCompletedResponseData>> {
-    const command = this.childrenCompletedMapper.toCommand(query, childProfileId);
+    const command = this.childrenCompletedMapper.toCommand(
+      query,
+      childProfileId,
+    );
     const result = await this.listChildrenCompletedUseCase.execute(command);
     const data = this.childrenCompletedMapper.toResponse(result);
     return { success: true, message: '자녀용 완료된 퀴즈 조회 성공', data };

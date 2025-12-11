@@ -1,5 +1,3 @@
-
-
 // 공통 타입 ===============================================
 export interface PageResult<T> {
   items: T[];
@@ -13,7 +11,6 @@ export interface CursorById {
 export interface CursorByDateId {
   paginationCursor?: { publishDateYmd: string; quizId: bigint };
 }
-
 
 // 부모용 조회 ===============================================
 
@@ -32,25 +29,26 @@ export type FamilyParentsTodayRow = {
   hint: string | null;
   authorParentProfileId: number;
 };
-export type FindFamilyParentsTodayResult = PageResult<FamilyParentsTodayRow>
-
+export type FindFamilyParentsTodayResult = PageResult<FamilyParentsTodayRow>;
 
 // 완료된 퀴즈 전체 조회
-export interface FindFamilyParentsCompletedParams extends CursorByDateId { // 탐색 의뢰서
+export interface FindFamilyParentsCompletedParams extends CursorByDateId {
+  // 탐색 의뢰서
   parentProfileIds: number[];
   beforeDateYmd: string; // 탐색 기준(상한선: 이 날짜보다 이전 날짜)
   limit: number;
 }
-export type FamilyParentsCompletedRow = { // 발견한 기록 한 줄
+export type FamilyParentsCompletedRow = {
+  // 발견한 기록 한 줄
   quizId: bigint;
   publishDateYmd: string;
   question: string;
   answer: string;
   reward: string | null;
   authorParentProfileId: number;
-}
-export type FindFamilyParentsCompletedResult = PageResult<FamilyParentsCompletedRow>; // 탐색 보고서(페이지네이션 포함)
-
+};
+export type FindFamilyParentsCompletedResult =
+  PageResult<FamilyParentsCompletedRow>; // 탐색 보고서(페이지네이션 포함)
 
 // 예정된 퀴즈 전체 조회
 export interface FindFamilyParentsScheduledParams extends CursorByDateId {
@@ -66,9 +64,9 @@ export type FamilyParentsScheduledRow = {
   hint: string | null;
   reward: string | null;
   authorParentProfileId: number;
-}
-export type FindFamilyParentsScheduledResult = PageResult<FamilyParentsScheduledRow>;
-
+};
+export type FindFamilyParentsScheduledResult =
+  PageResult<FamilyParentsScheduledRow>;
 
 // 상세 조회
 export type QuizDetailRow = {
@@ -80,7 +78,6 @@ export type QuizDetailRow = {
   publishDate: Date;
   parentProfileId: number;
 };
-
 
 // 자녀용 조회 ===============================================
 
@@ -102,7 +99,6 @@ export type ChildrenCompletedRow = {
 };
 export type FindChildrenCompletedResult = PageResult<ChildrenCompletedRow>;
 
-
 // 통합 읽기 포트 ================================================
 
 export interface QuizQueryPort {
@@ -114,23 +110,35 @@ export interface QuizQueryPort {
   findDetailById(quizId: bigint): Promise<QuizDetailRow | null>;
 
   // 자녀(개인) 완료 목록
-  findChildrenCompleted(params: FindChildrenCompletedParams): Promise<FindChildrenCompletedResult>;
+  findChildrenCompleted(
+    params: FindChildrenCompletedParams,
+  ): Promise<FindChildrenCompletedResult>;
 
   // 가족(다수 부모)용 오늘 목록
-  findFamilyParentsToday(params: FindFamilyParentsTodayParams): Promise<FindFamilyParentsTodayResult>;
+  findFamilyParentsToday(
+    params: FindFamilyParentsTodayParams,
+  ): Promise<FindFamilyParentsTodayResult>;
 
   // 가족(다수 부모)용 완료 목록
-  findFamilyParentsCompleted(params: FindFamilyParentsCompletedParams): Promise<FindFamilyParentsCompletedResult>;
+  findFamilyParentsCompleted(
+    params: FindFamilyParentsCompletedParams,
+  ): Promise<FindFamilyParentsCompletedResult>;
 
   // 가족(다수 부모)용 예정 목록
-  findFamilyParentsScheduled(params: FindFamilyParentsScheduledParams): Promise<FindFamilyParentsScheduledResult>;
+  findFamilyParentsScheduled(
+    params: FindFamilyParentsScheduledParams,
+  ): Promise<FindFamilyParentsScheduledResult>;
 
   // (퀴즈들 x 자녀들) 과제/보상 상태 조회
-  findAssignmentsForQuizzes(params: { quizIds: bigint[]; childProfileIds: number[]; }):
-  Promise<Array<{
-    quizId: bigint;
-    childProfileId: number;
-    isSolved: boolean;
-    rewardGranted: boolean;
-  }>>;
+  findAssignmentsForQuizzes(params: {
+    quizIds: bigint[];
+    childProfileIds: number[];
+  }): Promise<
+    Array<{
+      quizId: bigint;
+      childProfileId: number;
+      isSolved: boolean;
+      rewardGranted: boolean;
+    }>
+  >;
 }
