@@ -1,20 +1,9 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import type { Request } from 'express';
-import type { AuthClaims } from '../auth/token.verifier';
-
-interface AuthenticatedRequest extends Request {
-  auth: {
-    token: string;
-    userId: string;
-    profileId: string | number;
-    profileType: 'parent' | 'child';
-    claims: AuthClaims;
-  };
-}
 
 export const Auth = createParamDecorator(
   (field: 'userId' | 'profileId' | undefined, ctx: ExecutionContext) => {
-    const req = ctx.switchToHttp().getRequest() as AuthenticatedRequest;
+    const req = ctx.switchToHttp().getRequest<Request>();
     const { auth } = req; // 이 데코레이터는 가드가 먼저 실행되어 req.auth를 채워뒀다는 전제로 동작
 
     // @Auth() <- 인자 없으면 { userId, profileId } 객체를 통째로 줌

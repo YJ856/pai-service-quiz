@@ -7,7 +7,7 @@ import { Quiz } from 'src/domain/model/quiz';
 import { todayYmdKST } from 'src/utils/date.util';
 
 const hasKey = <T extends object>(o: T, k: keyof any): k is keyof T =>
-  o != null && Object.prototype.hasOwnProperty.call(o, k);
+  o != null && Object.prototype.hasOwnProperty.call(o, k) === true;
 
 const isEditable = (
   publishDate: string | null,

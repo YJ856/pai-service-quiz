@@ -12,14 +12,17 @@ import type { TokenVersionQueryPort } from 'src/application/port/out/token-versi
 import { QUIZ_TOKENS } from 'src/quiz.token';
 import type { Request } from 'express';
 
-interface AuthenticatedRequest extends Request {
-  auth: {
-    token: string;
-    userId: string;
-    profileId: string | number;
-    profileType: 'parent' | 'child';
-    claims: AuthClaims;
-  };
+// Express Request 타입을 확장해서 auth 속성 추가
+declare module 'express' {
+  interface Request {
+    auth?: {
+      token: string;
+      userId: string;
+      profileId: string | number;
+      profileType: 'parent' | 'child';
+      claims: AuthClaims;
+    };
+  }
 }
 
 @Injectable()
@@ -31,7 +34,7 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // HTTP 요청 객체 가져오기
-    const req = context.switchToHttp().getRequest() as AuthenticatedRequest;
+    const req = context.switchToHttp().getRequest<Request>();
 
     // 1) Bearer 토큰 추출
     const authHeader = req.headers['authorization'] as string | undefined;
@@ -86,8 +89,8 @@ export class AuthGuard implements CanActivate {
 export class ParentGuard extends AuthGuard {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const ok = await super.canActivate(context);
-    const req = context.switchToHttp().getRequest() as AuthenticatedRequest;
-    if (req.auth.profileType !== 'parent') {
+    const req = context.switchToHttp().getRequest<Request>();
+    if (req.auth!.profileType !== 'parent') {
       throw new ForbiddenException('FORBIDDEN: parent profile required');
     }
     return ok;
@@ -99,8 +102,8 @@ export class ParentGuard extends AuthGuard {
 export class ChildGuard extends AuthGuard {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const ok = await super.canActivate(context);
-    const req = context.switchToHttp().getRequest() as AuthenticatedRequest;
-    if (req.auth.profileType !== 'child') {
+    const req = context.switchToHttp().getRequest<Request>();
+    if (req.auth!.profileType !== 'child') {
       throw new ForbiddenException('FORBIDDEN: child profile required');
     }
     return ok;
