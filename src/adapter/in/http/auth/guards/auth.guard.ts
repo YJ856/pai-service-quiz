@@ -37,8 +37,8 @@ export class AuthGuard implements CanActivate {
     const req = context.switchToHttp().getRequest<Request>();
 
     // 1) Bearer 토큰 추출
-    const authHeader = req.headers['authorization'] as string | undefined;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) {
       throw new UnauthorizedException('UNAUTHORIZED: Bearer token required');
     }
     const token = authHeader.slice('Bearer '.length).trim();

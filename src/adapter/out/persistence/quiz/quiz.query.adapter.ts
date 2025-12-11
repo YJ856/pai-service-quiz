@@ -256,7 +256,7 @@ export class QuizQueryAdapter implements QuizQueryPort {
 
     const resultRecords = await this.prisma.assignment.findMany({
       where: {
-        quizId: { in: quizIds as bigint[] },
+        quizId: { in: quizIds },
         childProfileId: { in: childProfileIds },
       },
       select: {
