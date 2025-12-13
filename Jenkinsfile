@@ -45,10 +45,10 @@ pipeline {
             steps {
                 script {
                     echo 'Building Docker image...'
-                    // Build with BUILD_NUMBER tag
+                    // Build once with BUILD_NUMBER tag
                     sh "docker build -t songhyunkwang/pai-service-quiz:${BUILD_NUMBER} ."
-                    // Build with latest tag
-                    sh "docker build -t songhyunkwang/pai-service-quiz:latest ."
+                    // Add latest tag to the same image
+                    sh "docker tag songhyunkwang/pai-service-quiz:${BUILD_NUMBER} songhyunkwang/pai-service-quiz:latest"
                 }
             }
         }
@@ -80,6 +80,8 @@ pipeline {
             // Cleanup: remove Docker images to save space
             sh "docker rmi songhyunkwang/pai-service-quiz:${BUILD_NUMBER} || true"
             sh "docker rmi songhyunkwang/pai-service-quiz:latest || true"
+            // Remove dangling images (untagged <none> images)
+            sh "docker image prune -f || true"
             cleanWs()
         }
     }
