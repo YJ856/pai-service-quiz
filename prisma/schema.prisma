@@ -9,46 +9,45 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ENUM: QUIZ.status ∈ {SCHEDULED, TODAY, COMPLETED}
-enum QuizStatus {
-  SCHEDULED  // 예약됨(발행 예정)
-  TODAY      // 오늘 발행
-  COMPLETED  // 완료
-}
 
 // =======================
 //        MODELS
 // =======================
 
 model Quiz {
-  id              Int           @id @default(autoincrement())                 // PK
-  parentProfileId Int           @map("parent_profile_id")                     // 외부 부모 프로필 ID(소프트 참조, FK 없음)
-  question        String                                                        // 문제
-  answer          String                                                        // 정답
-  reward          String?                                                       // 보상(옵션)
-  hint            String?                                                       // 힌트(옵션)
-  publishDate     DateTime      @db.Date @map("publish_date")                  // 발행일(date-only)
-  status          QuizStatus                                                    // 상태
-  assignments     Assignment[]                                                  // 1:N
+  id              BigInt           @id @default(autoincrement())            // PK
+  parentProfileId Int              @map("parent_profile_id")                // 외부 부모 프로필 ID(소프트 참조, FK 없음)
+  question        String                                                    // 문제
+  answer          String                                                    // 정답
+  reward          String?                                                   // 보상(옵션)
+  hint            String?                                                   // 힌트(옵션)
+  publishDate     DateTime         @db.Date @map("publish_date")            // 발행일(date-only)                    
+  assignments     Assignment[]                                              // 1:N
 
   // --- Table / Index Mapping ---
-  @@map("quiz")                                                                 // 실제 테이블명: quiz (단수)
-  @@index([parentProfileId, publishDate], map: "idx_quiz_parent_profile_id_publish_date")
+  @@map("quiz")                                                             // 실제 테이블명: quiz (단수)
+  @@index([parentProfileId, publishDate], map: "idx_quiz_parent_profile_id_publish_date")                               
+  // (parentProfileId, publishDate) 복합 인덱스  → 부모별로 날짜 조건(=, >, <) 조회/정렬 시 성능 최적화 => 예: 특정 부모의 '오늘/예정/완료' 퀴즈를 날짜 기준으로 찾을 때 빠르게 탐색
 }
 
 model Assignment {
-  id              Int      @id @default(autoincrement())                       // PK
-  quizId          Int      @map("quiz_id")                                     // FK -> Quiz.id
-  childProfileId  Int      @map("child_profile_id")                            // 외부 자녀 프로필 ID(소프트 참조, FK 없음)
-  isSolved        Boolean  @default(false) @map("is_solved")                   // 해결 여부
-  rewardGranted   Boolean  @default(false) @map("reward_granted")              // 보상 지급 여부
+  id              BigInt      @id @default(autoincrement())                 // PK
+  quizId          BigInt      @map("quiz_id")                               // FK -> Quiz.id
+  childProfileId  Int         @map("child_profile_id")                      // 외부 자녀 프로필 ID(소프트 참조, FK 없음)
+  isSolved        Boolean     @default(false) @map("is_solved")             // 해결 여부
+  rewardGranted   Boolean     @default(false) @map("reward_granted")        // 보상 지급 여부
 
   // --- Relations ---
   quiz            Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
 
   // --- Table / Index Mapping ---
-  @@map("assignment")                                                           // 실제 테이블명: assignment (단수)
-  @@unique([quizId, childProfileId], map: "uq_assignment_quiz_id_child_profile_id")
-  @@index([quizId, childProfileId], map: "idx_assignment_quiz_id_child_profile_id")
-  @@index([childProfileId], map: "idx_assignment_child_profile_id")
+  @@map("assignment")                                                        // 실제 DB 테이블명: assignment
+  @@unique([quizId, childProfileId], map: "uq_assignment_quiz_id_child_profile_id")                                        
+  // (quizId, childProfileId) 복합 유니크 제약  → 같은 퀴즈에 같은 자녀는 한 번만 존재 (중복 row 방지), 인덱스/제약 이름 지정
+                      
+  @@index([quizId, childProfileId], map: "idx_assignment_quiz_id_child_profile_id")                                    
+  // (quizId, childProfileId) 복합 인덱스 → 두 컬럼 조합으로 조회/정렬 최적화 (유니크와 별개로 읽기 성능용), 인덱스 이름 지정
+
+  @@index([childProfileId], map: "idx_assignment_child_profile_id")                                             
+  // childProfileId 단일 컬럼 인덱스 → 자녀별로 과제(assignment) 조회할 때 빠르게 찾도록, 인덱스 이름 지정
 }

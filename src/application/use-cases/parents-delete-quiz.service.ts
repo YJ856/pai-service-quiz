@@ -1,0 +1,88 @@
+import {
+  ConflictException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+
+import { QUIZ_TOKENS } from '../../quiz.token';
+import { toYmdFromDate, todayYmdKST } from '../../utils/date.util';
+
+const canDelete = (
+  publishDateYmd: string,
+  authorParentProfileId: number,
+  requesterParentProfileId: number,
+  today: string,
+): boolean => {
+  // 작성자만 삭제 가능
+  if (authorParentProfileId !== requesterParentProfileId) {
+    return false;
+  }
+  // publishDate가 오늘 이후인 경우만 삭제 가능 (SCHEDULED 상태)
+  if (publishDateYmd > today) {
+    return true;
+  }
+  return false;
+};
+
+import type { ParentsDeleteQuizCommand } from '../command/parents-delete-quiz.command';
+import type { DeleteQuizUseCase } from '../port/in/parents-delete-quiz.usecase';
+import type { QuizQueryPort } from '../port/out/quiz.query.port';
+import type { QuizCommandPort } from '../port/out/quiz.repository.port';
+import type { DeleteQuizResponseResult } from '../port/in/result/parents-delete-quiz-result.dto';
+import { DeleteQuizMapper } from '../../adapter/in/http/mapper/parents-delete-quiz.mapper';
+
+@Injectable()
+export class DeleteQuizService implements DeleteQuizUseCase {
+  constructor(
+    @Inject(QUIZ_TOKENS.QuizQueryPort)
+    private readonly detailRepo: QuizQueryPort,
+    @Inject(QUIZ_TOKENS.QuizCommandPort)
+    private readonly deleteRepo: QuizCommandPort,
+    private readonly deleteQuizMapper: DeleteQuizMapper,
+  ) {}
+
+  /**
+   * 부모용 퀴즈 삭제
+   * - 작성자 본인만
+   * - 상태가 SCHEDULED인 경우에만
+   */
+  async execute(
+    cmd: ParentsDeleteQuizCommand,
+  ): Promise<DeleteQuizResponseResult> {
+    const { quizId, parentProfileId } = cmd;
+
+    // 1) 대상 조회
+    const quiz = await this.detailRepo.findDetailById(quizId);
+    if (!quiz) throw new NotFoundException('QUIZ_NOT_FOUND');
+
+    // 2) 권한 & 상태 체크 (도메인 정책 활용)
+    const today = todayYmdKST();
+    const publishDateYmd = toYmdFromDate(quiz.publishDate);
+
+    if (
+      !canDelete(publishDateYmd, quiz.parentProfileId, parentProfileId, today)
+    ) {
+      // 작성자가 아니거나 SCHEDULED 상태가 아님
+      if (quiz.parentProfileId !== parentProfileId) {
+        throw new ForbiddenException('FORBIDDEN');
+      }
+      throw new ConflictException('NOT_SCHEDULED');
+    }
+
+    // 4) 하드 삭제 수행 (조건부: SCHEDULED & 작성자)
+    const affected = await this.deleteRepo.deleteIfScheduledAndAuthor({
+      quizId,
+      parentProfileId,
+    });
+
+    if (affected === 0) {
+      // 경합 등으로 상태 변경/부재 시
+      throw new ConflictException('NOT_SCHEDULED');
+    }
+
+    // 5) Result DTO로 변환
+    return this.deleteQuizMapper.toResponseResult(quizId);
+  }
+}
