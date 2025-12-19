@@ -1,8 +1,43 @@
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    jenkins: agent
+  namespace: jenkins
+spec:
+  serviceAccountName: jenkins
+  containers:
+  - name: node
+    image: node:22-alpine
+    command:
+    - cat
+    tty: true
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:debug
+    command:
+    - /busybox/cat
+    tty: true
+    volumeMounts:
+    - name: docker-config
+      mountPath: /kaniko/.docker
+  volumes:
+  - name: docker-config
+    secret:
+      secretName: dockerhub-regcred
+      items:
+      - key: .dockerconfigjson
+        path: config.json
+"""
+        }
+    }
 
-    tools {
-        nodejs 'NodeJS-22'
+    environment {
+        IMAGE_NAME = 'songhyunkwang/pai-service-quiz'
+        IMAGE_TAG = "${BUILD_NUMBER}"
     }
 
     stages {
@@ -15,53 +50,56 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                echo 'Installing npm dependencies...'
-                sh 'npm ci'
+                container('node') {
+                    echo 'Installing npm dependencies...'
+                    sh 'npm ci'
+                }
             }
         }
 
         stage('Lint') {
             steps {
-                echo 'Running linter...'
-                sh 'npm run lint:check'
+                container('node') {
+                    echo 'Running linter...'
+                    sh 'npm run lint:check'
+                }
             }
         }
 
         stage('Build') {
             steps {
-                echo 'Building NestJS application...'
-                sh 'npm run build'
+                container('node') {
+                    echo 'Building NestJS application...'
+                    sh 'npm run build'
+                }
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Running tests...'
-                sh 'npm test'
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    echo 'Building Docker image...'
-                    // Build once with BUILD_NUMBER tag
-                    sh "docker build -t songhyunkwang/pai-service-quiz:${BUILD_NUMBER} ."
-                    // Add latest tag to the same image
-                    sh "docker tag songhyunkwang/pai-service-quiz:${BUILD_NUMBER} songhyunkwang/pai-service-quiz:latest"
+                container('node') {
+                    echo 'Running tests...'
+                    sh 'npm test'
                 }
             }
         }
 
-        stage('Push to Docker Hub') {
+        stage('Build and Push with Kaniko') {
             steps {
-                script {
-                    echo 'Pushing Docker image to Docker Hub...'
-                    // Login to Docker Hub and push images
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                        sh "docker push songhyunkwang/pai-service-quiz:${BUILD_NUMBER}"
-                        sh "docker push songhyunkwang/pai-service-quiz:latest"
+                container('kaniko') {
+                    script {
+                        echo "Building and pushing image: ${IMAGE_NAME}:${IMAGE_TAG}"
+
+                        sh """
+                            /kaniko/executor \
+                              --context=\${WORKSPACE} \
+                              --dockerfile=\${WORKSPACE}/Dockerfile \
+                              --destination=${IMAGE_NAME}:${IMAGE_TAG} \
+                              --destination=${IMAGE_NAME}:latest \
+                              --cache=true \
+                              --cache-ttl=24h \
+                              --compressed-caching=false
+                        """
                     }
                 }
             }
@@ -71,17 +109,13 @@ pipeline {
     post {
         success {
             echo 'Pipeline completed successfully!'
-            echo "Docker image pushed: songhyunkwang/pai-service-quiz:${BUILD_NUMBER}"
+            echo "Docker image pushed: ${IMAGE_NAME}:${IMAGE_TAG}"
+            echo "Docker image pushed: ${IMAGE_NAME}:latest"
         }
         failure {
             echo 'Pipeline failed!'
         }
         always {
-            // Cleanup: remove Docker images to save space
-            sh "docker rmi songhyunkwang/pai-service-quiz:${BUILD_NUMBER} || true"
-            sh "docker rmi songhyunkwang/pai-service-quiz:latest || true"
-            // Remove dangling images (untagged <none> images)
-            sh "docker image prune -f || true"
             cleanWs()
         }
     }
