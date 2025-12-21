@@ -24,6 +24,11 @@ spec:
     volumeMounts:
     - name: docker-config
       mountPath: /kaniko/.docker
+  - name: git
+    image: alpine/git:latest
+    command:
+    - cat
+    tty: true
   volumes:
   - name: docker-config
     secret:
@@ -100,6 +105,37 @@ spec:
                               --cache-ttl=24h \
                               --compressed-caching=false
                         """
+                    }
+                }
+            }
+        }
+
+        stage('Update GitOps Repository') {
+            steps {
+                container('git') {
+                    script {
+                        echo "Updating GitOps repository with new image tag: ${IMAGE_TAG}"
+
+                        withCredentials([usernamePassword(credentialsId: 'github-credentials',
+                                                          usernameVariable: 'GIT_USERNAME',
+                                                          passwordVariable: 'GIT_PASSWORD')]) {
+                            sh """
+                                git config --global user.email "jenkins@pai.com"
+                                git config --global user.name "Jenkins CI"
+
+                                # Clone gitops repo
+                                git clone https://\${GIT_USERNAME}:\${GIT_PASSWORD}@github.com/YJ856/pai-gitops.git
+                                cd pai-gitops
+
+                                # Update image tag in deployment file
+                                sed -i 's|image: ${IMAGE_NAME}:.*|image: ${IMAGE_NAME}:${IMAGE_TAG}|g' k8s/base/quiz-service-deploy.yaml
+
+                                # Commit and push
+                                git add k8s/base/quiz-service-deploy.yaml
+                                git commit -m "Update quiz-service image to ${IMAGE_TAG}" || echo "No changes to commit"
+                                git push origin master
+                            """
+                        }
                     }
                 }
             }
